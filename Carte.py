@@ -10,6 +10,8 @@ class Carte(object):
 
 	#Creation des differentes ressources selon des parametres au hasard
 	def createRessources(self):
+
+		#Creation de la ressource en grappe
 		for x in range(0,self.size):
 			for y in range(0,self.size):
 				self.matrice[x][y].type = random.randint(0,100)
@@ -17,7 +19,7 @@ class Carte(object):
 					moyenne = (self.matrice[x][y].type + self.matrice[x-1][y] + self.matrice[x][y-1]) / 3
 					self.matrice[x][y].type = moyenne
 
-
+		#Distribution de la ressource selon le pourcentage
 		for x in range(0,self.size):
 			for y in range(0,self.size):
 				if self.matrice[x][y].type < 55:
