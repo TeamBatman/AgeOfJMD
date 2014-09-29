@@ -1,10 +1,14 @@
 from Tuile import Tuile
+import random
 
 class Carte(object):
-	"""docstring for Carte"""
+	"""Modelisation de la carte de jeu"""
 	def __init__(self, size):
+
+		#Initialisation de la matrice de tuile
 		self.matrice = [[Tuile() for x in range(0,size)] for x in range(0,size)]
 
+	#Creation des differentes ressources selon des parametres au hasard
 	def createRessources(self):
 		for x in range(0,self.size):
 			for y in range(0,self.size):
