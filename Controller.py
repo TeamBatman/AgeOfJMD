@@ -67,17 +67,13 @@ class EventListener:
                 self.controller.view.positionX = int((event.x - self.controller.view.width-233)/2)+233
                 self.controller.view.positionY = int((event.y - 18) /2)
 
-                print(self.controller.view.positionX)
-
                 self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
 
     def onRClick(self, event):
-        print("R-CLICK")
 
         if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
             if event.y >= 18 and event.y <= 229:
-                print("YES")
-
+            	pass
         #self.controller.network.stopServer()
         
     def createBuilding(self,param):
