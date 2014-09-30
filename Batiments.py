@@ -3,10 +3,13 @@
 import time
 
 
+
+#TODO Remplacer les sleep par un test du temps
+#TODO les bons constructeurs pour les unités et la bonne variable
+
 class Batiment:
-    def __init__(self,parent, posX, posY, civilisation):
+    def __init__(self,parent, posX, posY):
         self.pos = [posX, posY]
-        self.civilisation = civilisation
         self.peutEtreOccupe = False
         self.estOccupe = False
         self.pointsDeVie = 100
@@ -14,11 +17,15 @@ class Batiment:
         self.type = ""
         self.parent = parent
         self.recherchesCompletes = 0
+        self.enRecherche = False
+        self.enCreation = False
+        self.tempsDepartRecherche = 0
+        self.tempsDepartCreation = 0
 
     def detruire(self):
         self.sortirUnites(self.parent)
-        #enlever de la liste des batiments
-        #retourner un % des ressources du cout
+        #TODO enlever de la liste des batiments
+        #TODO retourner un % des ressources du cout
 
     def sortirUnites(self):
         #verifie si le batiment peut etre occupe puis s'il y a des unites dedans et les sort
@@ -31,115 +38,124 @@ class Batiment:
 
 
 class Eglise(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.type = "Eglise"
-        self.boostDisponible = True
 
 
     def boostMoral(self):
-        if self.boostDisponible == True:
-            if self.parent.epoque == 2:
-                self.boostDisponible = False
-                time.sleep(60)
-                #a verifier si le moral fonctionnera de meme
+        if self.parent.epoque == 2:
+            if self.enRecherche == False:
+                self.enRecherche = True
+                self.tempsDepartRecherche = time.time()
+            if roundtime.time() - self.tempsDepartRecherche <= 60:
                 self.parent.moral=100
-                time.sleep(120)
-                self.boostDisponible = True
-            else:
-                self.boostDisponible = False
-                time.sleep(120)
+                self.enRecherche = False
+        else:
+            if self.enRecherche == False:
+                self.enRecherche = True
+                self.tempsDepartRecherche = time.time()
+            if time.time() - self.tempsDepartRecherche <= 120:
                 self.parent.moral=100
-                time.sleep(300)
-                self.boostDisponible = True
+                self.enRecherche = False
 
 
 
 class TourDeGuet(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.type = "Tour de guet"
 
     def meilleureVue(self):
         if self.parent.epoque == 2:
             if self.recherchesCompletes < 1:
-                #Decouverir comment le FOW fonctionnera
+                #TODO Decouverir comment le FOW fonctionnera
+                #TODO ajouter le temps de recherche
                 self.recherchesCompletes+=1
 
         else:
             if self.recherchesCompletes < 2:
-                #Decouverir comment le FOW fonctionnera
+                #TODO Decouverir comment le FOW fonctionnera
+                #TODO ajouter le temps de recherche
                 self.recherchesCompletes+=1
 
 
 
 class Hopital(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.type = "Hopital"
         self.peutEtreOccupe = True
         self.vitesseDeCreation = 30
 
     def healing(self, unite):
-        #decouvrir comment le healing va se faire
+        #TODO decouvrir comment le healing va se faire
+        #TODO ajouter le temps de recherche
         2
 
     def regenerationAmelioree(self):
         if self.recherchesCompletes < 1:
-        #decouvrir comment la regeneration va se faire
+        #TODO decouvrir comment la regeneration va se faire
+        #TODO ajouter le temps de recherche
             self.recherchesCompletes+=1
 
 
 
 class Base(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.type = "Base"
         self.vitesseDeCreation = 40
 
 
     def creerPaysan(self):
-        time.sleep(self.vitesseDeCreation)
-        #a decouvrir le constructeur de paysans
-        self.parent.unites.add(Paysan(self.posX+4, self.posY+4, self.civilisation))
+        if self.enCreation == False:
+            self.enCreation = True
+            self.tempsDepartCreation = round(time.time(), 0)
+        elif time.time() - self.tempsDepartCreation <= 30:
+            self.parent.units.add(Paysan(self.posX+4, self.posY+4, self.parent))
+
 
     def meilleureVitesse(self):
         if self.parent.epoque == 1:
             if self.recherchesCompletes < 1:
+                #TODO ajouter le temps de recherche
                 self.vitesseDeCreation = self.vitesseDeCreation*0.9
                 self.recherchesCompletes+=1
 
         elif self.parent.epoque == 2:
             if self.recherchesCompletes < 2:
+                #TODO ajouter le temps de recherche
                 self.vitesseDeCreation = self.vitesseDeCreation*0.9
                 self.recherchesCompletes+=1
 
         else:
             if self.recherchesCompletes < 3:
+                #TODO ajouter le temps de recherche
                 self.vitesseDeCreation = self.vitesseDeCreation*0.9
                 self.recherchesCompletes+=1
 
 
 
 class Baraque(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.type="Baraque"
         self.vitesseDeCreation = 40
 
     def creerSoldatEpee(self):
         time.sleep(self.vitesseDeCreation)
-        #trouver le constructeur de soldat
+        #TODO trouver le constructeur de soldat
         self.parent.unites.add(SoldatEpee(self.posX+4, self.posY+4, self.civilisation))
 
     def creerSoldatLance(self):
         time.sleep(self.vitesseDeCreation)
-        #trouver le constructeur de soldat
+        #TODO trouver le constructeur de soldat
         self.parent.unites.add(SoldatLance(self.posX+4, self.posY+4, self.civilisation))
 
     def creerSoldatBouclier(self):
         time.sleep(self.vitesseDeCreation)
-        #trouver le constructeur de soldat
+        #TODO trouver le constructeur de soldat
         self.parent.unites.add(SoldatBouclier(self.posX+4, self.posY+4, self.civilisation))
 
     def meilleureAttaque(self):
@@ -173,13 +189,13 @@ class Baraque(Batiment):
 
 
 class Ferme(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
 
     def Produire(self):
-        #a se renseigner sur les valeurs pour la production
+        #TODO a se renseigner sur les valeurs pour la production
         while self.estOccupe == True:
             self.parent.nourriture += self.production
             time.sleep(10)
@@ -206,13 +222,13 @@ class Ferme(Batiment):
 
 
 class Scierie(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
 
     def Produire(self):
-        #a se renseigner sur les valeurs pour la production
+        #TODO a se renseigner sur les valeurs pour la production
         while self.estOccupe == True:
             self.parent.bois += self.production
             time.sleep(10)
@@ -233,13 +249,13 @@ class Scierie(Batiment):
 
 
 class Fonderie(Batiment):
-    def __init__(self, parent, posX, posY, civilisation):
-        super().__init__(parent, posX, posY, civilisation)
+    def __init__(self, parent, posX, posY):
+        super().__init__(parent, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
 
     def Produire(self):
-        #a se renseigner sur les valeurs pour la production
+        #TODO a se renseigner sur les valeurs pour la production
         while self.estOccupe == True:
             self.parent.metal += self.production
             time.sleep(10)
@@ -250,3 +266,5 @@ class Fonderie(Batiment):
                 time.sleep(60)
                 self.production = self.production * 1.1
                 self.recherchesCompletes += 1
+
+
