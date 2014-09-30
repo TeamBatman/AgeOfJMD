@@ -54,14 +54,23 @@ class EventListener:
         self.controller = controller
 
     def onRClick(self, event):
-        cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-        cmd.addData('X', event.x)
-        cmd.addData('Y', event.y)
-        self.controller.network.client.sendCommand(cmd)
+        if event.x < 742 and event.y < 636:
+            cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
+            cmd.addData('X', event.x)
+            cmd.addData('Y', event.y)
+            self.controller.network.client.sendCommand(cmd)
 
     def onLClick(self, event):
         print("R-CLICK")
         self.controller.network.stopServer()
+        
+    def createBuilding(self,param):
+        if param == 0:
+            print("Create building ferme")
+        elif param == 1:
+            print("Create building baraque")
+        elif param == 2:
+            print("Create building hopital")
 
 
 
