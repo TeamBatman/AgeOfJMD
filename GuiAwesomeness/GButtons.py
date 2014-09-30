@@ -15,10 +15,6 @@ except ImportError:
     from tkinter import NW
 
 
-
-
-
-
 class GButton(GWidget):
     """ Un bouton custom utilisant une image. A etre palcer sur un canvas"""
 
@@ -44,7 +40,7 @@ class GButton(GWidget):
         self.textColor = "white"
         self._determineColor(color)
 
-        # Image vide sur le dessus utilisée pour obtnie les événements de la souris (Event Monitor)
+        # Image vide sur le dessus utilisée pour obtenir les événements de la souris (Event Monitor)
         self.graphImage = ImageTk.PhotoImage(self.imageData[GButton.NORMAL])
         self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[GButton.EMPTY])
 
@@ -88,7 +84,7 @@ class GButton(GWidget):
         :param state: l'état du bouton à afficher (Constante de GButton)
         """
         if state == GButton.FOCUS:
-            self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[state])
+            self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[GButton.FOCUS])
             #self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
         else:
             self.graphImage = ImageTk.PhotoImage(self.imageData[state])
@@ -107,7 +103,9 @@ class GButton(GWidget):
         self.parent.tag_bind(self.eventMonitor, '<ButtonRelease-1>', self.onRelease)
 
     def onFocus(self, event):
+        print("ON FOCUS START")
         self.drawState(GButton.FOCUS)
+        print("ON FOCUS END")
 
     def onLeave(self, event):
         self.drawState(GButton.NORMAL)
@@ -120,6 +118,16 @@ class GButton(GWidget):
         self.drawState(GButton.FOCUS)
         if self.command:
             self.command()
+
+
+class GMediumButton(GButton):
+    def _determineColor(self, color):
+        self.imageData[GButton.NORMAL] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med.png")
+        self.imageData[GButton.PRESSED] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med_pressed.png")
+        self.imageData[GButton.FOCUS] = Image.open('GuiAwesomeness/Gui/Buttons/buttonSquare_focus.png')
+
+        self.width, self.height = self.imageData[GButton.NORMAL].size
+        self.imageData[GButton.EMPTY] = Image.new('RGBA', (self.width, self.height))
 
 
 class GCheckButton(GButton):
