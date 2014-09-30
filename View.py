@@ -62,12 +62,12 @@ class View(GWindow):
 
     def drawMinimap(self, units, carte):
         self.canvas.delete('miniMap')
-        x1 = self.width - 183
+        x1 = self.width - 233
         y1 = 18
-        x2 = self.width - 18
-        y2 = y1 + 162
+        x2 = self.width - 22
+        y2 = y1 + 211
 
-        size = 81
+        size = 106
         item = 2
         #self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue", tags='miniMap')
 

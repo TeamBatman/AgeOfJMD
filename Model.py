@@ -17,7 +17,7 @@ class Model:
 
 
         ###### Alex B #####
-        self.carte = Carte(81)
+        self.carte = Carte(106)
 
         ###################
 
