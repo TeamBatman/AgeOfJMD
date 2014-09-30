@@ -6,7 +6,9 @@ class Carte(object):
 	def __init__(self, size):
 
 		#Initialisation de la matrice de tuile
+		self.size = size
 		self.matrice = [[Tuile() for x in range(0,size)] for x in range(0,size)]
+		self.createRessources()
 
 	#Creation des differentes ressources selon des parametres au hasard
 	def createRessources(self):
@@ -16,7 +18,7 @@ class Carte(object):
 			for y in range(0,self.size):
 				self.matrice[x][y].type = random.randint(0,100)
 				if x > 0 and y > 0 and self.matrice[x][y].type < 100:
-					moyenne = (self.matrice[x][y].type + self.matrice[x-1][y] + self.matrice[x][y-1]) / 3
+					moyenne = (self.matrice[x][y].type + self.matrice[x-1][y].type + self.matrice[x][y-1].type) / 3
 					self.matrice[x][y].type = moyenne
 
 		#Distribution de la ressource selon le pourcentage
@@ -36,3 +38,9 @@ class Carte(object):
 
 				else:
 					self.matrice[x][y].type = 4
+
+def test():
+	carte = Carte(100)
+
+if __name__ == '__main__':
+	test()
