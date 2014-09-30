@@ -17,8 +17,8 @@ class View(GWindow):
 
 
         # PARAMÈTRES DE BASE
-        self.width = 1024
-        self.height = 768
+        self.width = 1020
+        self.height = 772
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
 
@@ -27,6 +27,9 @@ class View(GWindow):
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
                              highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
         self.canvas.pack()
+        # Position de la fenetre
+        self.positionX = 0
+        self.positionY = 0
 
         # LE HUD
         self.drawHUD()
@@ -60,7 +63,42 @@ class View(GWindow):
         self.moraleProg.setProgression(63)
         self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height+25)
 
+    def drawMap(self, carte):
+        if 'carte' in self.canvas.find_all():
+            self.canvas.delete('carte')
+        x1 = self.positionX
+        y1 = self.positionY
+        x2 = self.width-250
+        y2 = self.height-100
+
+        item = 48
+        #self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue")
+
+        for x in range(x1,x1+16):
+            for y in range(y1,y1+14):
+                posX1 = 0+(x-x1)*item
+                posY1 = 0+(y-y1)*item
+                posX2 = posX1+item
+                posY2 = posY1+item
+
+                if carte[x][y].type == 0:
+                    couleur = "#0B610B" #vert
+                elif carte[x][y].type == 1:
+                    #couleur = "#D7DF01" #jaune
+                    couleur = "#BFBF00"
+                elif carte[x][y].type == 2:
+                    couleur = "#1C1C1C" #gris pale
+                elif carte[x][y].type == 3:
+                    couleur = "#BDBDBD" #gris fonce
+                else:
+                    couleur = "#2E9AFE" #bleu
+                self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=1,fill=couleur, tags='carte')
+
+
+
     def drawMinimap(self, units, carte):
+        if 'miniMap' in self.canvas.find_all():
+            self.canvas.delete('miniMap')
         x1 = self.width - 233
         y1 = 18
         x2 = self.width - 22
@@ -91,11 +129,24 @@ class View(GWindow):
                     couleur = "#2E9AFE" #bleu
                 self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=0,fill=couleur, tags='miniMap')
 
+        #self.canevasJeu.create_line(event.x-13*self.mCaisse,event.y-10*self.mCaisse, event.x+13*self.mCaisse,event.y-10*self.mCaisse,width=2,fill="white")
+  		
+        xr = x1+self.positionX*item
+        yr = y1+self.positionY*item
+
+        self.canvas.create_line(xr,yr,xr+17*item,yr,fill="red")
+        self.canvas.create_line(xr,yr,xr,yr+15*item,fill="red")
+        self.canvas.create_line(xr,yr+15*item,xr+17*item,yr+15*item,fill="red")
+        self.canvas.create_line(xr+17*item,yr,xr+17*item,yr+15*item,fill="red")
+
+
+        self.drawMap(carte)
+
 
 
     def bindEvents(self):
-        self.canvas.bind("<Button-1>", self.eventListener.onRClick)
-        self.canvas.bind("<Button-3>", self.eventListener.onLClick)
+        self.canvas.bind("<Button-1>", self.eventListener.onLClick)
+        self.canvas.bind("<Button-3>", self.eventListener.onRClick)
         
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
@@ -114,8 +165,8 @@ class View(GWindow):
             for unit in units:
                 self.canvas.create_rectangle(unit.x, unit.y, unit.x + 32, unit.y + 32, fill='blue', tags='unit')
                 
-        self.canvas.delete('miniMap')
         self.drawMinimap(units, carte)
+        self.drawMap(carte)
 
 
     def show(self):
