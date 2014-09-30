@@ -55,16 +55,26 @@ class EventListener:
     def __init__(self, controller):
         self.controller = controller
 
-    def onRClick(self, event):
+    def onLClick(self, event):
         if event.x < 742 and event.y < 636:
             cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
             cmd.addData('X', event.x)
             cmd.addData('Y', event.y)
             self.controller.network.client.sendCommand(cmd)
 
-    def onLClick(self, event):
-        print("R-CLICK")
-        self.controller.network.stopServer()
+        if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
+            if event.y >= 18 and event.y <= 229:
+                self.controller.view.positionX = int((event.x - self.controller.view.width-233)/2)+233
+                self.controller.view.positionY = int((event.y - 18) /2)
+
+                self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
+
+    def onRClick(self, event):
+
+        if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
+            if event.y >= 18 and event.y <= 229:
+            	pass
+        #self.controller.network.stopServer()
         
     def createBuilding(self,param):
         if param == 0:
