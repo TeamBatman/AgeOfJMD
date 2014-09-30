@@ -103,9 +103,7 @@ class GButton(GWidget):
         self.parent.tag_bind(self.eventMonitor, '<ButtonRelease-1>', self.onRelease)
 
     def onFocus(self, event):
-        print("ON FOCUS START")
         self.drawState(GButton.FOCUS)
-        print("ON FOCUS END")
 
     def onLeave(self, event):
         self.drawState(GButton.NORMAL)
