@@ -61,7 +61,6 @@ class View(GWindow):
         self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height+25)
 
     def drawMinimap(self, units, carte):
-        self.canvas.delete('miniMap')
         x1 = self.width - 233
         y1 = 18
         x2 = self.width - 22
@@ -90,7 +89,7 @@ class View(GWindow):
                     couleur = "#BDBDBD" #gris fonce
                 else:
                     couleur = "#2E9AFE" #bleu
-                self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=0,fill=couleur)
+                self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=0,fill=couleur, tags='miniMap')
 
 
 
@@ -108,13 +107,15 @@ class View(GWindow):
         self.eventListener.createbuilding(2)
 
     def update(self, units, carte):
+    	
         self.canvas.delete('unit')
         # Draw Units
         if units:
             for unit in units:
                 self.canvas.create_rectangle(unit.x, unit.y, unit.x + 32, unit.y + 32, fill='blue', tags='unit')
-
-        #self.drawMinimap(units, carte)
+                
+        self.canvas.delete('miniMap')
+        self.drawMinimap(units, carte)
 
 
     def show(self):

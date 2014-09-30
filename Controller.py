@@ -24,8 +24,9 @@ class Controller:
             self.model.executeCommand(cmd)
             self.view.update(self.model.units, self.model.carte.matrice)
 
-        else:
-            pass #self.view.drawMinimap(self.model.units, self.model.carte.matrice)
+        #else:
+        #    self.view.canvas.delete('miniMap')
+        #    self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         
         self.view.after(20, self.mainLoop)
 
