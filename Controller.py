@@ -5,7 +5,7 @@ from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController
 from View import View
-
+import sys
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -20,14 +20,18 @@ class Controller:
     def mainLoop(self):
         cmd = self.network.client.synchronize()
         if cmd:
-
             self.model.executeCommand(cmd)
-            self.view.update(self.model.units, self.model.carte.matrice)
 
-        #else:
-        #    self.view.canvas.delete('miniMap')
-        #    self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         
+
+        for unit in self.model.units:
+            try:
+                unit.deplacementTrace()
+            except:
+                print("fail")
+                unit.deplacement()
+
+        self.view.update(self.model.units)
         self.view.after(20, self.mainLoop)
 
     def start(self):
@@ -38,6 +42,14 @@ class Controller:
         self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         self.mainLoop()
         self.view.show()
+    
+    def shutdown(self):
+        self.view.destroy()
+        self.network.client.disconnect()
+        if self.network.server:
+            self.network.stopServer()
+        sys.exit(0)
+            
 
     def actionListener(self, userInput, info):
         """ Méthode utilisée par la vue pour notifier le contrôleur des
@@ -60,7 +72,7 @@ class EventListener:
             cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
             cmd.addData('X', event.x)
             cmd.addData('Y', event.y)
-            self.controller.network.client.sendCommand(cmd)
+        self.controller.view.selection()
 
         if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
             if event.y >= 18 and event.y <= 229:
@@ -68,13 +80,39 @@ class EventListener:
                 self.controller.view.positionY = int((event.y - 18) /2)
 
                 self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
+        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
     def onRClick(self, event):
-
-        if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
-            if event.y >= 18 and event.y <= 229:
-            	pass
+        print("R-CLICK")
         #self.controller.network.stopServer()
+        print(self.controller.view.selected)
+        for unitSelected in self.controller.view.selected:
+            cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+            cmd.addData('X1', unitSelected.x)
+            cmd.addData('Y1', unitSelected.y)
+            cmd.addData('X2', event.x)
+            cmd.addData('Y2', event.y)
+            self.controller.network.client.sendCommand(cmd)
+
+        
+    #def onRClick(self, event):
+        #if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
+            #if event.y >= 18 and event.y <= 229:
+            	#pass
+        #self.controller.network.stopServer()
+
+
+
+    def onCenterClick(self, event):
+        cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
+        cmd.addData('X', event.x)
+        cmd.addData('Y', event.y)
+        self.controller.network.client.sendCommand(cmd)
+    
+        
+    def requestCloseWindow(self):
+        self.controller.shutdown()
+
         
     def createBuilding(self,param):
         if param == 0:
@@ -83,6 +121,10 @@ class EventListener:
             print("Create building baraque")
         elif param == 2:
             print("Create building hopital")
+
+
+        
+
 
 
 

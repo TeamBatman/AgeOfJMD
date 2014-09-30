@@ -5,6 +5,7 @@ class Command():
     # LES TYPES DE COMMANDES POSSIBLES
     CREATE_UNIT = 0
     DELETE_UNIT = 1
+    MOVE_UNIT = 2
 
     def __init__(self, clientId=-1, cmdType=-1):
         self.clientId = clientId

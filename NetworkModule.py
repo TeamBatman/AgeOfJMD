@@ -182,6 +182,9 @@ class Client:
     def outputDebug(msg):
         if CLIENT_DEBUG_VERBOSE:
             print(msg)
+            
+    def disconnect(self):
+        self.host.leave(self.id)
 
 
 class NetworkController:
