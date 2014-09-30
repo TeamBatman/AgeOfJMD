@@ -67,8 +67,8 @@ class GButton(GWidget):
         elif color == GButton.BLUE:
             color = "blue"
 
-        self.imageData[GButton.NORMAL] = Image.open("Gui/Buttons/buttonLong_%s.png" % color)
-        self.imageData[GButton.PRESSED] = Image.open("Gui/Buttons/buttonLong_%s_pressed.png" % color)
+        self.imageData[GButton.NORMAL] = Image.open("GuiAwesomeness/Gui/Buttons/buttonLong_%s.png" % color)
+        self.imageData[GButton.PRESSED] = Image.open("GuiAwesomeness/Gui/Buttons/buttonLong_%s_pressed.png" % color)
         self.imageData[GButton.FOCUS] = Image.open('GuiAwesomeness/Gui/Buttons/buttonLong_focus.png')
 
         self.width, self.height = self.imageData[GButton.NORMAL].size
@@ -89,7 +89,7 @@ class GButton(GWidget):
         """
         if state == GButton.FOCUS:
             self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[state])
-            self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
+            #self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
         else:
             self.graphImage = ImageTk.PhotoImage(self.imageData[state])
             self.parent.itemconfig(self.btnItem, image=self.graphImage)
