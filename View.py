@@ -64,8 +64,10 @@ class View(GWindow):
         self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height+25)
 
     def drawMap(self, carte):
-        if 'carte' in self.canvas.find_all():
+        try:
             self.canvas.delete('carte')
+        except:
+        	pass
         x1 = self.positionX
         y1 = self.positionY
         x2 = self.width-250
@@ -97,8 +99,10 @@ class View(GWindow):
 
 
     def drawMinimap(self, units, carte):
-        if 'miniMap' in self.canvas.find_all():
+        try:
             self.canvas.delete('miniMap')
+        except:
+        	pass
         x1 = self.width - 233
         y1 = 18
         x2 = self.width - 22
