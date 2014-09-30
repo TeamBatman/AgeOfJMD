@@ -6,6 +6,7 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
+from Tuile import *
 
 
 class View(GWindow):
@@ -52,6 +53,44 @@ class View(GWindow):
         self.moraleProg.setProgression(50)
         self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height+25)
 
+    def drawMinimap(self, units, carte):
+        self.canvas.delete('miniMap')
+        x1 = self.width - 183
+        y1 = 18
+        x2 = self.width - 18
+        y2 = y1 + 162
+
+        size = 81
+        item = 2
+        #self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue", tags='miniMap')
+
+        for x in range(0,size):
+            for y in range(0,size):
+
+                posX1 = x1+x*item
+                posY1 = y1+y*item
+                posX2 = posX1+item
+                posY2 = posY1+item
+
+                if carte[x][y].type == 0:
+                    couleur = "#0B610B" #vert
+
+
+                elif carte[x][y].type == 1:
+                    #couleur = "#D7DF01" #jaune
+                    couleur = "#BFBF00"
+
+
+                elif carte[x][y].type == 2:
+                    couleur = "#1C1C1C" #gris pale
+
+                elif carte[x][y].type == 3:
+                    couleur = "#BDBDBD" #gris fonce
+
+                else:
+                    couleur = "#2E9AFE" #bleu
+
+                self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=0,fill=couleur)
 
 
 
@@ -59,12 +98,15 @@ class View(GWindow):
         self.canvas.bind("<Button-1>", self.eventListener.onRClick)
         self.canvas.bind("<Button-3>", self.eventListener.onLClick)
 
-    def update(self, units):
+    def update(self, units, carte):
         self.canvas.delete('unit')
         # Draw Units
         if units:
             for unit in units:
                 self.canvas.create_rectangle(unit.x, unit.y, unit.x + 32, unit.y + 32, fill='blue', tags='unit')
+
+        self.drawMinimap(units, carte)
+
 
     def show(self):
         self.root.mainloop()

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from Commands import Command
+from Carte import Carte
 
 
 class Unit():
@@ -13,6 +14,12 @@ class Unit():
 class Model:
     def __init__(self):
         self.units = []
+
+
+        ###### Alex B #####
+        self.carte = Carte(81)
+
+        ###################
 
     def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités

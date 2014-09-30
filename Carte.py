@@ -7,7 +7,7 @@ class Carte(object):
 
 		#Initialisation de la matrice de tuile
 		self.size = size
-		self.matrice = [[Tuile() for x in range(0,size)] for x in range(0,size)]
+		self.matrice = [[Tuile() for x in range(0,self.size)] for x in range(0,self.size)]
 		self.createRessources()
 
 	#Creation des differentes ressources selon des parametres au hasard
