@@ -5,7 +5,7 @@ from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController
 from View import View
-
+import sys
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -32,6 +32,14 @@ class Controller:
         self.network.client.connect()
         self.mainLoop()
         self.view.show()
+    
+    def shutdown(self):
+        self.view.destroy()
+        self.network.client.disconnect()
+        if self.network.server:
+            self.network.stopServer()
+        sys.exit(0)
+            
 
     def actionListener(self, userInput, info):
         """ Méthode utilisée par la vue pour notifier le contrôleur des
@@ -49,16 +57,19 @@ class EventListener:
     def __init__(self, controller):
         self.controller = controller
 
-    def onRClick(self, event):
+    def onLClick(self, event):
         if event.x < 742 and event.y < 636:
             cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
             cmd.addData('X', event.x)
             cmd.addData('Y', event.y)
             self.controller.network.client.sendCommand(cmd)
 
-    def onLClick(self, event):
+    def onRClick(self, event):
         print("R-CLICK")
         self.controller.network.stopServer()
+        
+    def requestCloseWindow(self):
+        self.controller.shutdown()
         
     def createBuilding(self,param):
         if param == 0:

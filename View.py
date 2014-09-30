@@ -6,6 +6,8 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
+from PIL import Image
+from PIL import ImageTk
 
 
 class View(GWindow):
@@ -44,12 +46,16 @@ class View(GWindow):
         self.sidePanel = GFrame(self.canvas, width=250, height=self.height - 250)
         self.sidePanel.draw(self.width - 250, 250)
         
-        self.buttonFerme = GButton(self.canvas,"Ferme",self.createBuildingFerme,0)
-        self.buttonFerme.draw(x=self.width - 225, y=280)
-        self.buttonBaraque = GButton(self.canvas,"Baraque",self.createBuildingBaraque,2)
-        self.buttonBaraque.draw(x=self.width - 225, y=335)
-        self.buttonHopital = GButton(self.canvas,"Hopital",self.createBuildingHopital,2)
-        self.buttonHopital.draw(x=self.width - 225, y=390)
+        self.buttonFerme = GMediumButton(self.canvas,None,self.createBuildingFerme, GButton.BROWN)
+        self.buttonFerme.draw(x=self.width - 222, y=280)
+        im = Image.open("GuiAwesomeness/Gui/Buttons_Sprite/Farm.png")
+        im.thumbnail((70,70), Image.ANTIALIAS)
+        self.imtk = ImageTk.PhotoImage(im)
+        self.canvas.create_image(self.width - 212, 285, anchor=NW,image=self.imtk)
+        self.buttonBaraque = GMediumButton(self.canvas,"Baraque",self.createBuildingBaraque, GButton.GREY)
+        self.buttonBaraque.draw(x=self.width - 123, y=280)
+        self.buttonHopital = GMediumButton(self.canvas,"Hopital",self.createBuildingHopital, GButton.GREY)
+        self.buttonHopital.draw(x=self.width - 222, y=390)
 
         # LE PANEL DU BAS
         self.bottomPanel = GFrame(self.canvas, width=self.width - self.sidePanel.width, height=100)
@@ -63,8 +69,9 @@ class View(GWindow):
 
 
     def bindEvents(self):
-        self.canvas.bind("<Button-1>", self.eventListener.onRClick)
-        self.canvas.bind("<Button-3>", self.eventListener.onLClick)
+        self.canvas.bind("<Button-1>", self.eventListener.onLClick)
+        self.canvas.bind("<Button-3>", self.eventListener.onRClick)
+        self.root.protocol("WM_DELETE_WINDOW", self.eventListener.requestCloseWindow)
         
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
@@ -73,7 +80,7 @@ class View(GWindow):
         self.eventListener.createBuilding(1)
         
     def createBuildingHopital(self):
-        self.eventListener.createbuilding(2)
+        self.eventListener.createBuilding(2)
 
     def update(self, units):
         self.canvas.delete('unit')
@@ -87,5 +94,8 @@ class View(GWindow):
 
     def after(self, ms, func):
         self.root.after(ms, func)
+        
+    def destroy(self):
+        self.root.destroy()
 
 

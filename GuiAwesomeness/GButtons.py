@@ -122,6 +122,16 @@ class GButton(GWidget):
             self.command()
 
 
+class GMediumButton(GButton):
+
+     def _determineColor(self, color):
+        self.imageData[GButton.NORMAL] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med.png")
+        self.imageData[GButton.PRESSED] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med_pressed.png")
+        self.imageData[GButton.FOCUS] = Image.open('GuiAwesomeness/Gui/Buttons/buttonSquare_focus.png')
+
+        self.width, self.height = self.imageData[GButton.NORMAL].size
+        self.imageData[GButton.EMPTY] = Image.new('RGBA', (self.width, self.height))
+
 class GCheckButton(GButton):
     def __init__(self, parent, command=None, color=0):
         self.checkImage = None
