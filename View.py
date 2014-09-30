@@ -15,14 +15,19 @@ class View(GWindow):
 
     def __init__(self, evListener):
         GWindow.__init__(self)
-
+        # TODO mettre une référence au parent
 
         # PARAMÈTRES DE BASE
         self.width = 1024
         self.height = 768
+        self.selected = []  #Liste qui contient ce qui est selectionné
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
 
+        #POUR LES CASES
+        self.multiplicateur = 32
+        self.grandeurCanevas = 768
+        self.sizeUnit = 32
 
         # ZONE DE DESSIN
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
@@ -32,10 +37,31 @@ class View(GWindow):
         # LE HUD
         self.drawHUD()
 
+        #self.afficherLigne()
+
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
+        self.drawRessources()
         self.bindEvents()
 
+    def afficherLigne(self):
+        # verticales
+        for i in range(1, self.grandeurCanevas):
+            self.canvas.create_line(i * self.multiplicateur, 0, i * self.multiplicateur,
+                                    self.grandeurCanevas * self.multiplicateur)
+        #horizontales
+        for i in range(1, self.grandeurCanevas):
+            self.canvas.create_line(0, i * self.multiplicateur, self.grandeurCanevas * self.multiplicateur,
+                                    i * self.multiplicateur)
+
+    def drawRessources(self):
+        matrice = self.eventListener.controller.model.carte.matrice
+        for i in range(0, self.eventListener.controller.model.carte.size):
+            for j in range(0, self.eventListener.controller.model.carte.size):
+                if not matrice[i][j].type == 0:
+                    self.canvas.create_rectangle(i * self.multiplicateur, j * self.multiplicateur,
+                                                 i * self.multiplicateur + 32, j * self.multiplicateur + 32,
+                                                 fill="yellow", tags='ressource')
 
     def drawHUD(self):
         # LA MINIMAP
@@ -45,16 +71,16 @@ class View(GWindow):
         # LE PANEL DROIT
         self.sidePanel = GFrame(self.canvas, width=250, height=self.height - 250)
         self.sidePanel.draw(self.width - 250, 250)
-        
-        self.buttonFerme = GMediumButton(self.canvas,None,self.createBuildingFerme, GButton.BROWN)
+
+        self.buttonFerme = GMediumButton(self.canvas, None, self.createBuildingFerme, GButton.BROWN)
         self.buttonFerme.draw(x=self.width - 222, y=280)
-        im = Image.open("GuiAwesomeness/Gui/Buttons_Sprite/Farm.png")
-        im.thumbnail((70,70), Image.ANTIALIAS)
+        im = Image.open("Graphics/Buildings/Age_I/Farm.png")
+        im.thumbnail((70, 70), Image.ANTIALIAS)
         self.imtk = ImageTk.PhotoImage(im)
-        self.canvas.create_image(self.width - 212, 285, anchor=NW,image=self.imtk)
-        self.buttonBaraque = GMediumButton(self.canvas,"Baraque",self.createBuildingBaraque, GButton.GREY)
+        self.canvas.create_image(self.width - 212, 285, anchor=NW, image=self.imtk)
+        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.createBuildingBaraque, GButton.GREY)
         self.buttonBaraque.draw(x=self.width - 123, y=280)
-        self.buttonHopital = GMediumButton(self.canvas,"Hopital",self.createBuildingHopital, GButton.GREY)
+        self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
         self.buttonHopital.draw(x=self.width - 222, y=390)
 
         # LE PANEL DU BAS
@@ -63,38 +89,54 @@ class View(GWindow):
 
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         self.moraleProg.setProgression(63)
-        self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height+25)
+        self.moraleProg.draw(x=35, y=self.height - self.bottomPanel.height + 25)
 
-
-
+    def selection(self):
+        print("selection")
+        self.selected = []  # Déselection
+        item = self.canvas.find_withtag(CURRENT)
+        if item:  # Si on a cliqué sur quelque chose
+            itemCoords = self.canvas.coords(item)
+            itemCoord = (itemCoords[0] + self.sizeUnit / 2, itemCoords[1] + self.sizeUnit / 2)
+            for unit in self.eventListener.controller.model.units:
+                if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
+                    self.selected.append(unit)  #Unité sélectionné
+                    break
 
     def bindEvents(self):
         self.canvas.bind("<Button-1>", self.eventListener.onLClick)
+        self.canvas.bind("<Button-2>", self.eventListener.onCenterClick)
         self.canvas.bind("<Button-3>", self.eventListener.onRClick)
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.requestCloseWindow)
-        
+
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
-        
+
     def createBuildingBaraque(self):
         self.eventListener.createBuilding(1)
-        
+
     def createBuildingHopital(self):
         self.eventListener.createBuilding(2)
 
     def update(self, units):
         self.canvas.delete('unit')
+
         # Draw Units
         if units:
             for unit in units:
-                self.canvas.create_rectangle(unit.x, unit.y, unit.x + 32, unit.y + 32, fill='blue', tags='unit')
+                color = 'blue'
+                if unit in self.selected:
+                    color = 'red'  # Unité sélectionné
+                self.canvas.create_rectangle(unit.x - self.sizeUnit / 2, unit.y - self.sizeUnit / 2,
+                                             unit.x + self.sizeUnit / 2, unit.y + self.sizeUnit / 2, fill=color,
+                                             tags='unit')
 
     def show(self):
         self.root.mainloop()
 
     def after(self, ms, func):
         self.root.after(ms, func)
-        
+
     def destroy(self):
         self.root.destroy()
 

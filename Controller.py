@@ -20,9 +20,14 @@ class Controller:
     def mainLoop(self):
         cmd = self.network.client.synchronize()
         if cmd:
-
             self.model.executeCommand(cmd)
-            self.view.update(self.model.units)
+        for unit in self.model.units:
+            try:
+                unit.deplacementTrace()
+            except:
+                print("fail")
+                unit.deplacement()
+        self.view.update(self.model.units)
         self.view.after(20, self.mainLoop)
 
     def start(self):
@@ -58,15 +63,30 @@ class EventListener:
         self.controller = controller
 
     def onLClick(self, event):
-        if event.x < 742 and event.y < 636:
-            cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-            cmd.addData('X', event.x)
-            cmd.addData('Y', event.y)
-            self.controller.network.client.sendCommand(cmd)
+        self.controller.view.selection()
 
     def onRClick(self, event):
         print("R-CLICK")
-        self.controller.network.stopServer()
+        #self.controller.network.stopServer()
+        print(self.controller.view.selected)
+        for unitSelected in self.controller.view.selected:
+            cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+            cmd.addData('X1', unitSelected.x)
+            cmd.addData('Y1', unitSelected.y)
+            cmd.addData('X2', event.x)
+            cmd.addData('Y2', event.y)
+            self.controller.network.client.sendCommand(cmd)
+            #cmd.addData('Unit', unit)
+            #unit.changerCible(event.x,event.y)
+
+
+
+    def onCenterClick(self, event):
+        cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
+        cmd.addData('X', event.x)
+        cmd.addData('Y', event.y)
+        self.controller.network.client.sendCommand(cmd)
+    
         
     def requestCloseWindow(self):
         self.controller.shutdown()
@@ -78,6 +98,10 @@ class EventListener:
             print("Create building baraque")
         elif param == 2:
             print("Create building hopital")
+
+
+        
+
 
 
 
