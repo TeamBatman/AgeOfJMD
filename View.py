@@ -81,22 +81,15 @@ class View(GWindow):
 
                 if carte[x][y].type == 0:
                     couleur = "#0B610B" #vert
-
-
                 elif carte[x][y].type == 1:
                     #couleur = "#D7DF01" #jaune
                     couleur = "#BFBF00"
-
-
                 elif carte[x][y].type == 2:
                     couleur = "#1C1C1C" #gris pale
-
                 elif carte[x][y].type == 3:
                     couleur = "#BDBDBD" #gris fonce
-
                 else:
                     couleur = "#2E9AFE" #bleu
-
                 self.canvas.create_rectangle(posX1,posY1,posX2,posY2,width=0,fill=couleur)
 
 
@@ -121,7 +114,7 @@ class View(GWindow):
             for unit in units:
                 self.canvas.create_rectangle(unit.x, unit.y, unit.x + 32, unit.y + 32, fill='blue', tags='unit')
 
-        self.drawMinimap(units, carte)
+        #self.drawMinimap(units, carte)
 
 
     def show(self):

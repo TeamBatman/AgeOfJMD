@@ -25,7 +25,7 @@ class Controller:
             self.view.update(self.model.units, self.model.carte.matrice)
 
         else:
-        	self.view.drawMinimap(self.model.units, self.model.carte.matrice)
+            pass #self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         
         self.view.after(20, self.mainLoop)
 
@@ -34,6 +34,7 @@ class Controller:
         """
         self.network.startServer()
         self.network.client.connect()
+        self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         self.mainLoop()
         self.view.show()
 
