@@ -138,10 +138,10 @@ class View(GWindow):
         xr = x1+self.positionX*item
         yr = y1+self.positionY*item
 
-        self.canvas.create_line(xr,yr,xr+17*item,yr,fill="red")
-        self.canvas.create_line(xr,yr,xr,yr+15*item,fill="red")
-        self.canvas.create_line(xr,yr+15*item,xr+17*item,yr+15*item,fill="red")
-        self.canvas.create_line(xr+17*item,yr,xr+17*item,yr+15*item,fill="red")
+        self.canvas.create_line(xr,yr,xr+16*item,yr,fill="red")
+        self.canvas.create_line(xr,yr,xr,yr+14*item,fill="red")
+        self.canvas.create_line(xr,yr+14*item,xr+16*item,yr+14*item,fill="red")
+        self.canvas.create_line(xr+16*item,yr,xr+16*item,yr+14*item,fill="red")
 
 
         self.drawMap(carte)
