@@ -88,7 +88,7 @@ class View(GWindow):
         y1 = self.positionY
         x2 = self.width - 250
         y2 = self.height - 100
-
+        #print("DEBUT MAP ", x1, y1)
         item = 48
         # self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue")
 
@@ -98,6 +98,7 @@ class View(GWindow):
                 posY1 = 0 + (y - y1) * item
                 posX2 = posX1 + item
                 posY2 = posY1 + item
+                #print("DrawMap",x,y,"Position",posX1,posY1,posX2,posY2)
 
                 if carte[x][y].type == 0:
                     couleur = "#0B610B"  #vert
@@ -168,11 +169,12 @@ class View(GWindow):
 
     def selection(self):
         print("selection")
+        item = 48
         self.selected = []  # Déselection
-        item = self.canvas.find_withtag(CURRENT)
-        if item:  # Si on a cliqué sur quelque chose
-            itemCoords = self.canvas.coords(item)
-            itemCoord = (itemCoords[0] + self.sizeUnit / 2, itemCoords[1] + self.sizeUnit / 2)
+        itemOnBoard = self.canvas.find_withtag(CURRENT)
+        if itemOnBoard:  # Si on a cliqué sur quelque chose
+            itemCoords = self.canvas.coords(itemOnBoard)
+            itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX*item), itemCoords[1] + self.sizeUnit / 2 + (self.positionY*item))
             for unit in self.eventListener.controller.model.units:
                 if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
                     self.selected.append(unit)  # Unité sélectionné
@@ -198,17 +200,42 @@ class View(GWindow):
         self.canvas.delete('unit')
 
         # Draw Units
-
+        item = 48
         if carte:
             self.drawMinimap(units, carte)
             self.drawMap(carte)
         for unit in units:
-            color = 'blue'
-            if unit in self.selected:
-                color = 'red'  # Unité sélectionné
-            self.canvas.create_rectangle(unit.x - self.sizeUnit / 2, unit.y - self.sizeUnit / 2,
-                                         unit.x + self.sizeUnit / 2, unit.y + self.sizeUnit / 2, fill=color,
-                                         tags='unit')
+            if self.isUnitShow(unit):
+                color = 'blue'
+                if unit in self.selected:
+                    color = 'red'  # Unité sélectionné
+                self.canvas.create_rectangle((unit.x - self.sizeUnit / 2)-(self.positionX*item), (unit.y - self.sizeUnit / 2)-(self.positionY*item),
+                                             (unit.x + self.sizeUnit / 2)-(self.positionX*item), (unit.y + self.sizeUnit / 2)-(self.positionY*item), fill=color,
+                                             tags='unit')
+
+    def isUnitShow(self, unit):
+        item = 48
+        grandeurX = 16
+        grandeurY = 14
+        
+        x1 = self.positionX * item
+        y1 = self.positionY *item
+        x2 = x1 + (grandeurX*item)
+        y2 = y1 + (grandeurY*item)
+        
+        #minimap
+        size = 106
+        #print("Carte",x1,y1,x2,y2)
+        unitX1 = unit.x - self.sizeUnit / 2
+        unitY1 = unit.y - self.sizeUnit / 2
+        unitX2 = unit.x + self.sizeUnit / 2
+        unitY2 = unit.y + self.sizeUnit / 2
+        #print("Unit",unitX1,unitY1,unitX2,unitY2)
+        if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2:
+            return True
+
+        return False
+            
 
     def show(self):
         self.root.mainloop()

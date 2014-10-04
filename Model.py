@@ -136,7 +136,7 @@ class Unit():
         for i in range(0,len(liste)):
             print(i, nom, liste[i].x, liste[i].y, "cout", liste[i].cout)
 
-    def aCoteMur(self,caseX,caseY): #Pour ne pas aller en diagonale est rentrer dans un mur
+    def aCoteMur(self,caseX,caseY): #Pour ne pas aller en diagonale et rentrer dans un mur
         #TODO BUG traverse un mur en diagonale
         if caseY-1 >= 0 :
             if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY-1].type == 0 :
@@ -146,10 +146,10 @@ class Unit():
             if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY-1].type  == 0:
                 return True
 
-        #if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY]  == 0 :
-        #    return False
-        #if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY]  == 0:
-        #    return False
+        if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY]  == 0 :
+            return False
+        if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY]  == 0:
+            return False
 
         if caseY+1 < self.parent.grandeurMat:
             if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY+1].type  == 0 :
@@ -242,15 +242,16 @@ class Paysan(Unit):
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, controller):
+        self.controller = controller
         self.units = []
-        self.grandeurMat = 20
+        self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
-        self.carte.createRessources()
+        #self.carte.createRessources()
 
 
         ###### Alex B #####
-        self.carte = Carte(106)
+        #self.carte = Carte(106)
 
         ###################
 
@@ -288,7 +289,12 @@ class Model:
     def trouverCaseMatrice(self,x,y):
         #TODO Linker avec la vue
         #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        grandeurCanevasRelle = self.grandeurMat * 32
+        item = 48
+        #print("ancien", x, y)
+        #x = x +(self.controller.view.positionX*item )
+        #y = y +(self.controller.view.positionY*item )
+        #print("nouveau", x, y)
+        grandeurCanevasRelle = self.grandeurMat * item #32
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         caseX = int(x/grandeurCase)
         caseY = int(y/grandeurCase)
@@ -298,7 +304,10 @@ class Model:
     def trouverCentreCase(self,caseX,caseY):
         #TODO Linker avec la vue
         #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        grandeurCanevasRelle = self.grandeurMat * 32
+        item = 48
+        #x = x -(self.controller.view.positionX*item )
+        #y = y -(self.controller.view.positionY*item )
+        grandeurCanevasRelle = self.grandeurMat * item#32
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         centreX = (grandeurCase * caseX) + grandeurCase/2
         centreY = (grandeurCase * caseY) + grandeurCase/2

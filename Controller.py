@@ -12,7 +12,7 @@ class Controller:
         de sorte à ce qu'ils n'aient pas accès entre eux directement.
     """
     def __init__(self):
-        self.model = Model()
+        self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
@@ -69,29 +69,31 @@ class EventListener:
 
     def onLClick(self, event):
         if event.x < 742 and event.y < 636:
-            cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-            cmd.addData('X', event.x)
-            cmd.addData('Y', event.y)
-        self.controller.view.selection()
+            #cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
+            #cmd.addData('X', event.x)
+            #cmd.addData('Y', event.y)
+            self.controller.view.selection()
 
         if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
             if event.y >= 18 and event.y <= 229:
                 self.controller.view.positionX = int((event.x - self.controller.view.width-233)/2)+233
                 self.controller.view.positionY = int((event.y - 18) /2)
-
+                print("pos x y", self.controller.view.positionX,self.controller.view.positionY)
                 self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
     def onRClick(self, event):
         print("R-CLICK")
+        item = 48
         #self.controller.network.stopServer()
         print(self.controller.view.selected)
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x)
-            cmd.addData('Y2', event.y)
+            cmd.addData('X2', event.x + (self.controller.view.positionX*item))
+            cmd.addData('Y2', event.y + (self.controller.view.positionY*item))
+            print(unitSelected.x,unitSelected.y, event.x + (self.controller.view.positionX*item),event.y + (self.controller.view.positionY*item))
             self.controller.network.client.sendCommand(cmd)
 
         
@@ -104,9 +106,10 @@ class EventListener:
 
 
     def onCenterClick(self, event):
+        item = 48
         cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-        cmd.addData('X', event.x)
-        cmd.addData('Y', event.y)
+        cmd.addData('X', event.x + (self.controller.view.positionX*item))
+        cmd.addData('Y', event.y + (self.controller.view.positionY*item))
         self.controller.network.client.sendCommand(cmd)
     
         
