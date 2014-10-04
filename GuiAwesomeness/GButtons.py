@@ -15,10 +15,6 @@ except ImportError:
     from tkinter import NW
 
 
-
-
-
-
 class GButton(GWidget):
     """ Un bouton custom utilisant une image. A etre palcer sur un canvas"""
 
@@ -89,7 +85,7 @@ class GButton(GWidget):
         """
         if state == GButton.FOCUS:
             self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[state])
-            #self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
+            # self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
         else:
             self.graphImage = ImageTk.PhotoImage(self.imageData[state])
             self.parent.itemconfig(self.btnItem, image=self.graphImage)
@@ -123,14 +119,34 @@ class GButton(GWidget):
 
 
 class GMediumButton(GButton):
+    def __init__(self, parent, text="", command=None, color=0, iconPath=None):
+        super(GMediumButton, self).__init__(parent, text, command, color)
 
-     def _determineColor(self, color):
+        self.imageData['ICON'] = Image.open(iconPath) if iconPath else Image.new('RGBA', (70, 70))
+        self.imageData['ICON'].thumbnail((70, 70), Image.ANTIALIAS)
+        self.icon = ImageTk.PhotoImage(self.imageData['ICON'])
+
+
+
+    def _determineColor(self, color):
         self.imageData[GButton.NORMAL] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med.png")
         self.imageData[GButton.PRESSED] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med_pressed.png")
         self.imageData[GButton.FOCUS] = Image.open('GuiAwesomeness/Gui/Buttons/buttonSquare_focus.png')
 
         self.width, self.height = self.imageData[GButton.NORMAL].size
         self.imageData[GButton.EMPTY] = Image.new('RGBA', (self.width, self.height))
+
+    def draw(self, x, y):
+        self.btnItem = self.parent.create_image(x, y, image=self.graphImage, anchor=NW, tags=self.id)
+
+        height, width = self.imageData["ICON"].size
+        check_x = x + self.width / 2 - width / 2
+        check_y = y + self.height / 2 - height / 2
+        self.getCanvas().create_image(check_x, check_y, anchor=NW, image=self.icon, tags=self.id)
+
+        self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
+        self._bindEvents()
+
 
 class GCheckButton(GButton):
     def __init__(self, parent, command=None, color=0):

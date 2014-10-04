@@ -20,11 +20,11 @@ class View(GWindow):
         # PARAMÈTRES DE BASE
         self.width = 1024
         self.height = 768
-        self.selected = []  #Liste qui contient ce qui est selectionné
+        self.selected = []  # Liste qui contient ce qui est selectionné
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
 
-        #POUR LES CASES
+        # POUR LES CASES
         self.multiplicateur = 32
         self.grandeurCanevas = 768
         self.sizeUnit = 32
@@ -49,7 +49,7 @@ class View(GWindow):
         for i in range(1, self.grandeurCanevas):
             self.canvas.create_line(i * self.multiplicateur, 0, i * self.multiplicateur,
                                     self.grandeurCanevas * self.multiplicateur)
-        #horizontales
+        # horizontales
         for i in range(1, self.grandeurCanevas):
             self.canvas.create_line(0, i * self.multiplicateur, self.grandeurCanevas * self.multiplicateur,
                                     i * self.multiplicateur)
@@ -72,12 +72,10 @@ class View(GWindow):
         self.sidePanel = GFrame(self.canvas, width=250, height=self.height - 250)
         self.sidePanel.draw(self.width - 250, 250)
 
-        self.buttonFerme = GMediumButton(self.canvas, None, self.createBuildingFerme, GButton.BROWN)
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingFerme,
+                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
         self.buttonFerme.draw(x=self.width - 222, y=280)
-        im = Image.open("Graphics/Buildings/Age_I/Farm.png")
-        im.thumbnail((70, 70), Image.ANTIALIAS)
-        self.imtk = ImageTk.PhotoImage(im)
-        self.canvas.create_image(self.width - 212, 285, anchor=NW, image=self.imtk)
+
         self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.createBuildingBaraque, GButton.GREY)
         self.buttonBaraque.draw(x=self.width - 123, y=280)
         self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
@@ -100,7 +98,7 @@ class View(GWindow):
             itemCoord = (itemCoords[0] + self.sizeUnit / 2, itemCoords[1] + self.sizeUnit / 2)
             for unit in self.eventListener.controller.model.units:
                 if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
-                    self.selected.append(unit)  #Unité sélectionné
+                    self.selected.append(unit)  # Unité sélectionné
                     break
 
     def bindEvents(self):
