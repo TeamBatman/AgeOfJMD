@@ -146,7 +146,7 @@ class Client:
 
             Client.outputDebug()
         except Exception as e:
-            pass # Cette erreur n'est pas nécessairement vraie...
+            pass  # Cette erreur n'est pas nécessairement vraie...
 
 
     def synchronize(self):
@@ -156,17 +156,15 @@ class Client:
         """
         if not self.host:
             raise ConnectionError("Impossible de SYNCHRONISER")
-        try:
-            response = self.host.getLatestCommand(self.id)
-            if response:
-                command = pickle.loads(response)
-                command = Command.buildFromDict(command)
-                return command
-            else:
-                return None
-        except:
-            print("fail")
+
+        response = self.host.getLatestCommand(self.id)
+        if response:
+            command = pickle.loads(response)
+            command = Command.buildFromDict(command)
+            return command
+        else:
             return None
+
 
     def sendCommand(self, command):
         """ Sends a command to a host in a serialized format
