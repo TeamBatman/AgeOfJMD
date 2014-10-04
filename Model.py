@@ -90,7 +90,13 @@ class Unit():
                 n.x = centreCase[0]
                 n.y = centreCase[1]
                 n = n.parent
-            #print(self.cheminTrace,"len", len(self.cheminTrace)) 
+            #print(self.cheminTrace,"len", len(self.cheminTrace))
+            if self.cheminTrace:
+                #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+                self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)
+            else:
+                self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
+                
             self.cibleX = self.cheminTrace[-1].x
             self.cibleY = self.cheminTrace[-1].y
 
