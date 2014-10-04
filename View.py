@@ -61,12 +61,10 @@ class View(GWindow):
         self.sidePanel = GFrame(self.canvas, width=250, height=self.height - 250)
         self.sidePanel.draw(self.width - 250, 250)
 
-        self.buttonFerme = GMediumButton(self.canvas, None, self.createBuildingFerme, GButton.BROWN)
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingFerme,
+                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
         self.buttonFerme.draw(x=self.width - 222, y=280)
-        im = Image.open("Graphics/Buildings/Age_I/Farm.png")
-        im.thumbnail((70, 70), Image.ANTIALIAS)
-        self.imtk = ImageTk.PhotoImage(im)
-        self.canvas.create_image(self.width - 212, 285, anchor=NW, image=self.imtk)
+
         self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.createBuildingBaraque, GButton.GREY)
         self.buttonBaraque.draw(x=self.width - 123, y=280)
         self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
