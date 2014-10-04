@@ -147,16 +147,22 @@ class View(GWindow):
 
         #self.canevasJeu.create_line(event.x-13*self.mCaisse,event.y-10*self.mCaisse, event.x+13*self.mCaisse,event.y-10*self.mCaisse,width=2,fill="white")
 
+    def drawRectMiniMap(self):
+        try:
+            self.canvas.delete('rectMiniMap')
+        except:
+            pass
+        
+        x1 = self.width - 233
+        y1 = 18
+        itemMini = 2 #La grandeur des cases pour la minimap
         xr = x1 + self.positionX * itemMini
         yr = y1 + self.positionY * itemMini
 
-        self.canvas.create_line(xr, yr, xr + 17 * itemMini, yr, fill="red")
-        self.canvas.create_line(xr, yr, xr, yr + 15 * itemMini, fill="red")
-        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red")
-        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red")
-
-        self.drawMap(carte)
-
+        self.canvas.create_line(xr, yr, xr + 17 * itemMini, yr, fill="red", tags='rectMiniMap')
+        self.canvas.create_line(xr, yr, xr, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
+        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
+        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
 
     def bindEvents(self):
         self.canvas.bind("<Button-1>", self.eventListener.onLClick)
@@ -196,7 +202,8 @@ class View(GWindow):
 
         # Draw Units
         if carte:
-            self.drawMinimap(units, carte)
+           # self.drawMinimap(units, carte)
+            self.drawRectMiniMap()
             self.drawMap(carte)
         for unit in units:
             if self.isUnitShow(unit):

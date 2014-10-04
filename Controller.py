@@ -40,6 +40,8 @@ class Controller:
         self.network.startServer()
         self.network.client.connect()
         self.view.drawMinimap(self.model.units, self.model.carte.matrice)
+        self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
         self.mainLoop()
         self.view.show()
     
@@ -70,13 +72,14 @@ class EventListener:
     def onLClick(self, event):
         if event.x < 742 and event.y < 636:
             self.controller.view.selection()
+            self.controller.view.update(self.controller.model.units, None)
 
         if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
             if event.y >= 18 and event.y <= 229:
                 self.controller.view.positionX = int((event.x - self.controller.view.width-233)/2)+233
                 self.controller.view.positionY = int((event.y - 18) /2)
-                self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+                #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
+                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
     def onRClick(self, event):
         print(self.controller.view.selected)
