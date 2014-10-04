@@ -95,9 +95,7 @@ class Unit():
             self.cibleY = self.cheminTrace[-1].y
 
     def aEtoile(self):
-        nbTour = 0
         nbNoeud = 400
-        tempsTotal = 0
         while self.open:
             n = self.open[0]
             if self.goal(n) == True:
@@ -120,7 +118,7 @@ class Unit():
                    self.open.append(nPrime)
 
                #Mettre dans le if aAjouter ?
-             #  time1= time.time() 
+             #  time1= time.time()
                self.open.sort(key=lambda x: x.cout)
                #tempsTotal += time.time()-time1
               # print("Temps sort: ", tempsTotal)
@@ -247,13 +245,6 @@ class Model:
         self.units = []
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
-        #self.carte.createRessources()
-
-
-        ###### Alex B #####
-        #self.carte = Carte(106)
-
-        ###################
 
     def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
@@ -287,14 +278,9 @@ class Model:
                     unit.changerCible(command.data['X2'], command.data['Y2'])
 
     def trouverCaseMatrice(self,x,y):
-        #TODO Linker avec la vue
-        #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        item = 48
-        #print("ancien", x, y)
-        #x = x +(self.controller.view.positionX*item )
-        #y = y +(self.controller.view.positionY*item )
-        #print("nouveau", x, y)
-        grandeurCanevasRelle = self.grandeurMat * item #32
+        #TODO ? Mettre dans la vue ?
+
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         caseX = int(x/grandeurCase)
         caseY = int(y/grandeurCase)
@@ -302,12 +288,9 @@ class Model:
         return (caseX, caseY)
 
     def trouverCentreCase(self,caseX,caseY):
-        #TODO Linker avec la vue
-        #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        item = 48
-        #x = x -(self.controller.view.positionX*item )
-        #y = y -(self.controller.view.positionY*item )
-        grandeurCanevasRelle = self.grandeurMat * item#32
+        #TODO ? Mettre dans la vue ?
+
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         centreX = (grandeurCase * caseX) + grandeurCase/2
         centreY = (grandeurCase * caseY) + grandeurCase/2

@@ -29,9 +29,10 @@ class View(GWindow):
         self.root.configure(background='#2B2B2B')
 
         # POUR LES CASES
-        self.multiplicateur = 32
-        self.grandeurCanevas = 768
         self.sizeUnit = 32
+        self.item = 48 #Grandeur d'un bloc (Carte)
+        self.nbCasesX = 16
+        self.nbCasesY = 14
 
         # ZONE DE DESSIN
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
@@ -88,17 +89,13 @@ class View(GWindow):
         y1 = self.positionY
         x2 = self.width - 250
         y2 = self.height - 100
-        #print("DEBUT MAP ", x1, y1)
-        item = 48
-        # self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue")
 
-        for x in range(x1, x1 + 16):
-            for y in range(y1, y1 + 14):
-                posX1 = 0 + (x - x1) * item
-                posY1 = 0 + (y - y1) * item
-                posX2 = posX1 + item
-                posY2 = posY1 + item
-                #print("DrawMap",x,y,"Position",posX1,posY1,posX2,posY2)
+        for x in range(x1, x1 + self.nbCasesX):
+            for y in range(y1, y1 + self.nbCasesY):
+                posX1 = 0 + (x - x1) * self.item
+                posY1 = 0 + (y - y1) * self.item
+                posX2 = posX1 + self.item
+                posY2 = posY1 + self.item
 
                 if carte[x][y].type == 0:
                     couleur = "#0B610B"  #vert
@@ -125,16 +122,15 @@ class View(GWindow):
         y2 = y1 + 211
 
         size = 106
-        item = 2
-        # self.canvas.create_rectangle(x1,y1,x2,y2, fill="blue", tags='miniMap')
+        itemMini = 2 #La grandeur des cases pour la minimap
 
         for x in range(0, size):
             for y in range(0, size):
 
-                posX1 = x1 + x * item
-                posY1 = y1 + y * item
-                posX2 = posX1 + item
-                posY2 = posY1 + item
+                posX1 = x1 + x * itemMini
+                posY1 = y1 + y * itemMini
+                posX2 = posX1 + itemMini
+                posY2 = posY1 + itemMini
 
                 if carte[x][y].type == 0:
                     couleur = "#0B610B"  #vert
@@ -151,13 +147,13 @@ class View(GWindow):
 
         #self.canevasJeu.create_line(event.x-13*self.mCaisse,event.y-10*self.mCaisse, event.x+13*self.mCaisse,event.y-10*self.mCaisse,width=2,fill="white")
 
-        xr = x1 + self.positionX * item
-        yr = y1 + self.positionY * item
+        xr = x1 + self.positionX * itemMini
+        yr = y1 + self.positionY * itemMini
 
-        self.canvas.create_line(xr, yr, xr + 17 * item, yr, fill="red")
-        self.canvas.create_line(xr, yr, xr, yr + 15 * item, fill="red")
-        self.canvas.create_line(xr, yr + 15 * item, xr + 17 * item, yr + 15 * item, fill="red")
-        self.canvas.create_line(xr + 17 * item, yr, xr + 17 * item, yr + 15 * item, fill="red")
+        self.canvas.create_line(xr, yr, xr + 17 * itemMini, yr, fill="red")
+        self.canvas.create_line(xr, yr, xr, yr + 15 * itemMini, fill="red")
+        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red")
+        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red")
 
         self.drawMap(carte)
 
@@ -169,12 +165,11 @@ class View(GWindow):
 
     def selection(self):
         print("selection")
-        item = 48
         self.selected = []  # Déselection
         itemOnBoard = self.canvas.find_withtag(CURRENT)
         if itemOnBoard:  # Si on a cliqué sur quelque chose
             itemCoords = self.canvas.coords(itemOnBoard)
-            itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX*item), itemCoords[1] + self.sizeUnit / 2 + (self.positionY*item))
+            itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX*self.item), itemCoords[1] + self.sizeUnit / 2 + (self.positionY*self.item))
             for unit in self.eventListener.controller.model.units:
                 if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
                     self.selected.append(unit)  # Unité sélectionné
@@ -200,7 +195,6 @@ class View(GWindow):
         self.canvas.delete('unit')
 
         # Draw Units
-        item = 48
         if carte:
             self.drawMinimap(units, carte)
             self.drawMap(carte)
@@ -209,28 +203,22 @@ class View(GWindow):
                 color = 'blue'
                 if unit in self.selected:
                     color = 'red'  # Unité sélectionné
-                self.canvas.create_rectangle((unit.x - self.sizeUnit / 2)-(self.positionX*item), (unit.y - self.sizeUnit / 2)-(self.positionY*item),
-                                             (unit.x + self.sizeUnit / 2)-(self.positionX*item), (unit.y + self.sizeUnit / 2)-(self.positionY*item), fill=color,
+                self.canvas.create_rectangle((unit.x - self.sizeUnit / 2)-(self.positionX*self.item), (unit.y - self.sizeUnit / 2)-(self.positionY*self.item),
+                                             (unit.x + self.sizeUnit / 2)-(self.positionX*self.item), (unit.y + self.sizeUnit / 2)-(self.positionY*self.item), fill=color,
                                              tags='unit')
 
     def isUnitShow(self, unit):
-        item = 48
-        grandeurX = 16
-        grandeurY = 14
-        
-        x1 = self.positionX * item
-        y1 = self.positionY *item
-        x2 = x1 + (grandeurX*item)
-        y2 = y1 + (grandeurY*item)
+        x1 = self.positionX * self.item
+        y1 = self.positionY * self.item
+        x2 = x1 + (self.nbCasesX * self.item)
+        y2 = y1 + (self.nbCasesY * self.item)
         
         #minimap
-        size = 106
-        #print("Carte",x1,y1,x2,y2)
         unitX1 = unit.x - self.sizeUnit / 2
         unitY1 = unit.y - self.sizeUnit / 2
         unitX2 = unit.x + self.sizeUnit / 2
         unitY2 = unit.y + self.sizeUnit / 2
-        #print("Unit",unitX1,unitY1,unitX2,unitY2)
+
         if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2:
             return True
 
