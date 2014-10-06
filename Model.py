@@ -19,7 +19,7 @@ class Unit():
         self.cheminTrace = []
         self.cibleXTrace = x
         self.cibleXTrace = y
-        self.mode = 0
+        self.mode = 0 #1=ressource
 
     def changerCible(self,cibleX ,cibleY):
         self.cibleX = cibleX
@@ -71,6 +71,7 @@ class Unit():
         if not self.parent.carte.matrice[casesCible[0]][casesCible[1]].type == 0 :
             if isinstance(self, Paysan):
                 print("ressource")
+                self.parent.enRessource.append(self)
                 self.mode = 1 # ressource
                 #TODO Changer le chemin pour aller à côté de la ressource !
             else:
@@ -241,18 +242,19 @@ class Noeud:
 class Paysan(Unit):
     def __init__(self, x, y, parent):
         Unit.__init__(self,x,y,parent)
-        self.vitesseRessource = 1 #La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.01 #La vitesse à ramasser des ressources
         self.nbRessourcesMax = 10
         self.nbRessources = 0
         self.typeRessource = 0 #0 = Rien 1 à 4 = Ressources
 
     def chercherRessources(self):
-        print(nbRessources)
+       # print(int(self.nbRessources))
         #TODO Regarder le type de la ressource !
-        if self.nbRessources + vitesseRessource <= self.nbRessourcesMax:
-            self.nbRessources = self.nbRessources + vitesseRessource
+        if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
+            self.nbRessources = self.nbRessources + self.vitesseRessource
         else:
             self.nbRessources = self.nbRessourcesMax
+            #print("MAX!", self.nbRessources)
             #TODO Faire retourner à la base !        
 
 
@@ -262,6 +264,7 @@ class Model:
         self.units = []
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
+        self.enRessource = [] #TODO ?À mettre dans Joueur?
 
     def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités

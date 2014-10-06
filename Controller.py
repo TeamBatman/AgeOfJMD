@@ -22,15 +22,14 @@ class Controller:
         if cmd:
             self.model.executeCommand(cmd)
 
-        
-
         for unit in self.model.units:
             try:
                 unit.deplacementTrace()
             except:
                 print("fail")
                 unit.deplacement()
-
+        for paysan in self.model.enRessource:
+            paysan.chercherRessources()
         self.view.update(self.model.units)
         self.view.after(20, self.mainLoop)
 
