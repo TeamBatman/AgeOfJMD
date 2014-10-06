@@ -82,7 +82,6 @@ class EventListener:
                 self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
     def onRClick(self, event):
-        print(self.controller.view.selected)
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)

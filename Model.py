@@ -19,6 +19,7 @@ class Unit():
         self.cheminTrace = []
         self.cibleXTrace = x
         self.cibleXTrace = y
+        self.mode = 0
 
     def changerCible(self,cibleX ,cibleY):
         self.cibleX = cibleX
@@ -65,12 +66,15 @@ class Unit():
         cases = self.parent.trouverCaseMatrice(self.x,self.y)
         caseX = cases[0]
         caseY = cases[1]
+        self.mode = 0
         casesCible = self.parent.trouverCaseMatrice(self.cibleX,self.cibleY)
         if not self.parent.carte.matrice[casesCible[0]][casesCible[1]].type == 0 :
             if isinstance(self, Paysan):
                 print("ressource")
+                self.mode = 1 # ressource
                 #TODO Changer le chemin pour aller à côté de la ressource !
-            return -1 # Ne peut pas aller sur un obstacle
+            else:
+                return -1 # Ne peut pas aller sur un obstacle
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
         
@@ -93,9 +97,13 @@ class Unit():
             #print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.cheminTrace:
                 #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-                self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)
+                if not self.mode == 1:#pas en mode ressource
+                    self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)
             else:
-                self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
+                if not self.mode == 1:#pas en mode ressource
+                    self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
+                else:
+                    self.cheminTrace.append(Noeud(None,self.x,self.y,None ,None))
                 
             self.cibleX = self.cheminTrace[-1].x
             self.cibleY = self.cheminTrace[-1].y
@@ -205,6 +213,8 @@ class Unit():
         
         if noeud.x == caseCibleX and noeud.y == caseCibleY:
             return True
+        elif abs(noeud.x - caseCibleX) <= 1 and abs(noeud.y - caseCibleY) <= 1 and self.mode == 1:#pour les ressources
+            return True
         return False
 
 
@@ -237,6 +247,7 @@ class Paysan(Unit):
         self.typeRessource = 0 #0 = Rien 1 à 4 = Ressources
 
     def chercherRessources(self):
+        print(nbRessources)
         #TODO Regarder le type de la ressource !
         if self.nbRessources + vitesseRessource <= self.nbRessourcesMax:
             self.nbRessources = self.nbRessources + vitesseRessource
