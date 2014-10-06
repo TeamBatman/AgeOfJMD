@@ -29,7 +29,10 @@ class Controller:
                 print("fail")
                 unit.deplacement()
         for paysan in self.model.enRessource:
-            paysan.chercherRessources()
+            if paysan.mode == 1:
+                paysan.chercherRessources()
+            else:
+                del paysan
         self.view.update(self.model.units)
         self.view.after(20, self.mainLoop)
 

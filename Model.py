@@ -22,6 +22,7 @@ class Unit():
         self.mode = 0 #1=ressource
 
     def changerCible(self,cibleX ,cibleY):
+        self.mode = 0
         self.cibleX = cibleX
         self.cibleY = cibleY
         self.choisirTrace()
@@ -248,8 +249,9 @@ class Paysan(Unit):
         self.typeRessource = 0 #0 = Rien 1 à 4 = Ressources
 
     def chercherRessources(self):
-       # print(int(self.nbRessources))
+        #print(int(self.nbRessources))
         #TODO Regarder le type de la ressource !
+        #TODO Enlever nbRessources à la case ressource !
         if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
             self.nbRessources = self.nbRessources + self.vitesseRessource
         else:
