@@ -80,7 +80,7 @@ class Server:
 
     def __init__(self, port=3333):
         self.port = port  # Le port du serveur
-        self.host = socket.gethostbyname(socket.gethostname())  # L'adresse IP du serveur. Détectée automatiquement
+        self.host = socket.gethostbyname("127.0.0.1")  # L'adresse IP du serveur. Détectée automatiquement
         if LOCAL_TEST:
             self.host = '127.0.0.1'
 
