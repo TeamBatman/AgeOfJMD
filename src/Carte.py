@@ -29,10 +29,10 @@ class Carte(object):
 		#Distribution de la ressource selon le pourcentage
 		for x in range(0,self.size):
 			for y in range(0,self.size):
-				if self.matrice[x][y].type < 55:
+				if self.matrice[x][y].type < 62:
 					self.matrice[x][y].type = 0
 
-				elif self.matrice[x][y].type < 60:
+				elif self.matrice[x][y].type < 67:
 					self.matrice[x][y].type = 1
 
 				elif self.matrice[x][y].type < 72:
