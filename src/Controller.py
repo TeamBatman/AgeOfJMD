@@ -122,9 +122,24 @@ class EventListener:
         if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
             if 18 <= event.y <= 229:
                 self.controller.view.deleteSelectionSquare()#selection de la carte
-                
-                self.controller.view.positionX = int((event.x - self.controller.view.width - 233) / 2) + 233
-                self.controller.view.positionY = int((event.y - 18) / 2)
+
+                posClicX = int((event.x - self.controller.view.width-233)/2)+233
+                posClicY = int((event.y - 18) /2)
+
+                posRealX = posClicX - 8
+                posRealY = posClicY - 7
+
+                if posRealX < 0:
+                    posRealX = 0
+                elif posRealX > 89:
+                    posRealX = 89
+                if posRealY < 0:
+                    posRealY = 0
+                elif posRealY > 91:
+                    posRealY = 91
+
+                self.controller.view.positionX = posRealX
+                self.controller.view.positionY = posRealY
                 # self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
                 self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
         else:
