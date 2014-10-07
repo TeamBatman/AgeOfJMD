@@ -143,7 +143,21 @@ class View(GWindow):
                     couleur = "#2E9AFE"  #bleu
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags='miniMap')
 
-        #self.canevasJeu.create_line(event.x-13*self.mCaisse,event.y-10*self.mCaisse, event.x+13*self.mCaisse,event.y-10*self.mCaisse,width=2,fill="white")
+    def drawMiniUnits(self, units):
+        try:
+            self.canvas.delete('miniUnits')
+        except:
+            pass
+        color = 'red'
+        item = 2
+        for unit in units:
+            caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x,unit.y)
+            x1 = (self.width - 233) + (caseX * item)
+            y1 = 18 + (caseY * item)
+            x2 = x1+item
+            y2 = y1+item
+            self.canvas.create_rectangle(x1,y1,x2,y2, fill=color, tags='miniUnits')
+
 
     def drawRectMiniMap(self):
         try:
@@ -203,6 +217,9 @@ class View(GWindow):
            # self.drawMinimap(units, carte)
             self.drawRectMiniMap()
             self.drawMap(carte)
+
+
+        self.drawMiniUnits(units)
         for unit in units:
             if self.isUnitShow(unit):
                 color = 'blue'
