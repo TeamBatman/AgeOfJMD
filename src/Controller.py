@@ -82,8 +82,7 @@ class EventListener:
         self.controller.view.resetSelection()
 
         # Minimap
-        if event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22:
-            if event.y >= 18 and event.y <= 229:
+        if (event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22) and (event.y >= 18 and event.y <= 229):
                 posClicX = int((event.x - self.controller.view.width-233)/2)+233
                 posClicY = int((event.y - 18) /2)
 
@@ -92,13 +91,10 @@ class EventListener:
 
                 if posRealX < 0:
                     posRealX = 0
-
                 elif posRealX > 89:
                     posRealX = 89
-
                 if posRealY < 0:
                     posRealY = 0
-
                 elif posRealY > 91:
                     posRealY = 91
 
@@ -108,6 +104,11 @@ class EventListener:
                 #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
                 self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
+        elif event.y < self.controller.view.height - 100:
+            self.leftClickPos = (event.x, event.y)
+            self.controller.view.resetSelection()
+
+
     def onLRelease(self, event):
 
         if not (self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22):
@@ -116,13 +117,23 @@ class EventListener:
             self.controller.view.deleteSelectionSquare()
             self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
 
+
     def onMouseMotion(self, event):
-        x1, y1 = self.leftClickPos
-        x2, y2 = event.x, event.y
+        if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
+            if 18 <= event.y <= 229:
+                self.controller.view.deleteSelectionSquare()#selection de la carte
+                
+                self.controller.view.positionX = int((event.x - self.controller.view.width - 233) / 2) + 233
+                self.controller.view.positionY = int((event.y - 18) / 2)
+                # self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
+                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+        else:
+            x1, y1 = self.leftClickPos
+            x2, y2 = event.x, event.y
+            self.controller.view.carreSelection(x1, y1, x2, y2)
 
         # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
-        self.controller.view.carreSelection(x1, y1, x2, y2)
-
+        #
 
 
 
