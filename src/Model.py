@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import division
 from Commands import Command
 from Carte import Carte
+from GraphicsManagement import SpriteSheet
 
 import time
-from GraphicsManagement import SpriteSheet
 
 
 class Unit():
@@ -20,6 +21,7 @@ class Unit():
         self.cheminTrace = []
         self.cibleXTrace = x
         self.cibleXTrace = y
+        self.mode = 0  # 1=ressource
 
         # ANIMATION
         self.lastAnimtaionTime = time.time()
@@ -32,26 +34,6 @@ class Unit():
         activeFrameKey = '%s_%s' % (self.animDirection, self.animFrameIndex)
         self.activeFrame = self.spriteSheet.frames[activeFrameKey]
         self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
-
-
-    def changerCible(self, cibleX, cibleY):
-        self.cibleX = cibleX
-        self.cibleY = cibleY
-        self.choisirTrace()
-
-    def deplacement(self):
-        if abs(self.cibleX - self.x) <= self.vitesse:
-            self.x = self.cibleX
-        if abs(self.cibleY - self.y) <= self.vitesse:
-            self.y = self.cibleY
-        if self.cibleX > self.x:
-            self.x += self.vitesse
-        elif self.cibleX < self.x:
-            self.x -= self.vitesse
-        if self.cibleY > self.y:
-            self.y += self.vitesse
-        elif self.cibleY < self.y:
-            self.y -= self.vitesse
 
     def animer(self):
         """ Lance l'animation de l'unité
@@ -78,6 +60,38 @@ class Unit():
             print("unit fail")
             self.deplacement()
 
+
+    def changerCible(self, cibleX, cibleY):
+        self.mode = 0
+        self.cibleX = cibleX
+        self.cibleY = cibleY
+        self.choisirTrace()
+
+    def deplacement(self):
+        if abs(self.cibleX - self.x) <= self.vitesse:
+            self.x = self.cibleX
+        if abs(self.cibleY - self.y) <= self.vitesse:
+            self.y = self.cibleY
+
+        if self.cibleX > self.x:
+            self.x += self.vitesse
+            self.animDirection = 'RIGHT'
+
+
+        elif self.cibleX < self.x:
+            self.x -= self.vitesse
+            self.animDirection = 'LEFT'
+
+        if self.cibleY > self.y:
+            self.y += self.vitesse
+            self.animDirection = 'DOWN'
+
+        elif self.cibleY < self.y:
+            self.y -= self.vitesse
+            self.animDirection = 'UP'
+
+        # Puisqu'il y a eu un déplacement
+        self.animer()
 
     def deplacementTrace(self):
         if len(self.cheminTrace) > 0:
@@ -117,16 +131,21 @@ class Unit():
             # Puisqu'il y a eu un déplacement
             self.animer()
 
+
     def choisirTrace(self):
         cases = self.parent.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
         caseY = cases[1]
+        self.mode = 0
         casesCible = self.parent.trouverCaseMatrice(self.cibleX, self.cibleY)
         if not self.parent.carte.matrice[casesCible[0]][casesCible[1]].type == 0:
             if isinstance(self, Paysan):
                 print("ressource")
+                self.parent.enRessource.append(self)
+                self.mode = 1  # ressource
                 # TODO Changer le chemin pour aller à côté de la ressource !
-            return -1  # Ne peut pas aller sur un obstacle
+            else:
+                return -1  # Ne peut pas aller sur un obstacle
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
 
@@ -136,7 +155,7 @@ class Unit():
         self.open.append(noeudInit)
         time1 = time.time()
         chemin = self.aEtoile()
-        # print("Temps a*: ", time.time() - time1)
+        print("Temps a*: ", time.time() - time1)
         n = chemin
         if not n == -1:
             self.cheminTrace = []
@@ -148,10 +167,14 @@ class Unit():
                 n = n.parent
             # print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.cheminTrace:
-                # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-                self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
+                #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+                if not self.mode == 1:  #pas en mode ressource
+                    self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
             else:
-                self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
+                if not self.mode == 1:  #pas en mode ressource
+                    self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
+                else:
+                    self.cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
             self.cibleX = self.cheminTrace[-1].x
             self.cibleY = self.cheminTrace[-1].y
@@ -180,13 +203,13 @@ class Unit():
                     self.open.append(nPrime)
 
                     # Mettre dans le if aAjouter ?
-                    # time1= time.time()
+                    #  time1= time.time()
                 self.open.sort(key=lambda x: x.cout)
                 # tempsTotal += time.time()-time1
                 # print("Temps sort: ", tempsTotal)
                 if len(self.open) > nbNoeud:
-                    # self.afficherList("open", self.open)
-                    # return -1
+                    #self.afficherList("open", self.open)
+                    #return -1
                     self.open = self.open[:nbNoeud]
                     #print(len(self.open))
                     #self.parent.parent.v.afficherCourantPath(self.open)
@@ -197,7 +220,7 @@ class Unit():
             print(i, nom, liste[i].x, liste[i].y, "cout", liste[i].cout)
 
     def aCoteMur(self, caseX, caseY):  # Pour ne pas aller en diagonale et rentrer dans un mur
-        # TODO BUG traverse un mur en diagonale
+        #TODO BUG traverse un mur en diagonale
         if caseY - 1 >= 0:
             if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY - 1].type == 0:
                 return True
@@ -257,12 +280,16 @@ class Unit():
 
         return caseTransition
 
+
     def goal(self, noeud):
         casesCible = self.parent.trouverCaseMatrice(self.cibleX, self.cibleY)
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
 
         if noeud.x == caseCibleX and noeud.y == caseCibleY:
+            return True
+        elif abs(noeud.x - caseCibleX) <= 1 and abs(
+                        noeud.y - caseCibleY) <= 1 and self.mode == 1:  # pour les ressources
             return True
         return False
 
@@ -273,8 +300,7 @@ class Noeud:
         self.x = x
         self.y = y
         self.cout = 0
-
-        if parent:
+        if not (parent == None):
             self.calculerCout(cibleX, cibleY)
 
     def calculerCout(self, cibleX, cibleY):
@@ -292,18 +318,21 @@ class Noeud:
 class Paysan(Unit):
     def __init__(self, x, y, parent):
         Unit.__init__(self, x, y, parent)
-        self.vitesseRessource = 1  # La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 10
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
 
     def chercherRessources(self):
-        # TODO Regarder le type de la ressource !
+        # print(int(self.nbRessources))
+        #TODO Regarder le type de la ressource !
+        #TODO Enlever nbRessources à la case ressource !
         if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
-            self.nbRessources += self.vitesseRessource
+            self.nbRessources = self.nbRessources + self.vitesseRessource
         else:
             self.nbRessources = self.nbRessourcesMax
-            # TODO Faire retourner à la base !
+            #print("MAX!", self.nbRessources)
+            #TODO Faire retourner à la base !        
 
 
 class Model:
@@ -312,6 +341,16 @@ class Model:
         self.units = []
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
+        self.enRessource = []  # TODO ?À mettre dans Joueur?
+
+
+    def update(self):
+        self.updateUnits()
+
+    def updateUnits(self):
+        for unit in self.units:
+            unit.update()
+
 
     def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
@@ -352,7 +391,7 @@ class Model:
         caseX = int(x / grandeurCase)
         caseY = int(y / grandeurCase)
 
-        return caseX, caseY
+        return (caseX, caseY)
 
     def trouverCentreCase(self, caseX, caseY):
         # TODO ? Mettre dans la vue ?
@@ -362,12 +401,4 @@ class Model:
         centreX = (grandeurCase * caseX) + grandeurCase / 2
         centreY = (grandeurCase * caseY) + grandeurCase / 2
 
-        return centreX, centreY
-
-
-    def update(self):
-        self.updateUnits()
-
-    def updateUnits(self):
-        for unit in self.units:
-            unit.update()
+        return (centreX, centreY)

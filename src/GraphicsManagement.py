@@ -58,7 +58,7 @@ class SpriteSheet():
 
 
 def colorizeImage(pilImg):
-    """ Met une image PIL en rouge
+    """ Met une image PIL en bleu
     :param pilImg: l'image PIL
     :return: l'image PIl en rouge
     """
@@ -72,7 +72,7 @@ def colorizeImage(pilImg):
     # this keeps tha alpha channel in the new image
 
     # GREY SCALE L L L A
-    pilImg = Image.merge('RGBA', (S, L, L, A))
+    pilImg = Image.merge('RGBA', (L, L, S, A))
 
     # save
     return pilImg
