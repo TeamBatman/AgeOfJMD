@@ -21,10 +21,15 @@ class Controller:
         self.refreshRate = 64  # Nombre de fois par seconde
 
     def mainLoop(self):
-        command = self.network.client.synchronize()
-        if command:
-            self.model.executeCommand(command)
+        cmd = self.network.client.synchronize()
+        if cmd:
+            self.model.executeCommand(cmd)
 
+        for paysan in self.model.enRessource:
+            if paysan.mode == 1:
+                paysan.chercherRessources()
+            else:
+                del paysan
         self.model.update()
 
         self.view.update(self.model.units)
@@ -68,7 +73,6 @@ class EventListener:
 
 
     def onRClick(self, event):
-        # print(self.controller.view.selected)
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)
