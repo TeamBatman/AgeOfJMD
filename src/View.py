@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from GraphicsManagement import GraphicsManager
+
 try:
     from tkinter import *  # Python 3
 except ImportError:
@@ -30,7 +32,7 @@ class View(GWindow):
 
         # POUR LES CASES
         self.sizeUnit = 32
-        self.item = 48 #Grandeur d'un bloc (Carte)
+        self.item = 48  # Grandeur d'un bloc (Carte)
         self.nbCasesX = 16
         self.nbCasesY = 14
 
@@ -45,7 +47,7 @@ class View(GWindow):
         # LE HUD
         self.drawHUD()
 
-        #self.afficherLigne()
+        # self.afficherLigne()
 
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
@@ -96,16 +98,19 @@ class View(GWindow):
                 posY2 = posY1 + self.item
 
                 if carte[x][y].type == 0:
-                    couleur = "#0B610B"  #vert
+                    couleur = "#0B610B"  # vert
+                    #self.canvas.create_image(posX1, posY1,
+                    #                         image=ImageTk.PhotoImage(GraphicsManager.get('Graphics/World/grass.png')))
+                    #continue
                 elif carte[x][y].type == 1:
-                    #couleur = "#D7DF01" #jaune
+                    # couleur = "#D7DF01" #jaune
                     couleur = "#BFBF00"
                 elif carte[x][y].type == 2:
-                    couleur = "#1C1C1C"  #gris pale
+                    couleur = "#1C1C1C"  # gris pale
                 elif carte[x][y].type == 3:
-                    couleur = "#BDBDBD"  #gris fonce
+                    couleur = "#BDBDBD"  # gris fonce
                 else:
-                    couleur = "#2E9AFE"  #bleu
+                    couleur = "#2E9AFE"  # bleu
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags='carte')
 
 
@@ -120,7 +125,7 @@ class View(GWindow):
         y2 = y1 + 211
 
         size = 106
-        itemMini = 2 #La grandeur des cases pour la minimap
+        itemMini = 2  # La grandeur des cases pour la minimap
 
         for x in range(0, size):
             for y in range(0, size):
@@ -131,17 +136,18 @@ class View(GWindow):
                 posY2 = posY1 + itemMini
 
                 if carte[x][y].type == 0:
-                    couleur = "#0B610B"  #vert
+                    couleur = "#0B610B"  # vert
                 elif carte[x][y].type == 1:
-                    #couleur = "#D7DF01" #jaune
+                    # couleur = "#D7DF01" #jaune
                     couleur = "#BFBF00"
                 elif carte[x][y].type == 2:
-                    couleur = "#1C1C1C"  #gris pale
+                    couleur = "#1C1C1C"  # gris pale
                 elif carte[x][y].type == 3:
-                    couleur = "#BDBDBD"  #gris fonce
+                    couleur = "#BDBDBD"  # gris fonce
                 else:
-                    couleur = "#2E9AFE"  #bleu
+                    couleur = "#2E9AFE"  # bleu
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags='miniMap')
+
 
     def drawMiniUnits(self, units):
         try:
@@ -164,40 +170,81 @@ class View(GWindow):
             self.canvas.delete('rectMiniMap')
         except:
             pass
-        
+
         x1 = self.width - 233
         y1 = 18
-        itemMini = 2 #La grandeur des cases pour la minimap
+        itemMini = 2  # La grandeur des cases pour la minimap
         xr = x1 + self.positionX * itemMini
         yr = y1 + self.positionY * itemMini
 
         self.canvas.create_line(xr, yr, xr + 17 * itemMini, yr, fill="red", tags='rectMiniMap')
         self.canvas.create_line(xr, yr, xr, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
-        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
-        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
-
-    def bindEvents(self):
-        self.canvas.bind("<Button-1>", self.eventListener.onLClick)
-        self.canvas.bind("<Button-3>", self.eventListener.onRClick)
+        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red",
+                                tags='rectMiniMap')
+        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red",
+                                tags='rectMiniMap')
 
 
-    def selection(self):
-        print("selection")
-        self.selected = []  # Déselection
-        itemOnBoard = self.canvas.find_withtag(CURRENT)
-        if itemOnBoard:  # Si on a cliqué sur quelque chose
-            itemCoords = self.canvas.coords(itemOnBoard)
-            itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX*self.item), itemCoords[1] + self.sizeUnit / 2 + (self.positionY*self.item))
-            for unit in self.eventListener.controller.model.units:
+
+
+
+
+    def resetSelection(self):
+        """ Met la sélection à 0 (désélection
+        """
+        self.selected = []
+
+
+    def detectSelected(self, x1, y1, x2, y2, units):
+        """ Ajoute toutes les unités sélectionné dans le carré spécifié
+        :param units: All the possible units
+        :param x1: coord x du point haut gauche
+        :param y1: coord y du point haut gauche
+        :param x2: coord x du point bas droite
+        :param y2: coord y du point bas droite
+        """
+        items = self.canvas.find_overlapping(x1, y1, x2, y2)
+        for item in items:
+            itemCoords = self.canvas.coords(item)
+            itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX * self.item),
+                         itemCoords[1] + self.sizeUnit / 2 + (self.positionY * self.item))
+            for unit in units:
                 if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
                     self.selected.append(unit)  # Unité sélectionné
-                    break
+
+
+
+
+
+
+
+
+    def carreSelection(self, x1, y1, x2, y2):
+        self.deleteSelectionSquare()
+        self.canvas.create_rectangle(x1, y1, x2, y2, outline='blue', tags='selection_square')
+
+    def deleteSelectionSquare(self):
+        self.canvas.delete('selection_square')
+
+
+
+
 
     def bindEvents(self):
-        self.canvas.bind("<Button-1>", self.eventListener.onLClick)
         self.canvas.bind("<Button-2>", self.eventListener.onCenterClick)
         self.canvas.bind("<Button-3>", self.eventListener.onRClick)
+
+        self.canvas.bind('<ButtonPress-1>', self.eventListener.onLPress)
+        self.canvas.bind('<B1-Motion>', self.eventListener.onMouseMotion)
+        self.canvas.bind('<ButtonRelease-1>', self.eventListener.onLRelease)
+
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.requestCloseWindow)
+
+
+
+
+
+
 
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
@@ -214,7 +261,7 @@ class View(GWindow):
 
         # Draw Units
         if carte:
-           # self.drawMinimap(units, carte)
+            # self.drawMinimap(units, carte)
             self.drawRectMiniMap()
             self.drawMap(carte)
 
@@ -222,20 +269,24 @@ class View(GWindow):
         self.drawMiniUnits(units)
         for unit in units:
             if self.isUnitShow(unit):
-                color = 'blue'
+                img = unit.activeFrame
                 if unit in self.selected:
-                    color = 'red'  # Unité sélectionné
-                self.canvas.create_rectangle((unit.x - self.sizeUnit / 2)-(self.positionX*self.item), (unit.y - self.sizeUnit / 2)-(self.positionY*self.item),
-                                             (unit.x + self.sizeUnit / 2)-(self.positionX*self.item), (unit.y + self.sizeUnit / 2)-(self.positionY*self.item), fill=color,
-                                             tags='unit')
+                    img = unit.activeOutline,
+
+                self.canvas.create_image((unit.x - self.sizeUnit / 2) - (self.positionX * self.item),
+                                         (unit.y - self.sizeUnit / 2) - (self.positionY * self.item),
+                                         anchor=NW,
+                                         image=img,
+                                         tags='unit')
+
 
     def isUnitShow(self, unit):
         x1 = self.positionX * self.item
         y1 = self.positionY * self.item
         x2 = x1 + (self.nbCasesX * self.item)
         y2 = y1 + (self.nbCasesY * self.item)
-        
-        #minimap
+
+        # minimap
         unitX1 = unit.x - self.sizeUnit / 2
         unitY1 = unit.y - self.sizeUnit / 2
         unitX2 = unit.x + self.sizeUnit / 2
@@ -245,7 +296,7 @@ class View(GWindow):
             return True
 
         return False
-            
+
 
     def show(self):
         self.root.mainloop()
