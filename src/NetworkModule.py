@@ -146,7 +146,7 @@ class Client:
 
             Client.outputDebug()
         except Exception as e:
-            pass # Cette erreur n'est pas nécessairement vraie...
+            pass  # Cette erreur n'est pas nécessairement vraie...
 
 
     def synchronize(self):
@@ -165,6 +165,7 @@ class Client:
         else:
             return None
 
+
     def sendCommand(self, command):
         """ Sends a command to a host in a serialized format
         :param command: the command to send to the host
@@ -182,6 +183,9 @@ class Client:
     def outputDebug(msg):
         if CLIENT_DEBUG_VERBOSE:
             print(msg)
+            
+    def disconnect(self):
+        self.host.leave(self.id)
 
 
 class NetworkController:

@@ -103,9 +103,7 @@ class GButton(GWidget):
         self.parent.tag_bind(self.eventMonitor, '<ButtonRelease-1>', self.onRelease)
 
     def onFocus(self, event):
-        print("ON FOCUS START")
         self.drawState(GButton.FOCUS)
-        print("ON FOCUS END")
 
     def onLeave(self, event):
         self.drawState(GButton.NORMAL)
@@ -120,7 +118,17 @@ class GButton(GWidget):
             self.command()
 
 
+
 class GMediumButton(GButton):
+    def __init__(self, parent, text="", command=None, color=0, iconPath=None):
+        super(GMediumButton, self).__init__(parent, text, command, color)
+
+        self.imageData['ICON'] = Image.open(iconPath) if iconPath else Image.new('RGBA', (70, 70))
+        self.imageData['ICON'].thumbnail((70, 70), Image.ANTIALIAS)
+        self.icon = ImageTk.PhotoImage(self.imageData['ICON'])
+
+
+
     def _determineColor(self, color):
         self.imageData[GButton.NORMAL] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med.png")
         self.imageData[GButton.PRESSED] = Image.open("GuiAwesomeness/Gui/Buttons/buttonSquare_med_pressed.png")
@@ -128,6 +136,21 @@ class GMediumButton(GButton):
 
         self.width, self.height = self.imageData[GButton.NORMAL].size
         self.imageData[GButton.EMPTY] = Image.new('RGBA', (self.width, self.height))
+
+    def draw(self, x, y):
+        self.btnItem = self.parent.create_image(x, y, image=self.graphImage, anchor=NW, tags=self.id)
+
+        height, width = self.imageData["ICON"].size
+        check_x = x + self.width / 2 - width / 2
+        check_y = y + self.height / 2 - height / 2
+        self.getCanvas().create_image(check_x, check_y, anchor=NW, image=self.icon, tags=self.id)
+
+        self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
+        self._bindEvents()
+
+
+
+
 
 
 class GCheckButton(GButton):
