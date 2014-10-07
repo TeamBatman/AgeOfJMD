@@ -82,8 +82,6 @@ class EventListener:
             self.controller.network.client.sendCommand(cmd)
 
     def onLPress(self, event):
-        self.leftClickPos = (event.x, event.y)
-        self.controller.view.resetSelection()
 
         # Minimap
         if (event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22) and (event.y >= 18 and event.y <= 229):
