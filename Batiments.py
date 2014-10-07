@@ -9,7 +9,7 @@ import Model
 
 
 class Batiment:
-    def __init__(self,parent, posX, posY):
+    def __init__(self, parent, posX, posY):
         self.posX = posX
         self.posY = posY
         self.peutEtreOccupe = False
@@ -18,21 +18,20 @@ class Batiment:
         self.estSelectionne = False
         self.type = ""
         self.parent = parent
-        self.recherchesCompletes = 0  #compte le nombre de recherches completées pour savoir si l'on peux en faire une nouvelle
-                                      #probabalement à remplacer avec une liste de recherches complétées dans le parent
-        self.enRecherche = False #booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche
-        self.enCreation = False #booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
+        self.rechercheCompletee = False
+        self.enRecherche = False  #booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche
+        self.enCreation = False  #booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
 
     def detruire(self):
-        self.sortirUnites(self.parent)
+        self.sortirUnites()
         for batiment in self.parent.batiments:
-                if batiment.posX == self.posX:
-                    if batiment.posY == self.posY:
-                        self.parent.batiments.remove(batiment)
-                        self.retourRessources()
-                        return
+            if batiment.posX == self.posX:
+                if batiment.posY == self.posY:
+                    self.parent.batiments.remove(batiment)
+                    self.retourRessources()
+                    return
 
     def retourRessources(self):
         #A trouver les valeurs à retourner
@@ -71,40 +70,43 @@ class Batiment:
             if self.estOccupe == True:
                 for i in range(0, self.parent.unites):
                     if self.parent.unites[i].batiment == self:
-                        self.parent.unites[i].batiment == 0
-
+                        self.parent.unites[i].batiment == None
 
 
 class Eglise(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
         self.type = "Eglise"
+        self.tempsDerniereFete = 0
 
 
     def recherche1(self):  #Boost Moral
         if self.parent.epoque == 2:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
-                    self.parent.bois -= 50
-                    self.enRecherche = True
-                    self.tempsDepartRecherche = time.time()
+                    if time.time() - self.tempsDerniereFete >= 60:
+                        self.parent.bois -= 50
+                        self.enRecherche = True
+                        self.tempsDepartRecherche = time.time()
             elif time.time() - self.tempsDepartRecherche <= 60:
-                self.parent.moral=100
+                self.parent.moral = 100
                 self.enRecherche = False
+                self.tempsDerniereFete = time.time()
         else:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
-                    self.parent.bois -= 50
-                    self.enRecherche = True
-                    self.tempsDepartRecherche = time.time()
+                    if time.time() - self.tempsDerniereFete >= 60:
+                        self.parent.bois -= 50
+                        self.enRecherche = True
+                        self.tempsDepartRecherche = time.time()
             elif time.time() - self.tempsDepartRecherche <= 120:
-                self.parent.moral=100
+                self.parent.moral = 100
                 self.enRecherche = False
+                self.tempsDerniereFete = time.time()
 
     def miseAJour(self):
         if self.enRecherche:
             self.recherche1()
-
 
 
 class TourDeGuet(Batiment):
@@ -114,7 +116,10 @@ class TourDeGuet(Batiment):
 
     def recherche1(self):  #Meilleure vue du Fog of war
         if self.parent.epoque == 2:
-            if self.recherchesCompletes < 1:
+            for recherche in self.parent.recherche:
+                if recherche == "Tour1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -122,11 +127,14 @@ class TourDeGuet(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
                     #TODO Decouverir comment le FOW fonctionnera
-                    self.recherchesCompletes += 1
                     self.enRecherche = False
+                    self.parent.recherche.append("Tour1")
 
         else:
-            if self.recherchesCompletes < 2:
+            for recherche in self.parent.recherche:
+                if recherche == "Tour2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -134,8 +142,10 @@ class TourDeGuet(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
                     #TODO Decouverir comment le FOW fonctionnera
-                    self.recherchesCompletes += 1
                     self.enRecherche = False
+                    self.parent.recherche.append("Tour2")
+
+        self.rechercheCompletee = False
 
     def miseAJour(self):
         if self.enRecherche:
@@ -155,17 +165,19 @@ class Hopital(Batiment):
         pass
 
     def recherche1(self):  #Amélioration du healing
-        if self.recherchesCompletes < 1:
-            if self.recherchesCompletes < 1:
-                if self.enRecherche == False:
-                    if self.parent.bois >= 50:
-                        self.parent.bois -= 50
-                        self.enRecherche = True
-                        self.tempsDepartRecherche = time.time()
-                elif time.time() - self.tempsDepartRecherche <= 60:
-                    self.recherchesCompletes += 1
-                    self.enRecherche = False
-                    #TODO decouvrir comment la regeneration va se faire
+        for recherche in self.parent.recherche:
+            if recherche == "Hopital":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
+            if self.enRecherche == False:
+                if self.parent.bois >= 50:
+                    self.parent.bois -= 50
+                    self.enRecherche = True
+                    self.tempsDepartRecherche = time.time()
+            elif time.time() - self.tempsDepartRecherche <= 60:
+                self.enRecherche = False
+                self.parent.recherche.append("Hopital")
+                #TODO decouvrir comment la regeneration va se faire
 
     def miseAJour(self):
         if self.enRecherche:
@@ -187,49 +199,58 @@ class Base(Batiment):
                 self.tempsDepartCreation = time.time()
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.units.append(Paysan(self.posX+4, self.posY+4, self.parent))
+            self.parent.units.append(Paysan(self.posX + 4, self.posY + 4, self.parent))
             self.enCreation = False
 
 
     def recherche1(self):  #meilleure vitesse de création de paysans
         if self.parent.epoque == 1:
-            if self.recherchesCompletes < 1:
+            for recherche in self.parent.recherche:
+                if recherche == "Paysan Vitesse 1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
-                    self.recherchesCompletes += 1
                     self.enRecherche = False
-                    self.vitesseDeCreation = self.vitesseDeCreation*0.9
-                    self.recherchesCompletes += 1
+                    self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                    self.rechercheCompletee = False
+                    self.parent.recherche.append("Paysan Vitesse 1")
 
         elif self.parent.epoque == 2:
-            if self.recherchesCompletes < 2:
-               if self.enRecherche == False:
-                   if self.parent.bois >= 50:
-                        self.parent.bois -= 50
-                        self.enRecherche = True
-                        self.tempsDepartRecherche = time.time()
-               elif time.time() - self.tempsDepartRecherche >= 60:
-                    self.recherchesCompletes += 1
-                    self.enRecherche = False
-                    self.vitesseDeCreation = self.vitesseDeCreation*0.9
-                    self.recherchesCompletes += 1
-
-        else:
-            if self.recherchesCompletes < 3:
+            for recherche in self.parent.recherche:
+                if recherche == "Paysan Vitesse 2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
-                    self.recherchesCompletes += 1
                     self.enRecherche = False
-                    self.vitesseDeCreation = self.vitesseDeCreation*0.9
-                    self.recherchesCompletes+=1
+                    self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                    self.rechercheCompletee = False
+                    self.parent.recherche.append("Paysan Vitesse 2")
+
+        else:
+            for recherche in self.parent.recherche:
+                if recherche == "Paysan Vitesse 3":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
+                if self.enRecherche == False:
+                    if self.parent.bois >= 50:
+                        self.parent.bois -= 50
+                        self.enRecherche = True
+                        self.tempsDepartRecherche = time.time()
+                elif time.time() - self.tempsDepartRecherche >= 60:
+                    self.rechercheCompletee = False
+                    self.enRecherche = False
+                    self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                    self.parent.recherche.append("Paysan Vitesse 3")
 
     def miseAJour(self):
         if self.enCreation:
@@ -241,64 +262,57 @@ class Base(Batiment):
 class Baraque(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
-        self.type="Baraque"
+        self.type = "Baraque"
         self.vitesseDeCreation = 40
         self.typeCreation = ""
         self.typeRecherche = ""
-        self.recherchesCompletesvitesse = 0
-        self.recherchesCompletesAttaque = 0
 
-    def creer1(self):  #création de soldats avec épée
-        if self.enCreation == False:
-            if self.parent.bois >= 50:
-                self.parent.bois -= 50
-                self.enCreation = True
-                self.typeCreation = "Epee"
-                self.tempsDepartCreation = time.time()
-        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.unites.add(SoldatEpee(self.posX+4, self.posY+4, self.parent))
-            self.enCreation = False
 
-    def creer2(self):  #création de soldats avec lances
-        if self.enCreation == False:
-            if self.parent.bois >= 50:
-                self.parent.bois -= 50
-                self.enCreation = True
-                self.typeCreation = "Lance"
-                self.tempsDepartCreation = time.time()
-        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.unites.add(SoldatLance(self.posX+4, self.posY+4, self.parent))
-            self.enCreation = False
+0
 
-    def creer3(self):  #création de soldats avec boucliers
-        if self.enCreation == False:
-            if self.parent.bois >= 50:
-                self.parent.bois -= 50
-                self.enCreation = True
-                self.typeCreation = "Bouclier"
-                self.tempsDepartCreation = time.time()
-        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.unites.add(SoldatBouclier(self.posX+4, self.posY+4, self.parent))
-            self.enCreation = False
 
-    def recherche1(self):  #meilleure attaque
-        if self.parent.epoque == 2:
-            if self.recherchesCompletesAttaque < 1:
-               if self.enRecherche == False:
-                   if self.parent.bois >= 50:
-                       self.parent.bois -= 50
-                       self.enRecherche = True
-                       self.tempsDepartRecherche = time.time()
-                       self.typeRecherche = "Attaque"
+def creer1(self):  #création de soldats avec épée
+    if self.enCreation == False:
+        if self.parent.bois >= 50:
+            self.parent.bois -= 50
+            self.enCreation = True
+            self.typeCreation = "Epee"
+            self.tempsDepartCreation = time.time()
+    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+        self.parent.unites.add(SoldatEpee(self.posX + 4, self.posY + 4, self.parent))
+        self.enCreation = False
 
-               elif time.time() - self.tempsDepartRecherche >= 60:
-                   self.enRecherche = False
-                   for unite in self.parent.units:
-                        if isinstance(unite, Soldat):
-                            unite.attaque = unite.attaque*1.1
-                   self.recherchesCompletesAttaque += 1
 
-        elif self.recherchesCompletesAttaque <2:
+def creer2(self):  #création de soldats avec lances
+    if self.enCreation == False:
+        if self.parent.bois >= 50:
+            self.parent.bois -= 50
+            self.enCreation = True
+            self.typeCreation = "Lance"
+            self.tempsDepartCreation = time.time()
+    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+        self.parent.unites.add(SoldatLance(self.posX + 4, self.posY + 4, self.parent))
+        self.enCreation = False
+
+
+def creer3(self):  #création de soldats avec boucliers
+    if self.enCreation == False:
+        if self.parent.bois >= 50:
+            self.parent.bois -= 50
+            self.enCreation = True
+            self.typeCreation = "Bouclier"
+            self.tempsDepartCreation = time.time()
+    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+        self.parent.unites.add(SoldatBouclier(self.posX + 4, self.posY + 4, self.parent))
+        self.enCreation = False
+
+
+def recherche1(self):  #meilleure attaque
+    if self.parent.epoque == 2:
+        for recherche in self.parent.recherche:
+            if recherche == "Soldat Attaque 1":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
                     self.parent.bois -= 50
@@ -310,51 +324,80 @@ class Baraque(Batiment):
                 self.enRecherche = False
                 for unite in self.parent.units:
                     if isinstance(unite, Soldat):
-                        unite.attaque = unite.attaque*1.1
-                self.recherchesCompletesAttaque += 1
+                        unite.attaque = unite.attaque * 1.1
+                self.rechercheCompletee = False
+                self.parent.recherche.append("Soldat Attaque 1")
+
+    else:
+        for recherche in self.parent.recherche:
+            if recherche == "Soldat Attaque 2":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
+            if self.enRecherche == False:
+                if self.parent.bois >= 50:
+                    self.parent.bois -= 50
+                    self.enRecherche = True
+                    self.tempsDepartRecherche = time.time()
+                    self.typeRecherche = "Attaque"
+
+        elif time.time() - self.tempsDepartRecherche >= 60:
+            self.enRecherche = False
+            for unite in self.parent.units:
+                if isinstance(unite, Soldat):
+                    unite.attaque = unite.attaque * 1.1
+            self.rechercheCompletee = False
+            self.parent.recherche.append("Soldat Attaque 2")
 
 
-    def recherche2(self):  #meilleure vitesse de création
-        if self.parent.epoque == 2:
-            if self.recherchesCompletesvitesse < 1:
-                if self.enRecherche == False:
-                    if self.parent.bois >= 50:
-                        self.parent.bois -= 50
-                        self.enRecherche = True
-                        self.typeRecherche = "Vitesse"
-                        self.tempsDepartRecherche = time.time()
-                elif time.time() - self.tempsDepartRecherche >=60:
-                    self.vitesseDeCreation = self.vitesseDeCreation*0.9
-                    self.recherchesCompletesvitesse += 1
-                    self.enRecherche = False
+def recherche2(self):  #meilleure vitesse de création
+    if self.parent.epoque == 2:
+        for recherche in self.parent.recherche:
+            if recherche == "Soldat Vitesse 1":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
+            if self.enRecherche == False:
+                if self.parent.bois >= 50:
+                    self.parent.bois -= 50
+                    self.enRecherche = True
+                    self.typeRecherche = "Vitesse"
+                    self.tempsDepartRecherche = time.time()
+            elif time.time() - self.tempsDepartRecherche >= 60:
+                self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                self.rechercheCompletee = False
+                self.parent.recherche.append("Soldat Vitesse 1")
+                self.enRecherche = False
 
+    else:
+        for recherche in self.parent.recherche:
+            if recherche == "Soldat Vitesse 2":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
+            if self.enRecherche == False:
+                if self.parent.bois >= 50:
+                    self.parent.bois -= 50
+                    self.enRecherche = True
+                    self.typeRecherche = "Vitesse"
+                    self.tempsDepartRecherche = time.time()
+            elif time.time() - self.tempsDepartRecherche >= 60:
+                self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                self.rechercheCompletee = False
+                self.enRecherche = False
+                self.parent.recherche.append("Soldat Vitesse 2")
+
+
+def miseAJour(self):
+    if self.enCreation:
+        if self.typeCreation == "Epee":
+            self.creer1()
+        elif self.typeCreation == "Lance":
+            self.creer2()
         else:
-            if self.recherchesCompletesvitesse < 2:
-                if self.enRecherche == False:
-                    if self.parent.bois >= 50:
-                        self.parent.bois -= 50
-                        self.enRecherche = True
-                        self.typeRecherche = "Vitesse"
-                        self.tempsDepartRecherche = time.time()
-                elif time.time() - self.tempsDepartRecherche >=60:
-                    self.vitesseDeCreation = self.vitesseDeCreation*0.9
-                    self.recherchesCompletesvitesse += 1
-                    self.enRecherche = False
-
-    def miseAJour(self):
-        if self.enCreation:
-            if self.typeCreation == "Epee":
-                self.creer1()
-            elif self.typeCreation == "Lance":
-                self.creer2()
-            else:
-                self.creer3()
-        if self.enRecherche:
-            if self.typeRecherche == "Attaque":
-                self.recherche1()
-            else:
-                self.recherche2()
-
+            self.creer3()
+    if self.enRecherche:
+        if self.typeRecherche == "Attaque":
+            self.recherche1()
+        else:
+            recherche2()
 
 
 class Ferme(Batiment):
@@ -374,7 +417,10 @@ class Ferme(Batiment):
 
     def recherche1(self):  #meilleure vitesse de production
         if self.parent.epoque == 1:
-            if self.recherchesCompletes < 1:
+            for recherche in self.parent.recherche:
+                if recherche == "Ferme 1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -382,11 +428,15 @@ class Ferme(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.production = self.production * 1.1
-                    self.recherchesCompletes += 1
+                    self.rechercheCompletee = False
                     self.enRecherche = False
+                    self.parent.recherche.append("Ferme 1")
 
         elif self.parent.epoque == 2:
-            if self.recherchesCompletes < 2:
+            for recherche in self.parent.recherche:
+                if recherche == "Ferme 2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -394,11 +444,15 @@ class Ferme(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.production = self.production * 1.1
-                    self.recherchesCompletes += 1
+                    self.rechercheComplete = False
                     self.enRecherche = False
+                    self.parent.recherche.append("Ferme 2")
 
-        else :
-            if self.recherchesCompletes < 3:
+        else:
+            for recherche in self.parent.recherche:
+                if recherche == "Ferme 3":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -406,15 +460,15 @@ class Ferme(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.production = self.production * 1.1
-                    self.recherchesCompletes += 1
+                    self.rechercheCompletee = False
                     self.enRecherche = False
+                    self.parent.recherche.append("Ferme 3")
 
     def miseAJour(self):
         if self.enRecherche:
             self.recherche1()
 
         self.produire()
-
 
 
 class Scierie(Batiment):
@@ -433,7 +487,10 @@ class Scierie(Batiment):
 
     def recherche1(self):  #meilleure vitesse de production
         if self.parent.epoque == 2:
-            if self.recherchesCompletes < 1:
+            for recherche in self.parent.recherche:
+                if recherche == "Scierie 1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -441,11 +498,15 @@ class Scierie(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.production = self.production * 1.1
-                    self.recherchesCompletes += 1
+                    self.rechercheCompletee = False
                     self.enRecherche = False
+                    self.parent.recherche.append("Scierie 1")
 
-        else :
-            if self.recherchesCompletes < 2:
+        else:
+            for recherche in self.parent.recherche:
+                if recherche == "Scierie 2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
                 if self.enRecherche == False:
                     if self.parent.bois >= 50:
                         self.parent.bois -= 50
@@ -453,15 +514,15 @@ class Scierie(Batiment):
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.production = self.production * 1.1
-                    self.recherchesCompletes += 1
+                    self.rechercheCompletee = False
                     self.enRecherche = False
+                    self.parent.recherche.append("Scierie 2")
 
     def miseAJour(self):
         if self.enRecherche:
             self.recherche1()
 
         self.produire()
-
 
 
 class Fonderie(Batiment):
@@ -479,16 +540,20 @@ class Fonderie(Batiment):
                 self.tempsProduction = time.time()
 
     def recherche1(self):  #meilleure vitesse de production
-        if self.recherchesCompletes < 1:
+        for recherche in self.parent.recherche:
+            if recherche == "Fonderie 1":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
                     self.parent.bois -= 50
                     self.enRecherche = True
                     self.tempsDepartRecherche = time.time()
-            elif time.time() - self.tempsDepartRecherche >= 60:
-                self.production = self.production * 1.1
-                self.recherchesCompletes += 1
-                self.enRecherche = False
+        elif time.time() - self.tempsDepartRecherche >= 60:
+            self.production = self.production * 1.1
+            self.rechercheCompletee = False
+            self.enRecherche = False
+            self.parent.recherche.append("Fonderie 1")
 
     def miseAJour(self):
         if self.enRecherche:
@@ -501,8 +566,6 @@ class Garage(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
         self.vitesseDeCreation = 60
-        self.rechercheVitesse = 0
-        self.rechercheHP = 0
         self.typeRecherche = ""
 
     def creer1(self):  #créer des tanks
@@ -513,10 +576,13 @@ class Garage(Batiment):
                 self.tempsDepartCreation = time.time()
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             self.enCreation = False
-            self.parent.units.append(Tank(self.posX+4, self.posY+4, self.parent))
+            self.parent.units.append(Tank(self.posX + 4, self.posY + 4, self.parent))
 
     def recherche1(self):  #meilleure vitesse de création de tanks
-        if self.rechercheVitesse < 1:
+        for recherche in self.parent.recherche:
+            if recherche == "Tank Vitesse":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
                     self.parent.bois -= 50
@@ -524,12 +590,16 @@ class Garage(Batiment):
                     self.tempsDepartRecherche = time.time()
                     self.typeRecherche = "Vitesse"
             elif time.time() - self.tempsDepartRecherche >= 60:
-                self.rechercheVitesse += 1
+                self.rechercheCompletee = False
                 self.enRecherche = False
                 self.vitesseDeCreation = self.vitesseDeCreation * 0.8
+                self.parent.recherche.append("Tank Vitesse")
 
     def recherche2(self):  #amélioration du HP des tanks
-        if self.rechercheHP < 1:
+        for recherche in self.parent.recherche:
+            if recherche == "Tank HP":
+                self.rechercheCompletee = True
+        if self.rechercheCompletee == False:
             if self.enRecherche == False:
                 if self.parent.bois >= 50:
                     self.parent.bois -= 50
@@ -537,8 +607,9 @@ class Garage(Batiment):
                     self.tempsDepartRecherche = time.time()
                     self.typeRecherche = "HP"
             elif time.time() - self.tempsDepartRecherche >= 60:
-                self.rechercheHP += 1
+                self.rechercheCompletee = False
                 self.enRecherche = False
+                self.parent.recherche.append("Tank HP")
                 for tank in self.parent.units:
                     if isinstance(tank, Tank):
                         tank.hpMax = 120
