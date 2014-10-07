@@ -20,8 +20,8 @@ class ServerController:
 
     def __init__(self):
 
-        self.clientSynchronized = {}  # Clients seront représentés par un ID unique, initialement attribuée par serveur
-        # avec un flag True/False spécifiant si le client donné est synchronisé avec les dernières commands
+        # Chaque clé est identifiant du client et la valeur est une liste des commandes à exécuter par le client
+        self.clients = {}
 
         self.idIndex = 0  # À chaque attribution d'ID ce nombre est augmenté [il constitue l'identifiant unique]
         self.commands = []  # une liste des commandes reçues
@@ -39,7 +39,7 @@ class ServerController:
         :return: l'identifiant unique généré pour le client
         """
         clientId = self._generateId()
-        self.clientSynchronized[clientId] = False
+        self.clients[clientId] = []
         if SERVER_DEBUG_VERBOSE:
             print('CLIENT %s JUST JOINED' % clientId)
         return clientId
@@ -48,29 +48,25 @@ class ServerController:
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
-        self.commands.append(command)
-        for client in self.clientSynchronized:
-            self.clientSynchronized[client] = False
+        for client in self.clients:
+            self.clients[client].append(command)
 
     def getLatestCommand(self, clientId):
         """ Permet à un client de se renseigner sur la dernière commande envoyée et non synchronisée
         :param clientId: le numéro d'identification du client
-        :return: La dernière commande non synchronisée par le client ou None
+        :return: Les dernières commandes non synchronisées par le client ou []
         """
-        # Si le client n'est PAS synchronisé ET si il ya au moins une commande à envoyer
-        if not self.clientSynchronized[clientId] and self.commands:
-            self.clientSynchronized[clientId] = True
-            return self.commands[-1]
-        else:
-            return None
+        if self.clients[clientId]:
+            return self.clients[clientId].pop()
+        return None
+
 
     def leave(self, clientId):
         """ Permet à un client de quitter le serveur
         :param clientId:
         """
-        self.clientSynchronized.pop(clientId)
-        if SERVER_DEBUG_VERBOSE:
-            print(' client: %s left the game' % clientId)
+        self.clients.pop(clientId)
+        Server.outputDebug((' client: %s left the game' % clientId))
 
 
 class Server:
@@ -80,7 +76,7 @@ class Server:
 
     def __init__(self, port=3333):
         self.port = port  # Le port du serveur
-        self.host = socket.gethostbyname("127.0.0.1")  # L'adresse IP du serveur. Détectée automatiquement
+        self.host = socket.gethostbyname(socket.gethostname())  # L'adresse IP du serveur. Détectée automatiquement
         if LOCAL_TEST:
             self.host = '127.0.0.1'
 
@@ -160,8 +156,7 @@ class Client:
         response = self.host.getLatestCommand(self.id)
         if response:
             command = pickle.loads(response)
-            command = Command.buildFromDict(command)
-            return command
+            return Command.buildFromDict(command)
         else:
             return None
 
@@ -206,6 +201,13 @@ class NetworkController:
         :param port: Le port du serveur
         """
         self.client.connect(ipAddress, port)
+
+
+    def disconnectClient(self):
+        self.client.disconnect()
+
+    def getClientId(self):
+        return self.client.id if self.client else -1
 
     def startServer(self):
         """ Lance le serveur dans un nouveau fil d'exécution
