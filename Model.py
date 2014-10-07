@@ -161,9 +161,9 @@ class Unit():
                 return True
 
         if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY]  == 0 :
-            return False
+            return True
         if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY]  == 0:
-            return False
+            return True
 
         if caseY+1 < self.parent.grandeurMat:
             if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY+1].type  == 0 :
