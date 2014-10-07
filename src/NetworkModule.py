@@ -14,7 +14,6 @@ SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveu
 CLIENT_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du client
 LOCAL_TEST = True  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
 
-
 class ServerController:
     """ Contrôleur serveur. C'est une instance de cette classe qui sera mis à disposition des clients. Enregistrée dans
      le démon Pyro4. Ainsi, ils ne pourront avoir accès qu'aux méthodes définies ici."""
@@ -81,7 +80,7 @@ class Server:
 
     def __init__(self, port=3333):
         self.port = port  # Le port du serveur
-        self.host = socket.gethostbyname(socket.gethostname())  # L'adresse IP du serveur. Détectée automatiquement
+        self.host = socket.gethostbyname("127.0.0.1")  # L'adresse IP du serveur. Détectée automatiquement
         if LOCAL_TEST:
             self.host = '127.0.0.1'
 
@@ -120,6 +119,7 @@ class Server:
         """
         self.running = False
 
+
     @staticmethod
     def outputDebug(msg):
         if SERVER_DEBUG_VERBOSE:
@@ -129,11 +129,10 @@ class Server:
 class Client:
     """ Objet client
     """
-
     def __init__(self):
-        self.uri = ''  # L'identifiant Pyro du client
+        self.uri = ''   # L'identifiant Pyro du client
         self.host = None  # L'hôte auquel on tente de se connecte
-        self.id = -1  # L'identifiant logique auprès du serveur
+        self.id = -1    # L'identifiant logique auprès du serveur
 
     def connect(self, host='127.0.0.1', port=3333, hostName='RTS'):
         """ Connecte le client à son hôte
@@ -166,6 +165,7 @@ class Client:
         else:
             return None
 
+
     def sendCommand(self, command):
         """ Sends a command to a host in a serialized format
         :param command: the command to send to the host
@@ -183,7 +183,7 @@ class Client:
     def outputDebug(msg):
         if CLIENT_DEBUG_VERBOSE:
             print(msg)
-
+            
     def disconnect(self):
         self.host.leave(self.id)
 

@@ -3,7 +3,9 @@
 
 from Commands import Command
 from Carte import Carte
+
 import time
+
 
 class Unit():
     def __init__(self, x, y, parent):
@@ -88,14 +90,18 @@ class Unit():
                 n.x = centreCase[0]
                 n.y = centreCase[1]
                 n = n.parent
-            #print(self.cheminTrace,"len", len(self.cheminTrace)) 
+            #print(self.cheminTrace,"len", len(self.cheminTrace))
+            if self.cheminTrace:
+                #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+                self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)
+            else:
+                self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
+                
             self.cibleX = self.cheminTrace[-1].x
             self.cibleY = self.cheminTrace[-1].y
 
     def aEtoile(self):
-        nbTour = 0
         nbNoeud = 400
-        tempsTotal = 0
         while self.open:
             n = self.open[0]
             if self.goal(n) == True:
@@ -118,7 +124,7 @@ class Unit():
                    self.open.append(nPrime)
 
                #Mettre dans le if aAjouter ?
-             #  time1= time.time() 
+             #  time1= time.time()
                self.open.sort(key=lambda x: x.cout)
                #tempsTotal += time.time()-time1
               # print("Temps sort: ", tempsTotal)
@@ -134,7 +140,7 @@ class Unit():
         for i in range(0,len(liste)):
             print(i, nom, liste[i].x, liste[i].y, "cout", liste[i].cout)
 
-    def aCoteMur(self,caseX,caseY): #Pour ne pas aller en diagonale est rentrer dans un mur
+    def aCoteMur(self,caseX,caseY): #Pour ne pas aller en diagonale et rentrer dans un mur
         #TODO BUG traverse un mur en diagonale
         if caseY-1 >= 0 :
             if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY-1].type == 0 :
@@ -144,10 +150,10 @@ class Unit():
             if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY-1].type  == 0:
                 return True
 
-        #if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY]  == 0 :
-        #    return False
-        #if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY]  == 0:
-        #    return False
+        if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY]  == 0 :
+            return False
+        if caseX+1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX+1][caseY]  == 0:
+            return False
 
         if caseY+1 < self.parent.grandeurMat:
             if caseX-1 >= 0 and not self.parent.carte.matrice[caseX-1][caseY+1].type  == 0 :
@@ -240,11 +246,11 @@ class Paysan(Unit):
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, controller):
+        self.controller = controller
         self.units = []
-        self.grandeurMat = 20
+        self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
-        self.carte.createRessources()
 
     def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
@@ -278,9 +284,9 @@ class Model:
                     unit.changerCible(command.data['X2'], command.data['Y2'])
 
     def trouverCaseMatrice(self,x,y):
-        #TODO Linker avec la vue
-        #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        grandeurCanevasRelle = self.grandeurMat * 32
+        #TODO ? Mettre dans la vue ?
+
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         caseX = int(x/grandeurCase)
         caseY = int(y/grandeurCase)
@@ -288,9 +294,9 @@ class Model:
         return (caseX, caseY)
 
     def trouverCentreCase(self,caseX,caseY):
-        #TODO Linker avec la vue
-        #grandeurCanevasRelle = self.parent.v.grandeurCanevasRelle
-        grandeurCanevasRelle = self.grandeurMat * 32
+        #TODO ? Mettre dans la vue ?
+
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         centreX = (grandeurCase * caseX) + grandeurCase/2
         centreY = (grandeurCase * caseY) + grandeurCase/2

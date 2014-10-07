@@ -40,7 +40,7 @@ class GButton(GWidget):
         self.textColor = "white"
         self._determineColor(color)
 
-        # Image vide sur le dessus utilisée pour obtnie les événements de la souris (Event Monitor)
+        # Image vide sur le dessus utilisée pour obtenir les événements de la souris (Event Monitor)
         self.graphImage = ImageTk.PhotoImage(self.imageData[GButton.NORMAL])
         self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[GButton.EMPTY])
 
@@ -84,8 +84,8 @@ class GButton(GWidget):
         :param state: l'état du bouton à afficher (Constante de GButton)
         """
         if state == GButton.FOCUS:
-            self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[state])
-            # self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
+            self.eventMonitorImage = ImageTk.PhotoImage(self.imageData[GButton.FOCUS])
+            #self.parent.itemconfig(self.eventMonitor, image=self.eventMonitorImage)
         else:
             self.graphImage = ImageTk.PhotoImage(self.imageData[state])
             self.parent.itemconfig(self.btnItem, image=self.graphImage)
@@ -118,6 +118,7 @@ class GButton(GWidget):
             self.command()
 
 
+
 class GMediumButton(GButton):
     def __init__(self, parent, text="", command=None, color=0, iconPath=None):
         super(GMediumButton, self).__init__(parent, text, command, color)
@@ -146,6 +147,10 @@ class GMediumButton(GButton):
 
         self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
         self._bindEvents()
+
+
+
+
 
 
 class GCheckButton(GButton):
