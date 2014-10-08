@@ -3,10 +3,10 @@
 
 from Commands import Command
 from Model import Model
-from NetworkModule import NetworkController
+from NetworkModule import NetworkController, ClientConnectionError
 from View import View
 import sys
-from src.Model import Unit
+from Model import Unit
 
 
 class Controller:
@@ -22,15 +22,19 @@ class Controller:
         self.refreshRate = 64  # Nombre de fois par seconde
 
     def mainLoop(self):
-        cmd = self.network.client.synchronize()
-        if cmd:
-            self.model.executeCommand(cmd)
 
-        for paysan in self.model.enRessource:
-            if paysan.mode == 1:
-                paysan.chercherRessources()
-            else:
-                del paysan
+        try:
+            cmds = self.network.synchronizeClient()
+            if cmds:
+                for cmd in cmds:
+                    self.model.executeCommand(cmd)
+
+        except ClientConnectionError:
+            self.shutdown()
+        # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+
+
+
         self.model.update()
 
         self.view.update(self.model.units)
@@ -51,7 +55,8 @@ class Controller:
 
     def shutdown(self):
         self.view.destroy()
-        self.network.disconnectClient()
+        if self.network.client:
+            self.network.disconnectClient()
         if self.network.server:
             self.network.stopServer()
         sys.exit(0)
@@ -72,6 +77,7 @@ class EventListener:
         for unitSelected in self.controller.view.selected:
             if unitSelected.estUniteDe(clientId):
                 cmd = Command(clientId, Command.MOVE_UNIT)
+                cmd.addData('ID', unitSelected.id)
                 cmd.addData('X1', unitSelected.x)
                 cmd.addData('Y1', unitSelected.y)
                 cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
@@ -151,12 +157,13 @@ class EventListener:
 
 
     def onCenterClick(self, event):
+        # CRÉEATION D'UNITÉ
         clientId = self.controller.network.client.id
         cmd = Command(clientId, Command.CREATE_UNIT)
-        cmd.addData('ID', Unit._generateId(clientId))
+        cmd.addData('ID', Unit.generateId(clientId))
         cmd.addData('X', event.x + (self.controller.view.positionX * self.controller.view.item))
         cmd.addData('Y', event.y + (self.controller.view.positionY * self.controller.view.item))
-        cmd.addData('CIVILISATION', self.controller.model.joueur.civilisation)
+        cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
 
     def requestCloseWindow(self):

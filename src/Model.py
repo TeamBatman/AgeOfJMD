@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import sys
 from Commands import Command
 from Carte import Carte
 from GraphicsManagement import SpriteSheet
@@ -59,6 +60,7 @@ class Unit():
         self.cibleXTrace = y
         self.mode = 0  # 1=ressource
 
+
         # ANIMATION
         self.lastAnimtaionTime = time.time()
         self.animationRate = 333  # in millisecond
@@ -96,7 +98,7 @@ class Unit():
         sys.exit(1)
 
     @staticmethod
-    def _generateId(clientId):
+    def generateId(clientId):
         gId = "%s_%s" % (clientId, Unit.COUNT)
         Unit.COUNT += 1
         return gId
@@ -235,7 +237,7 @@ class Unit():
             # print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.cheminTrace:
                 # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-                if not self.mode == 1:  #pas en mode ressource
+                if not self.mode == 1:  # pas en mode ressource
                     self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
             else:
                 if not self.mode == 1:  # pas en mode ressource
@@ -276,7 +278,7 @@ class Unit():
                 # print("Temps sort: ", tempsTotal)
                 if len(self.open) > nbNoeud:
                     # self.afficherList("open", self.open)
-                    #return -1
+                    # return -1
                     self.open = self.open[:nbNoeud]
                     #print(len(self.open))
                     #self.parent.parent.v.afficherCourantPath(self.open)
@@ -396,10 +398,16 @@ class Paysan(Unit):
         else:  # TODO COMPLETER
             self.spriteSheet = SpriteSheet('Units/Age_I/paysan_bleu.png')
 
+    def update(self):
+        Unit.update(self)
+
+
+
+
     def chercherRessources(self):
         # print(int(self.nbRessources))
         # TODO Regarder le type de la ressource !
-        #TODO Enlever nbRessources à la case ressource !
+        # TODO Enlever nbRessources à la case ressource !
         if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
             self.nbRessources += self.vitesseRessource
         else:
@@ -419,20 +427,33 @@ class Model:
 
     def update(self):
         self.updateUnits()
+        self.updatePaysans()
+
 
     def updateUnits(self):
-        for unit in self.units:
-            unit.update()
+        [u.update() for u in self.units]
 
 
-    def deleteUnit(self, x, y):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
+    def updatePaysans(self):
+        for paysan in self.enRessource:
+            if paysan.mode == 1:
+                paysan.chercherRessources()
+            else:
+                del paysan
+
+
+    def getUnit(self, uId):
+        """ Returns a unit according to its ID
+        :param uId: the id of the unit to find
+        """
+        return next((u for u in self.units if u.id == uId), None)
+
+    def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
-        for unit in self.units:
-            if unit.x == x and unit.y == y:
-                self.units.remove(unit)
+        self.units.remove(self.getUnit(uId))
 
     def createUnit(self, uid, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités
@@ -447,14 +468,17 @@ class Model:
         :param command: la commande à exécuter
         """
         if command.data['TYPE'] == Command.CREATE_UNIT:
-            self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIVILISATION'])
+            self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIV'])
 
         elif command.data['TYPE'] == Command.DELETE_UNIT:
             self.deleteUnit(command.data['X'], command.data['Y'])
+
         elif command.data['TYPE'] == Command.MOVE_UNIT:
-            for unit in self.units:
-                if unit.x == command.data['X1'] and unit.y == command.data['Y1']:
-                    unit.changerCible(command.data['X2'], command.data['Y2'])
+            print("WE MOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOVEEEE")
+            self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'])
+
+
+
 
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?

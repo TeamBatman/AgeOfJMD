@@ -12,7 +12,7 @@ from Commands import Command
 # CONFIGURATION PYRO
 
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
-Pyro4.config.COMMTIMEOUT = 0.5  # Permet au serveur de pouvoir s'éteindre
+Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindre et deconnecte le client après ce délais
 
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
@@ -46,14 +46,14 @@ class ServerController:
         """
         clientId = self._generateId()
         self.clients[clientId] = []
-        if SERVER_DEBUG_VERBOSE:
-            print('CLIENT %s JUST JOINED' % clientId)
+        Server.outputDebug('CLIENT %s JUST JOINED' % clientId)
         return clientId
 
     def sendCommand(self, command):
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
+        map
         for client in self.clients:
             self.clients[client].append(command)
 
@@ -63,8 +63,10 @@ class ServerController:
         :return: Les dernières commandes non synchronisées par le client ou []
         """
         if self.clients[clientId]:
-            return self.clients[clientId].pop()
-        return None
+            cmds = self.clients[clientId]
+            self.clients[clientId] = []  # Flush les vieilles commandes
+            return cmds
+        return []
 
 
     def leave(self, clientId):
@@ -73,6 +75,14 @@ class ServerController:
         """
         self.clients.pop(clientId)
         Server.outputDebug((' client: %s left the game' % clientId))
+
+
+    def ping(self):
+        """ Méthode permettant à un client de tester si le serveur
+        existe toujours
+        """
+        pass
+
 
 
 class Server:
@@ -125,7 +135,7 @@ class Server:
     @staticmethod
     def outputDebug(msg):
         if SERVER_DEBUG_VERBOSE:
-            print(msg)
+            print('[SERVER]: %s' % msg)
 
 
 class Client:
@@ -142,14 +152,12 @@ class Client:
         :param host: L'addresse IP de l'hôte
         :param port: Le port ouvert de l'hôte
         """
-        try:
-            self.uri = "PYRO:%s@%s:%s" % (hostName, host, port)
-            self.host = Pyro4.Proxy(self.uri)
-            self.id = self.host.join()
 
-            Client.outputDebug()
-        except Exception as e:
-            pass  # Cette erreur n'est pas nécessairement vraie...
+        self.uri = "PYRO:%s@%s:%s" % (hostName, host, port)
+        self.host = Pyro4.Proxy(self.uri)
+        self.id = self.host.join()
+
+        Client.outputDebug("Connecté à %s avec ID: %s" %(self.uri, self.id))
 
 
     def synchronize(self):
@@ -157,22 +165,40 @@ class Client:
         sur le serveur
         :return: la dernière commande reçue (si il y avait une) autrement on retourne None
         """
-        if not self.host:
-            raise ClientConnectionError("Impossible de SYNCHRONISER")
         try:
             response = self.host.getLatestCommand(self.id)
             if response:
-                command = pickle.loads(response)
-                return Command.buildFromDict(command)
+                commands = []
+                for chunk in response:
+                    commands.append(Command.buildFromDict(pickle.loads(chunk)))
+                return commands
             else:
-                return None
-        except Pyro4.errors.ConnectionClosedError:
-            raise ClientConnectionError("Le client à du fermer inopinément: la connection à été perdue")
+                return []
+        except Exception:   # Pyro4.errors.CommunicationError:
+            raise ClientConnectionError("Impossible de SYNCHRONISER")
+
+
+
+    def attemptReconnect(self):
+        """ Utilisée lorsque le
+        :return:
+        """
+        try:
+            Client.outputDebug('Tentative de reconnection auprès du serveur ...')
+            self.host.ping()
+            self.host.pyroReconnect()
+            Client.outputDebug('Reconnecté!')
+            return True
+        except Exception:  # Pyro4.errors.CommunicationError:
+            return False  # Échec de la tentative... le serveur n'existe surement plus
+
+
+
 
 
     def sendCommand(self, command):
-        """ Sends a command to a host in a serialized format
-        :param command: the command to send to the host
+        """ Envoie un objet commande à l'hôte dans un format sérialisé JSON
+        :param command: la commande à envoyer [OBJET]
         """
         try:
             # CONVERSION DE LA COMMANDE EN DICTIONNAIRE
@@ -187,12 +213,12 @@ class Client:
     @staticmethod
     def outputDebug(msg):
         if CLIENT_DEBUG_VERBOSE:
-            print(msg)
+            print('[CLIENT]: %s' % msg)
 
     def disconnect(self):
         try:
             self.host.leave(self.id)
-        except Exception:
+        except Exception:  # Pyro4.errors.CommunicationError
             raise ClientConnectionError('Échec lors de la tentative d\'abandon de la partie')
 
 
@@ -216,7 +242,10 @@ class NetworkController:
         self.client.connect(ipAddress, port)
 
     def disconnectClient(self):
-        self.client.disconnect()
+        try:
+            self.client.disconnect()
+        except Exception:
+            pass
 
     def getClientId(self):
         return self.client.id if self.client else -1
@@ -239,11 +268,32 @@ class NetworkController:
             Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
                                self.server.port)
 
+    def synchronizeClient(self):
+        """ Méthode synchronisant le client et retournant
+         les commandes reçu par ce dernier s'il en a reçu
+        :return: les commandes du client (une liste d'Objet Commande)
+        """
+        try:
+            return self.client.synchronize()
+        except ClientConnectionError as e:
+                # TENTATIVE DE RECONNECTION
+                Client.outputDebug(e.message)
+                if self.client.attemptReconnect():
+                    self.synchronizeClient()
+                else:
+                    self.client = None
+                    message = "Impossible de se reconnecté au serveur... l'hôte n'existe plus"
+                    Client.outputDebug(message)
+                    raise ClientConnectionError(message)
+
+
+
 
     def stopServer(self):
         """ Arrête le serveur
         """
         self.server.stop()
+        self.server = None
 
 
 class ClientConnectionError(Exception):
