@@ -9,10 +9,16 @@ import threading
 import Pyro4
 from Commands import Command
 
+# CONFIGURATION PYRO
+
+Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
+Pyro4.config.COMMTIMEOUT = 0.5  # Permet au serveur de pouvoir s'éteindre
+
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
 CLIENT_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du client
 LOCAL_TEST = True  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
+
 
 class ServerController:
     """ Contrôleur serveur. C'est une instance de cette classe qui sera mis à disposition des clients. Enregistrée dans
@@ -84,7 +90,7 @@ class Server:
         self.uri = ''  # L'identifiant Pyro
         self.name = 'RTS'  # Le nom du serveur
         self.running = False  # Flag spécifiant si le serveur est en marche ou non
-        Pyro4.config.COMMTIMEOUT = 0.5  # Permet au serveur de pouvoir s'éteindre
+
 
     def initDaemon(self):
         """ Initialise le démon Pyro
@@ -125,10 +131,11 @@ class Server:
 class Client:
     """ Objet client
     """
+
     def __init__(self):
-        self.uri = ''   # L'identifiant Pyro du client
+        self.uri = ''  # L'identifiant Pyro du client
         self.host = None  # L'hôte auquel on tente de se connecte
-        self.id = -1    # L'identifiant logique auprès du serveur
+        self.id = -1  # L'identifiant logique auprès du serveur
 
     def connect(self, host='127.0.0.1', port=3333, hostName='RTS'):
         """ Connecte le client à son hôte
@@ -151,36 +158,42 @@ class Client:
         :return: la dernière commande reçue (si il y avait une) autrement on retourne None
         """
         if not self.host:
-            raise ConnectionError("Impossible de SYNCHRONISER")
-
-        response = self.host.getLatestCommand(self.id)
-        if response:
-            command = pickle.loads(response)
-            return Command.buildFromDict(command)
-        else:
-            return None
+            raise ClientConnectionError("Impossible de SYNCHRONISER")
+        try:
+            response = self.host.getLatestCommand(self.id)
+            if response:
+                command = pickle.loads(response)
+                return Command.buildFromDict(command)
+            else:
+                return None
+        except Pyro4.errors.ConnectionClosedError:
+            raise ClientConnectionError("Le client à du fermer inopinément: la connection à été perdue")
 
 
     def sendCommand(self, command):
         """ Sends a command to a host in a serialized format
         :param command: the command to send to the host
         """
-        if not self.host:
-            raise ConnectionError("Impossible d'ENVOYER LA COMMANDE AU SERVEUR")
-        # CONVERSION DE LA COMMANDE EN DICTIONNAIRE
-        command = command.convertToDict()
-        # SÉRIALISATION DE LA COMMANDE
-        cmd_ser = pickle.dumps(command)
-        # ENVOIE DE LA COMMANDE SÉRIALISÉE VERS L'HÔTE
-        self.host.sendCommand(cmd_ser)
+        try:
+            # CONVERSION DE LA COMMANDE EN DICTIONNAIRE
+            command = command.convertToDict()
+            # SÉRIALISATION DE LA COMMANDE
+            cmd_ser = pickle.dumps(command)
+            # ENVOIE DE LA COMMANDE SÉRIALISÉE VERS L'HÔTE
+            self.host.sendCommand(cmd_ser)
+        except Exception:
+            raise ClientConnectionError("Impossible d'ENVOYER LA COMMANDE AU SERVEUR")
 
     @staticmethod
     def outputDebug(msg):
         if CLIENT_DEBUG_VERBOSE:
             print(msg)
-            
+
     def disconnect(self):
-        self.host.leave(self.id)
+        try:
+            self.host.leave(self.id)
+        except Exception:
+            raise ClientConnectionError('Échec lors de la tentative d\'abandon de la partie')
 
 
 class NetworkController:
@@ -218,9 +231,14 @@ class NetworkController:
         """ Crée l'instance du serveur et lance ce dernier
         """
         self.server = Server()
-        self.server.initDaemon()
-        self.server.registerController()
-        self.server.start()
+        try:
+            self.server.initDaemon()
+            self.server.registerController()
+            self.server.start()
+        except Exception:
+            Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
+                               self.server.port)
+
 
     def stopServer(self):
         """ Arrête le serveur
@@ -228,10 +246,10 @@ class NetworkController:
         self.server.stop()
 
 
-class ConnectionError(Exception):
-    def __init__(self, reason):
+class ClientConnectionError(Exception):
+    def __init__(self, reason=''):
         """ Erreur lancée lorsque qu'il y a eu une erreur de connection
         :param reason: Raison de l'erreur de connection
         """
-        self.message = "[ERROR] %s : le client n'est connecté à aucun hôte" % reason
+        self.message = "[ERREUR CLIENT] %s : la connection avec le serveur à été perdue" % reason
         Exception.__init__(self, self.message)

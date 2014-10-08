@@ -12,7 +12,7 @@ import time
 class Joueur:
     """docstring for Joueur"""
     # CIVILISATIONS
-    NOIR = 0
+    ROUGE = 0
     BLEU = 1
     VERT = 2
 
@@ -20,7 +20,7 @@ class Joueur:
     ORANGE = 4
     ROSE = 5
 
-    ROUGE = 6
+    NOIR = 6
     BLANC = 7
     JAUNE = 8
     NB_CIVLISATION = 9
@@ -37,8 +37,16 @@ class Joueur:
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
 
-    def __init__(self, clientId, x, y, parent):
-        self.id = Unit._generateId(clientId)
+    def __init__(self, uid, x, y, parent, civilisation):
+        """
+        :param uid: l'id unique de l'unité
+        :param x: sa position initiale en x
+        :param y: sa position initiale en y
+        :param parent: le modèle
+        :param civilisation: la civilisation de l'unité
+        """
+        self.id = uid
+        self.civilisation = civilisation
         self.x = x
         self.y = y
         self.parent = parent
@@ -54,7 +62,8 @@ class Unit():
         # ANIMATION
         self.lastAnimtaionTime = time.time()
         self.animationRate = 333  # in millisecond
-        self.spriteSheet = SpriteSheet('Units/Age_I/red_caveman_1.png')
+        self.spriteSheet = None
+        self.determineSpritesheet()
 
         self.animDirection = 'DOWN'
         self.animFrameIndex = 1
@@ -79,9 +88,12 @@ class Unit():
         clientId = int(clientId)
         return masterId == clientId
 
-
-
-
+    def determineSpritesheet(self):
+        """ permet de déterminer le spritesheet à utiliser
+        selon la civilisation de l'unité
+        """
+        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit")
+        sys.exit(1)
 
     @staticmethod
     def _generateId(clientId):
@@ -371,12 +383,18 @@ class Noeud:
 
 
 class Paysan(Unit):
-    def __init__(self, clientId, x, y, parent):
-        Unit.__init__(self, clientId, x, y, parent)
+    def __init__(self, clientId, x, y, parent, civilisation):
+        Unit.__init__(self, clientId, x, y, parent, civilisation)
         self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 10
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
+
+    def determineSpritesheet(self):
+        if self.civilisation == Joueur.ROUGE:
+            self.spriteSheet = SpriteSheet('Units/Age_I/paysan_rouge.png')
+        else:  # TODO COMPLETER
+            self.spriteSheet = SpriteSheet('Units/Age_I/paysan_bleu.png')
 
     def chercherRessources(self):
         # print(int(self.nbRessources))
@@ -416,20 +434,20 @@ class Model:
             if unit.x == x and unit.y == y:
                 self.units.remove(unit)
 
-    def createUnit(self, clientId, x, y):
+    def createUnit(self, uid, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
         # self.units.append(Unit(x, y, self))
-        self.units.append(Paysan(clientId, x, y, self))
+        self.units.append(Paysan(uid, x, y, self, civilisation))
 
     def executeCommand(self, command):
         """ Exécute une commande
         :param command: la commande à exécuter
         """
         if command.data['TYPE'] == Command.CREATE_UNIT:
-            self.createUnit(command.clientId, command.data['X'], command.data['Y'])
+            self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIVILISATION'])
 
         elif command.data['TYPE'] == Command.DELETE_UNIT:
             self.deleteUnit(command.data['X'], command.data['Y'])

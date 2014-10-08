@@ -6,6 +6,7 @@ from Model import Model
 from NetworkModule import NetworkController
 from View import View
 import sys
+from src.Model import Unit
 
 
 class Controller:
@@ -150,9 +151,12 @@ class EventListener:
 
 
     def onCenterClick(self, event):
-        cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
+        clientId = self.controller.network.client.id
+        cmd = Command(clientId, Command.CREATE_UNIT)
+        cmd.addData('ID', Unit._generateId(clientId))
         cmd.addData('X', event.x + (self.controller.view.positionX * self.controller.view.item))
         cmd.addData('Y', event.y + (self.controller.view.positionY * self.controller.view.item))
+        cmd.addData('CIVILISATION', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
 
     def requestCloseWindow(self):
