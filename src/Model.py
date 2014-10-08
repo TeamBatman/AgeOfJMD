@@ -107,25 +107,31 @@ class Unit():
                 self.cibleX = self.cheminTrace[-1].x
                 self.cibleY = self.cheminTrace[-1].y
 
+            if not abs(self.cibleX - self.x) == 0 and not abs(self.cibleY - self.y) == 0:
+                diaganoleVit = math.sqrt(math.pow(self.vitesse,2) + math.pow(self.vitesse,2))
+                diaganoleVit /= 2
+            else:
+                diaganoleVit = self.vitesse #vitesse normal
+
             if abs(self.cibleX - self.x) <= self.vitesse:
                 self.x = self.cibleX
             if abs(self.cibleY - self.y) <= self.vitesse:
                 self.y = self.cibleY
 
             if self.cibleX > self.x:
-                self.x += self.vitesse
+                self.x += diaganoleVit
                 self.animDirection = 'RIGHT'
 
             elif self.cibleX < self.x:
-                self.x -= self.vitesse
+                self.x -= diaganoleVit
                 self.animDirection = 'LEFT'
 
             if self.cibleY > self.y:
-                self.y += self.vitesse
+                self.y += diaganoleVit
                 self.animDirection = 'DOWN'
 
             elif self.cibleY < self.y:
-                self.y -= self.vitesse
+                self.y -= diaganoleVit
                 self.animDirection = 'UP'
 
             # Puisqu'il y a eu un déplacement
@@ -229,10 +235,10 @@ class Unit():
             if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY - 1].type == 0:
                 return True
 
-        if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY] == 0:
-            return False
-        if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY] == 0:
-            return False
+        if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY].type == 0:
+            return True
+        if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY].type == 0:
+            return True
 
         if caseY + 1 < self.parent.grandeurMat:
             if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY + 1].type == 0:
