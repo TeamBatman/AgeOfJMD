@@ -202,7 +202,6 @@ class NetworkController:
         """
         self.client.connect(ipAddress, port)
 
-
     def disconnectClient(self):
         self.client.disconnect()
 

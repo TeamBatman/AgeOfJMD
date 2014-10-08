@@ -9,8 +9,36 @@ from GraphicsManagement import SpriteSheet
 import time
 
 
+class Joueur:
+    """docstring for Joueur"""
+    # CIVILISATIONS
+    NOIR = 0
+    BLEU = 1
+    VERT = 2
+
+    MAUVE = 3
+    ORANGE = 4
+    ROSE = 5
+
+    ROUGE = 6
+    BLANC = 7
+    JAUNE = 8
+    NB_CIVLISATION = 9
+
+
+    def __init__(self, civilisation):
+        self.civilisation = civilisation
+        self.base = None
+        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.morale = 0
+        self.nbNourriture = 0
+
+
 class Unit():
-    def __init__(self, x, y, parent):
+    COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
+
+    def __init__(self, clientId, x, y, parent):
+        self.id = Unit._generateId(clientId)
         self.x = x
         self.y = y
         self.parent = parent
@@ -34,6 +62,33 @@ class Unit():
         activeFrameKey = '%s_%s' % (self.animDirection, self.animFrameIndex)
         self.activeFrame = self.spriteSheet.frames[activeFrameKey]
         self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
+
+
+    def getClientId(self):
+        """ Returns the Id of the client using the id of the unit
+        :return: the id of the clients
+        """
+        return self.id.split('_')[0]
+
+    def estUniteDe(self, clientId):
+        """ Vérifie si l'unité appartient au client ou non
+        :param clientId: le client à tester
+        :return: True si elle lui appartient Sinon False
+        """
+        masterId = int(self.getClientId())
+        clientId = int(clientId)
+        return masterId == clientId
+
+
+
+
+
+    @staticmethod
+    def _generateId(clientId):
+        gId = "%s_%s" % (clientId, Unit.COUNT)
+        Unit.COUNT += 1
+        return gId
+
 
     def animer(self):
         """ Lance l'animation de l'unité
@@ -167,11 +222,11 @@ class Unit():
                 n = n.parent
             # print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.cheminTrace:
-                #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+                # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
                 if not self.mode == 1:  #pas en mode ressource
                     self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
             else:
-                if not self.mode == 1:  #pas en mode ressource
+                if not self.mode == 1:  # pas en mode ressource
                     self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
                 else:
                     self.cheminTrace.append(Noeud(None, self.x, self.y, None, None))
@@ -203,12 +258,12 @@ class Unit():
                     self.open.append(nPrime)
 
                     # Mettre dans le if aAjouter ?
-                    #  time1= time.time()
+                    # time1= time.time()
                 self.open.sort(key=lambda x: x.cout)
                 # tempsTotal += time.time()-time1
                 # print("Temps sort: ", tempsTotal)
                 if len(self.open) > nbNoeud:
-                    #self.afficherList("open", self.open)
+                    # self.afficherList("open", self.open)
                     #return -1
                     self.open = self.open[:nbNoeud]
                     #print(len(self.open))
@@ -220,7 +275,7 @@ class Unit():
             print(i, nom, liste[i].x, liste[i].y, "cout", liste[i].cout)
 
     def aCoteMur(self, caseX, caseY):  # Pour ne pas aller en diagonale et rentrer dans un mur
-        #TODO BUG traverse un mur en diagonale
+        # TODO BUG traverse un mur en diagonale
         if caseY - 1 >= 0:
             if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY - 1].type == 0:
                 return True
@@ -316,8 +371,8 @@ class Noeud:
 
 
 class Paysan(Unit):
-    def __init__(self, x, y, parent):
-        Unit.__init__(self, x, y, parent)
+    def __init__(self, clientId, x, y, parent):
+        Unit.__init__(self, clientId, x, y, parent)
         self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 10
         self.nbRessources = 0
@@ -325,10 +380,10 @@ class Paysan(Unit):
 
     def chercherRessources(self):
         # print(int(self.nbRessources))
-        #TODO Regarder le type de la ressource !
+        # TODO Regarder le type de la ressource !
         #TODO Enlever nbRessources à la case ressource !
         if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
-            self.nbRessources = self.nbRessources + self.vitesseRessource
+            self.nbRessources += self.vitesseRessource
         else:
             self.nbRessources = self.nbRessourcesMax
             #print("MAX!", self.nbRessources)
@@ -338,11 +393,11 @@ class Paysan(Unit):
 class Model:
     def __init__(self, controller):
         self.controller = controller
+        self.joueur = None
         self.units = []
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
-
 
     def update(self):
         self.updateUnits()
@@ -361,20 +416,20 @@ class Model:
             if unit.x == x and unit.y == y:
                 self.units.remove(unit)
 
-    def createUnit(self, x, y):
+    def createUnit(self, clientId, x, y):
         """ Crée et ajoute une nouvelle unité à la liste des unités
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
         # self.units.append(Unit(x, y, self))
-        self.units.append(Paysan(x, y, self))
+        self.units.append(Paysan(clientId, x, y, self))
 
     def executeCommand(self, command):
         """ Exécute une commande
         :param command: la commande à exécuter
         """
         if command.data['TYPE'] == Command.CREATE_UNIT:
-            self.createUnit(command.data['X'], command.data['Y'])
+            self.createUnit(command.clientId, command.data['X'], command.data['Y'])
 
         elif command.data['TYPE'] == Command.DELETE_UNIT:
             self.deleteUnit(command.data['X'], command.data['Y'])
@@ -391,7 +446,7 @@ class Model:
         caseX = int(x / grandeurCase)
         caseY = int(y / grandeurCase)
 
-        return (caseX, caseY)
+        return caseX, caseY
 
     def trouverCentreCase(self, caseX, caseY):
         # TODO ? Mettre dans la vue ?
@@ -401,4 +456,10 @@ class Model:
         centreX = (grandeurCase * caseX) + grandeurCase / 2
         centreY = (grandeurCase * caseY) + grandeurCase / 2
 
-        return (centreX, centreY)
+        return centreX, centreY
+
+    def creerJoueur(self, clientId):
+        """  Permet de crééer l'entité joueur
+        :param clientId: L'id du client
+        """
+        self.joueur = Joueur(clientId)

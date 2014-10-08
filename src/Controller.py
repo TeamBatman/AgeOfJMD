@@ -40,6 +40,8 @@ class Controller:
         """
         self.network.startServer()
         self.network.connectClient()
+
+        self.model.creerJoueur(self.network.getClientId())
         self.view.drawMinimap(self.model.units, self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
@@ -54,14 +56,6 @@ class Controller:
         sys.exit(0)
 
 
-    def actionListener(self, userInput, info):
-        """ Méthode utilisée par la vue pour notifier le contrôleur des
-
-        :param userInput:
-        :param info:
-        """
-
-
 class EventListener:
     """ Écoute les évènement de la Vue (en pratique la vue appelle les méthodes de cette classe)
         Et
@@ -73,38 +67,39 @@ class EventListener:
 
 
     def onRClick(self, event):
+        clientId = self.controller.network.getClientId()
         for unitSelected in self.controller.view.selected:
-            cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
-            cmd.addData('X1', unitSelected.x)
-            cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
-            cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
-            self.controller.network.client.sendCommand(cmd)
+            if unitSelected.estUniteDe(clientId):
+                cmd = Command(clientId, Command.MOVE_UNIT)
+                cmd.addData('X1', unitSelected.x)
+                cmd.addData('Y1', unitSelected.y)
+                cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
+                cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
+                self.controller.network.client.sendCommand(cmd)
 
     def onLPress(self, event):
 
         # Minimap
-        if (event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22) and (event.y >= 18 and event.y <= 229):
-                posClicX = int((event.x - self.controller.view.width-233)/2)+233
-                posClicY = int((event.y - 18) /2)
+        if (self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22) and (18 <= event.y <= 229):
+            posClicX = int((event.x - self.controller.view.width - 233) / 2) + 233
+            posClicY = int((event.y - 18) / 2)
 
-                posRealX = posClicX - 8
-                posRealY = posClicY - 7
+            posRealX = posClicX - 8
+            posRealY = posClicY - 7
 
-                if posRealX < 0:
-                    posRealX = 0
-                elif posRealX > 89:
-                    posRealX = 89
-                if posRealY < 0:
-                    posRealY = 0
-                elif posRealY > 91:
-                    posRealY = 91
+            if posRealX < 0:
+                posRealX = 0
+            elif posRealX > 89:
+                posRealX = 89
+            if posRealY < 0:
+                posRealY = 0
+            elif posRealY > 91:
+                posRealY = 91
 
-
-                self.controller.view.positionX = posRealX
-                self.controller.view.positionY = posRealY
-                #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+            self.controller.view.positionX = posRealX
+            self.controller.view.positionY = posRealY
+            # self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
+            self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
         elif event.y < self.controller.view.height - 100:
             self.leftClickPos = (event.x, event.y)
@@ -117,16 +112,17 @@ class EventListener:
             x1, y1 = self.leftClickPos
             x2, y2 = event.x, event.y
             self.controller.view.deleteSelectionSquare()
-            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
+            clientId = self.controller.network.getClientId()
+            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
 
     def onMouseMotion(self, event):
         if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
             if 18 <= event.y <= 229:
-                self.controller.view.deleteSelectionSquare()#selection de la carte
+                self.controller.view.deleteSelectionSquare()  # selection de la carte
 
-                posClicX = int((event.x - self.controller.view.width-233)/2)+233
-                posClicY = int((event.y - 18) /2)
+                posClicX = int((event.x - self.controller.view.width - 233) / 2) + 233
+                posClicY = int((event.y - 18) / 2)
 
                 posRealX = posClicX - 8
                 posRealY = posClicY - 7
@@ -149,9 +145,8 @@ class EventListener:
             x2, y2 = event.x, event.y
             self.controller.view.carreSelection(x1, y1, x2, y2)
 
-        # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
-        #
-
+            # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
+            #
 
 
     def onCenterClick(self, event):

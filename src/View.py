@@ -195,7 +195,7 @@ class View(GWindow):
         self.selected = []
 
 
-    def detectSelected(self, x1, y1, x2, y2, units):
+    def detectSelected(self, x1, y1, x2, y2, units, clientId):
         """ Ajoute toutes les unités sélectionné dans le carré spécifié
         :param units: All the possible units
         :param x1: coord x du point haut gauche
@@ -209,8 +209,9 @@ class View(GWindow):
             itemCoord = (itemCoords[0] + self.sizeUnit / 2 + (self.positionX * self.item),
                          itemCoords[1] + self.sizeUnit / 2 + (self.positionY * self.item))
             for unit in units:
-                if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
-                    self.selected.append(unit)  # Unité sélectionné
+                if unit.estUniteDe(clientId):
+                    if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
+                        self.selected.append(unit)  # Unité sélectionné
 
 
 

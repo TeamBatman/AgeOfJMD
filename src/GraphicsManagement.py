@@ -134,7 +134,6 @@ class GraphicsManager():
             try:
                 loadPath = directory + filename
                 graphics = Image.open(loadPath)
-                print(loadPath)
                 graphics.convert('RGBA')
                 cls.graphics[filename] = graphics
                 GraphicsManager.outputDebug('chargement de %s' % filename)

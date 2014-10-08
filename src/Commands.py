@@ -32,6 +32,6 @@ class Command():
         :param d: le dictionnaire à partir duquelle on construit l'Objet Command
         :return: L'objet commande construit
         """
-        cmd = Command([d['clientId'], d['data']['TYPE']])
+        cmd = Command(d['clientId'], d['data']['TYPE'])
         cmd.data = d['data']
         return cmd
