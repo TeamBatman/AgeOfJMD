@@ -73,10 +73,10 @@ class GButton(GWidget):
     def draw(self, x, y):
         self.btnItem = self.parent.create_image(x, y, image=self.graphImage, anchor=NW, tags=self.id)
 
-        self.parent.create_text(x + 10, y + 12, text=self.text, anchor=NW, font="Arial", fill=self.textColor,
+        self.getCanvas().create_text(x + 10, y + 12, text=self.text, anchor=NW, font="Arial", fill=self.textColor,
                                 tags=self.id)
 
-        self.eventMonitor = self.parent.create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
+        self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
         self._bindEvents()
 
     def drawState(self, state):
@@ -97,10 +97,10 @@ class GButton(GWidget):
         """ Lie les événements de la souris à l'EventMonitor (Moniteur événementiel)
         """
         # BIND EVENTS
-        self.parent.tag_bind(self.eventMonitor, '<Enter>', self.onFocus)
-        self.parent.tag_bind(self.eventMonitor, '<Leave>', self.onLeave)
-        self.parent.tag_bind(self.eventMonitor, '<ButtonPress-1>', self.onClick)
-        self.parent.tag_bind(self.eventMonitor, '<ButtonRelease-1>', self.onRelease)
+        self.getCanvas().tag_bind(self.eventMonitor, '<Enter>', self.onFocus)
+        self.getCanvas().tag_bind(self.eventMonitor, '<Leave>', self.onLeave)
+        self.getCanvas().tag_bind(self.eventMonitor, '<ButtonPress-1>', self.onClick)
+        self.getCanvas().tag_bind(self.eventMonitor, '<ButtonRelease-1>', self.onRelease)
 
     def onFocus(self, event):
         self.drawState(GButton.FOCUS)

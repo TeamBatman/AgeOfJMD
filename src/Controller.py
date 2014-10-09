@@ -84,7 +84,7 @@ class EventListener:
     def onLPress(self, event):
 
         # Minimap
-        if (event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22) and (event.y >= 18 and event.y <= 229):
+        if (self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22) and (18 <= event.y <= 229):
                 posClicX = int((event.x - self.controller.view.width-233)/2)+233
                 posClicY = int((event.y - 18) /2)
 
