@@ -362,7 +362,6 @@ class Unit():
             return True
         return False
 
-
 class Noeud:
     def __init__(self, parent, x, y, cibleX, cibleY):
         self.parent = parent
@@ -453,7 +452,9 @@ class Model:
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
-        self.units.remove(self.getUnit(uId))
+        u = self.getUnit(uId):
+        if u:
+            self.units.remove()
 
     def createUnit(self, uid, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités
@@ -474,7 +475,6 @@ class Model:
             self.deleteUnit(command.data['X'], command.data['Y'])
 
         elif command.data['TYPE'] == Command.MOVE_UNIT:
-            print("WE MOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOVEEEE")
             self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'])
 
 

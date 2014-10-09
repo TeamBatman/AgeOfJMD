@@ -26,7 +26,7 @@ class SpriteSheet():
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
 
         self.frames = {}  # Le dictionnaire contenant toute les frames
-        self.framesOutlines = {}
+        self.framesOutlines = {} # Le dictionnaire contenant toutes les frames en version sélectionnées
         self._splitSheet()
 
     def _splitRow(self, rowNb, rowTag):
@@ -55,6 +55,9 @@ class SpriteSheet():
         self._splitRow(1, "LEFT")
         self._splitRow(2, "RIGHT")
         self._splitRow(3, "UP")
+
+
+        
 
 
 def colorizeImage(pilImg):
