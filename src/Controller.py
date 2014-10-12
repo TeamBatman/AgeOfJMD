@@ -72,48 +72,66 @@ class EventListener:
         self.leftClickPos = None
 
 
-    def onRClick(self, event):
+    def onMapRClick(self, event):
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
-            cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
+            cmd.addData('X2', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
+            cmd.addData('Y2', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
             self.controller.network.client.sendCommand(cmd)
 
-    def onLPress(self, event):
+    def onMapLPress(self, event):
         self.leftClickPos = (event.x, event.y)
         self.controller.view.resetSelection()
 
 
-    def onLRelease(self, event):
+    def onMapLRelease(self, event):
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
         self.controller.view.deleteSelectionSquare()
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
 
 
-    def onMouseMotion(self, event):
+    def onMapMouseMotion(self, event):
 
         # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
+
+        if x2 > self.controller.view.carte.width:
+            x2 = self.controller.view.carte.width
+
+        if y2 > self.controller.view.carte.height:
+            y2 = self.controller.view.carte.height
+
+
+
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
 
 
-    def onCenterClick(self, event):
+    def onMapCenterClick(self, event):
         cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-        cmd.addData('X', event.x + (self.controller.view.positionX * self.controller.view.item))
-        cmd.addData('Y', event.y + (self.controller.view.positionY * self.controller.view.item))
+        cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
+        cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
         self.controller.network.client.sendCommand(cmd)
+
+
+
 
     def onMinimapLPress(self, event):
         self.controller.view.deleteSelectionSquare()  # selection de la carte
         # TODO Enlever les valeurs 'HARD CODÉES'
-        posClicX = int((event.x - self.controller.view.width-233)/2)+233
-        posClicY = int((event.y - 18) /2)
 
+        miniMapX = self.controller.view.frameMinimap.miniMapX
+        MiniMapY = self.controller.view.frameMinimap.miniMapY
+
+        posClicX = int((event.x - miniMapX)/2)
+        posClicY = int((event.y - MiniMapY)/2)
+
+
+       # TODO COMPRENDRE
         posRealX = posClicX - 8
         posRealY = posClicY - 7
 
@@ -125,7 +143,6 @@ class EventListener:
             posRealY = 0
         elif posRealY > 91:
             posRealY = 91
-
 
         self.controller.view.positionX = posRealX
         self.controller.view.positionY = posRealY
@@ -133,33 +150,11 @@ class EventListener:
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
 
     def onMinimapMouseMotion(self, event):
-        # TODO Enlever les valeurs 'HARD CODÉES'
-        posClicX = int((event.x - self.controller.view.width-233)/2)+233
-        posClicY = int((event.y - 18) / 2)
+        self.onMinimapLPress(event)
 
-        posRealX = posClicX - 8
-        posRealY = posClicY - 7
-
-        if posRealX < 0:
-            posRealX = 0
-        elif posRealX > 89:
-            posRealX = 89
-        if posRealY < 0:
-            posRealY = 0
-        elif posRealY > 91:
-            posRealY = 91
-
-        self.controller.view.positionX = posRealX
-        self.controller.view.positionY = posRealY
-        # self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
-
-
-
-
-
-    def requestCloseWindow(self):
+    def onCloseWindow(self):
         self.controller.shutdown()
+
 
     def createBuilding(self, param):
         if param == 0:

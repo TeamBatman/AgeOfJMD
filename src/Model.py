@@ -392,7 +392,7 @@ class Model:
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?
 
-        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.carte.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         caseX = int(x / grandeurCase)
         caseY = int(y / grandeurCase)
@@ -402,7 +402,7 @@ class Model:
     def trouverCentreCase(self, caseX, caseY):
         # TODO ? Mettre dans la vue ?
 
-        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.carte.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         centreX = (grandeurCase * caseX) + grandeurCase / 2
         centreY = (grandeurCase * caseY) + grandeurCase / 2
