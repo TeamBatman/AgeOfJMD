@@ -36,13 +36,21 @@ class FrameMiniMap():
         self.y = 0
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
-        # TODO AJOUTER LA MINIMAP EN TANT QUE TELLE
-        self.miniMapWidth = 200
-        self.miniMapHeight = 200
+        self.miniMapWidth = 211
+        self.miniMapHeight = 211
 
+        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2)
+        self.minimapMargeY = int((self.height - self.miniMapHeight) / 2)
 
+        self.miniMapX = self.x + self.minimapMargeX
+        self.miniMapY = self.y + self.minimapMargeY
 
-        # TODO BINDER LES ÉVÉNEMENTS
+        self.regionEcouteImage = ImageTk.PhotoImage(Image.new('RGBA', (self.miniMapWidth, self.miniMapHeight)))
+        self.regionEcoute = self.canvas.create_image(self.miniMapX, self.miniMapY,
+                                                     image=self.regionEcouteImage, anchor=NW)
+
+        self.canvas.tag_bind(self.regionEcoute, '<ButtonPress-1>', self.eventListener.onMinimapLPress)
+        self.canvas.tag_bind(self.regionEcoute, '<B1-Motion>', self.eventListener.onMinimapMouseMotion)
 
 
     def draw(self):
@@ -50,7 +58,7 @@ class FrameMiniMap():
         """
         self.frame.draw(self.x, self.y)
 
-    def updateMinimap(self, units, carte):
+    def updateMinimap(self, carte):
         """ Dessine toutes les composantes du cadre
         dans le cas présent la minimap
         """
@@ -59,39 +67,36 @@ class FrameMiniMap():
         except Exception:
             pass
 
-        margeX = int((self.width - self.miniMapWidth)/2)
-        margeY = int((self.height - self.miniMapHeight)/2)
-        print(margeX)
-        x1 = self.x + margeX
-        y1 = self.y + margeY
-        x2 = self.x + self.miniMapWidth
+        x1 = self.miniMapX
+        y1 = self.miniMapY
+        x2 = x1 + self.miniMapWidth
         y2 = y1 + self.miniMapHeight
 
         size = 106
         itemMini = 2  # La grandeur des cases pour la minimap
-
         for x in range(0, size):
             for y in range(0, size):
-
                 posX1 = x1 + x * itemMini
                 posY1 = y1 + y * itemMini
                 posX2 = posX1 + itemMini
                 posY2 = posY1 + itemMini
 
-                if carte[x][y].type == 0:
-                    couleur = "#0B610B"  # vert
-                elif carte[x][y].type == 1:
-                    # couleur = "#D7DF01" #jaune
-                    couleur = "#BFBF00"
-                elif carte[x][y].type == 2:
-                    couleur = "#1C1C1C"  # gris pale
-                elif carte[x][y].type == 3:
-                    couleur = "#BDBDBD"  # gris fonce
-                else:
-                    couleur = "#2E9AFE"  # bleu
+                couleurs = {
+                    0: "#0B610B",  # vert
+                    1: "#BFBF00",  # jaune
+                    2: "#1C1C1C",  # gris pale
+                    3: "#BDBDBD",  # gris fonce
+                    4: "#2E9AFE"  # bleu
+                }
+                couleur = couleurs[carte[x][y].type]
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags='miniMap')
+        self.canvas.tag_raise(self.regionEcoute)
 
     def updateMiniUnits(self, units):
+        """ Dessine les unités à l'écran
+        :param units: les unités
+        :return:
+        """
         try:
             self.canvas.delete('miniUnits')
         except:
@@ -100,11 +105,26 @@ class FrameMiniMap():
         item = 2
         for unit in units:
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
-            x1 = self.width + (caseX * item)
-            y1 = 18 + (caseY * item)
+            x1 = self.miniMapX + (caseX * item)
+            y1 = self.minimapMargeY + (caseY * item)
             x2 = x1 + item
             y2 = y1 + item
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags='miniUnits')
+
+
+    def drawRectMiniMap(self, positionCameraX, positionCameraY):
+        """ Dessine le rectangle de caméra de la minimap
+        :param positionCameraX: position de la caméra en X
+        :param positionCameraY: position de la caméra en Y
+        :return:
+        """
+        self.canvas.delete('rectMiniMap')
+
+        itemMini = 2  # La grandeur des cases pour la minimap
+        xr = self.miniMapX + positionCameraX * itemMini
+        yr = self.miniMapY + positionCameraY * itemMini
+
+        self.canvas.create_rectangle(xr, yr, xr + 17 * itemMini, yr + 15 * itemMini, outline='red', tags='rectMiniMap')
 
 
 class FrameBottom():  # TODO COMPLETER
@@ -123,7 +143,7 @@ class FrameBottom():  # TODO COMPLETER
 
 
         # self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
-        #self.moraleProg.setProgression(63)
+        # self.moraleProg.setProgression(63)
         #self.moraleProg.draw(x=self.bottomPanel.x + 35, y=self.height - self.bottomPanel.height + 25)
 
 
@@ -175,10 +195,9 @@ class View(GWindow):
     def drawHUD(self):
         """ Dessine la base du HUD
         """
-        # LA MINIMAP
+        # LE CADRE DE LA MINIMAP
         self.frameMinimap = FrameMiniMap(self.canvas, self.eventListener)
         self.frameMinimap.draw()
-
 
         # LE CADRE DROIT
         self.frameSide = FrameSide(self.canvas, self.frameMinimap.width, self.frameMinimap.height)
@@ -209,7 +228,7 @@ class View(GWindow):
                 if carte[x][y].type == 0:
                     couleur = "#0B610B"  # vert
                     # self.canvas.create_image(posX1, posY1,
-                    #                         image=ImageTk.PhotoImage(GraphicsManager.get('Graphics/World/grass.png')))
+                    # image=ImageTk.PhotoImage(GraphicsManager.get('Graphics/World/grass.png')))
                     #continue
                 elif carte[x][y].type == 1:
                     # couleur = "#D7DF01" #jaune
@@ -223,32 +242,15 @@ class View(GWindow):
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags='carte')
 
 
-    def drawMinimap(self, units, carte):
-        self.frameMinimap.updateMinimap(units, carte)
-
+    def drawMinimap(self, carte):
+        self.frameMinimap.updateMinimap(carte)
 
     def drawMiniUnits(self, units):
         self.frameMinimap.updateMiniUnits(units)
 
 
     def drawRectMiniMap(self):
-        try:
-            self.canvas.delete('rectMiniMap')
-        except:
-            pass
-
-        x1 = self.width - 233
-        y1 = 18
-        itemMini = 2  # La grandeur des cases pour la minimap
-        xr = x1 + self.positionX * itemMini
-        yr = y1 + self.positionY * itemMini
-
-        self.canvas.create_line(xr, yr, xr + 17 * itemMini, yr, fill="red", tags='rectMiniMap')
-        self.canvas.create_line(xr, yr, xr, yr + 15 * itemMini, fill="red", tags='rectMiniMap')
-        self.canvas.create_line(xr, yr + 15 * itemMini, xr + 17 * itemMini, yr + 15 * itemMini, fill="red",
-                                tags='rectMiniMap')
-        self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red",
-                                tags='rectMiniMap')
+        self.frameMinimap.drawRectMiniMap(self.positionX, self.positionY)
 
 
     def resetSelection(self):
@@ -284,6 +286,9 @@ class View(GWindow):
 
 
     def bindEvents(self):
+
+        # TODO BIND JUSTE LA MAP
+
         self.canvas.bind("<Button-2>", self.eventListener.onCenterClick)
         self.canvas.bind("<Button-3>", self.eventListener.onRClick)
 
