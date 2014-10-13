@@ -152,12 +152,15 @@ class Client:
         """
         if not self.host:
             raise ConnectionError("Impossible de SYNCHRONISER")
-
-        response = self.host.getLatestCommand(self.id)
-        if response:
-            command = pickle.loads(response)
-            return Command.buildFromDict(command)
-        else:
+        try:
+            response = self.host.getLatestCommand(self.id)
+            if response:
+                command = pickle.loads(response)
+                return Command.buildFromDict(command)
+            else:
+                return None
+        except:
+            print("fail serveur")
             return None
 
 
