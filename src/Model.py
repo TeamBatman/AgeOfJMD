@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
+import Batiments
 from Commands import Command
 from Carte import Carte
+
+
 
 import time
 from GraphicsManagement import SpriteSheet
@@ -310,6 +313,7 @@ class Model:
     def __init__(self, controller):
         self.controller = controller
         self.units = []
+        self.buildings = []
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
 
@@ -329,6 +333,11 @@ class Model:
         """
         # self.units.append(Unit(x, y, self))
         self.units.append(Paysan(x, y, self))
+
+    def createBuilding(self,type,posX,posY):
+        if type == 0:
+            self.buildings.append(Batiments.Ferme(self, posX, posY))
+
 
     def executeCommand(self, command):
         """ Exécute une commande

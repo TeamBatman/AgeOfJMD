@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import time
+from PIL import Image, ImageTk
+from GraphicsManagement import GraphicsManager
 import Model
+
 
 #TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
 #TODO L'hopital ne fait rien avec le healing
@@ -17,6 +20,7 @@ class Batiment:
         self.pointsDeVie = 100
         self.estSelectionne = False
         self.type = ""
+        self.image = None
         self.parent = parent
         self.rechercheCompletee = False
         self.enRecherche = False  #booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche
@@ -406,6 +410,9 @@ class Ferme(Batiment):
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10
+        self.type = "Ferme"
+        self.image = ImageTk.PhotoImage(GraphicsManager.get('Graphics/Buildings/Age_I/Farm.png'))
+        print("bob")
 
     def produire(self):
         #TODO a se renseigner sur les valeurs pour la production

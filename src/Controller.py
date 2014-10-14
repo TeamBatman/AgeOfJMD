@@ -27,7 +27,7 @@ class Controller:
 
         self.model.update()
 
-        self.view.update(self.model.units)
+        self.view.update(self.model.units,self.model.buildings)
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
@@ -68,14 +68,17 @@ class EventListener:
 
 
     def onRClick(self, event):
-        # print(self.controller.view.selected)
-        for unitSelected in self.controller.view.selected:
-            cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
-            cmd.addData('X1', unitSelected.x)
-            cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
-            cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
-            self.controller.network.client.sendCommand(cmd)
+        if self.controller.view.modeConstruction == True:
+            self.controller.model.createBuilding(0,event.x,event.y)
+        else:
+            # print(self.controller.view.selected)
+            for unitSelected in self.controller.view.selected:
+                cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+                cmd.addData('X1', unitSelected.x)
+                cmd.addData('Y1', unitSelected.y)
+                cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
+                cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
+                self.controller.network.client.sendCommand(cmd)
 
     def onLPress(self, event):
         self.leftClickPos = (event.x, event.y)
@@ -106,15 +109,19 @@ class EventListener:
                 self.controller.view.positionX = posRealX
                 self.controller.view.positionY = posRealY
                 #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+                self.controller.view.update(self.controller.model.units, self.controller.model.buildings, self.controller.model.carte.matrice)
 
     def onLRelease(self, event):
-
         if not (self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22):
-            x1, y1 = self.leftClickPos
-            x2, y2 = event.x, event.y
-            self.controller.view.deleteSelectionSquare()
-            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
+            # Si clic sur bouton gauche de la souris en mode construction, annulation du mode construction
+            if self.controller.view.modeConstruction == True:
+                self.controller.view.modeConstruction = False
+                print("MODE SELECTION")
+            else:
+                x1, y1 = self.leftClickPos
+                x2, y2 = event.x, event.y
+                self.controller.view.deleteSelectionSquare()
+                self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
 
     def onMouseMotion(self, event):
         x1, y1 = self.leftClickPos
@@ -138,6 +145,12 @@ class EventListener:
     def createBuilding(self, param):
         if param == 0:
             print("Create building ferme")
+            self.controller.view.modeConstruction = True
+            if self.controller.view.modeConstruction != True:
+                print("oups")
+            else:
+                print("MODE CONSTRUCTION")
+
         elif param == 1:
             print("Create building baraque")
         elif param == 2:

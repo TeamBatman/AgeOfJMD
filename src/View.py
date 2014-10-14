@@ -27,8 +27,8 @@ class View(GWindow):
         self.height = 768
         self.selected = []  # Liste qui contient ce qui est selectionné
 
-        self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#2B2B2B')
+        # PARAMÈTRES CRÉATION BATIMENTS
+        self.modeConstruction = False
 
         # POUR LES CASES
         self.sizeUnit = 32
@@ -184,9 +184,9 @@ class View(GWindow):
         self.canvas.create_line(xr + 17 * itemMini, yr, xr + 17 * itemMini, yr + 15 * itemMini, fill="red",
                                 tags='rectMiniMap')
 
-
-
-
+    def addBuildingToCursor(self,posX,posY):
+        #self.buildingSprite =
+        pass
 
 
     def resetSelection(self):
@@ -241,11 +241,6 @@ class View(GWindow):
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.requestCloseWindow)
 
 
-
-
-
-
-
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
 
@@ -255,7 +250,7 @@ class View(GWindow):
     def createBuildingHopital(self):
         self.eventListener.createBuilding(2)
 
-    def update(self, units, carte=None):
+    def update(self, units, buildings, carte=None):
 
         self.canvas.delete('unit')
 
@@ -278,6 +273,14 @@ class View(GWindow):
                                          anchor=NW,
                                          image=img,
                                          tags='unit')
+
+        for building in buildings:
+            img = building.image
+            self.canvas.create_image((building.posX - self.sizeUnit / 2) - (self.positionX * self.item),
+                                         (building.posY - self.sizeUnit / 2) - (self.positionY * self.item),
+                                         anchor=NW,
+                                         image=img,
+                                         tags='ferme')
 
 
     def isUnitShow(self, unit):
