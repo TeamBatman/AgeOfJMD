@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController
 from View import View
-import sys
+
+
+import time
 
 
 class Controller:
@@ -21,6 +25,7 @@ class Controller:
         self.refreshRate = 64  # Nombre de fois par seconde
 
     def mainLoop(self):
+        """
         cmd = self.network.client.synchronize()
         if cmd:
             self.model.executeCommand(cmd)
@@ -30,19 +35,25 @@ class Controller:
                 paysan.chercherRessources()
             else:
                 del paysan
+        """
         self.model.update()
-
         self.view.update(self.model.units)
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
         """ Starts the controller
         """
+        # LANCEMENT RÉSEAU
         self.network.startServer()
         self.network.connectClient()
+
+        # LANCEMENT VUE
+        self.view.drawMap(self.model.carte.matrice)
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
-        self.view.drawMap(self.model.carte.matrice)
+        
+
+        # LANCEMENT MOTEUR DE JEU
         self.mainLoop()
         self.view.show()
 
@@ -121,14 +132,45 @@ class EventListener:
 
 
     def onMinimapLPress(self, event):
-        self.controller.view.deleteSelectionSquare()  # selection de la carte
-        # TODO Enlever les valeurs 'HARD CODÉES'
+
+        self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
+
+        self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
+
+        # BOUGER LA CAMÉRA
 
         miniMapX = self.controller.view.frameMinimap.miniMapX
         MiniMapY = self.controller.view.frameMinimap.miniMapY
 
+        # CONVERTIR POSITION DU RECTANGLE
         posClicX = int((event.x - miniMapX)/2)
         posClicY = int((event.y - MiniMapY)/2)
+
+        posRealX = posClicX - 8
+        posRealY = posClicY - 7
+
+
+        self.controller.view.carte.cameraX = posRealX
+        self.controller.view.carte.cameraY = posRealY
+        #self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+
+        return
+
+        # TODO C'EST VRAIMENT LONG TRAVERSER CETTE FONCTION À PARTIR D'ICI --> OPTIMISER
+        # TODO Enlever les valeurs 'HARD CODÉES'
+
+        startTime = time.time()
+
+
+        
+
+        posClicX = int((event.x - miniMapX)/2)
+        posClicY = int((event.y - MiniMapY)/2)
+
+
+
+
+        return
 
 
        # TODO COMPRENDRE
@@ -144,10 +186,17 @@ class EventListener:
         elif posRealY > 91:
             posRealY = 91
 
-        self.controller.view.positionX = posRealX
-        self.controller.view.positionY = posRealY
+
+
+        self.controller.view.carte.cameraX = posRealX
+        self.controller.view.carte.cameraY = posRealY
         #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+        print(time.time() - startTime)
+
+
+
+
 
     def onMinimapMouseMotion(self, event):
         self.onMinimapLPress(event)

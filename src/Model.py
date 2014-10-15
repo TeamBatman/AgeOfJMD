@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import time
+
 from Commands import Command
 from Carte import Carte
 from GraphicsManagement import SpriteSheet
-
-import time
 
 
 class Unit():

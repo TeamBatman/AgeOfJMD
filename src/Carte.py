@@ -1,5 +1,7 @@
-from Tuile import Tuile
 import random
+
+from Tuile import Tuile
+
 
 class Carte(object):
 	"""Modelisation de la carte de jeu"""

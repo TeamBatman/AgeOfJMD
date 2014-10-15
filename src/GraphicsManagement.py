@@ -5,8 +5,6 @@
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
 from PIL import Image
 from PIL import ImageTk
-from PIL import ImageOps
-from PIL import ImageFilter
 
 
 class SpriteSheet():

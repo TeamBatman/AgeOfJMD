@@ -6,8 +6,11 @@
 import json as pickle
 import socket
 import threading
+
 import Pyro4
+
 from Commands import Command
+
 
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
