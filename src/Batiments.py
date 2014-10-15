@@ -21,6 +21,7 @@ class Batiment:
         self.estSelectionne = False
         self.type = ""
         self.image = None
+        self.dejaAfficher = False
         self.parent = parent
         self.rechercheCompletee = False
         self.enRecherche = False  #booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche

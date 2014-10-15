@@ -258,7 +258,6 @@ class View(GWindow):
         if carte:
             # self.drawMinimap(units, carte)
             self.drawRectMiniMap()
-            self.drawMap(carte)
 
 
         self.drawMiniUnits(units)
@@ -275,12 +274,14 @@ class View(GWindow):
                                          tags='unit')
 
         for building in buildings:
-            img = building.image
-            self.canvas.create_image((building.posX - self.sizeUnit / 2) - (self.positionX * self.item),
-                                         (building.posY - self.sizeUnit / 2) - (self.positionY * self.item),
-                                         anchor=NW,
-                                         image=img,
-                                         tags='ferme')
+            if building.dejaAfficher == False:
+                img = building.image
+                self.canvas.create_image(building.posX,
+                                             building.posY,
+                                             anchor=NW,
+                                             image=img,
+                                             tags='ferme')
+                building.dejaAfficher = True
 
 
     def isUnitShow(self, unit):

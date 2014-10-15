@@ -336,7 +336,15 @@ class Model:
 
     def createBuilding(self,type,posX,posY):
         if type == 0:
-            self.buildings.append(Batiments.Ferme(self, posX, posY))
+            x,y = self.trouverCaseMatrice(posX,posY)
+            if not self.carte.matrice[x][y].type == 0:
+                print("ressource")
+            else:
+                print(posX,posY)
+                print(x,y)
+                x = x*48
+                y = y*48
+                self.buildings.append(Batiments.Ferme(self, x, y))
 
 
     def executeCommand(self, command):
@@ -364,6 +372,8 @@ class Model:
         return caseX, caseY
 
     def trouverCentreCase(self, caseX, caseY):
+        # ?????FONCTIONNE AUCUNEMENT?????
+
         # TODO ? Mettre dans la vue ?
 
         grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
