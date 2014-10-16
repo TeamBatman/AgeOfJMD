@@ -48,9 +48,11 @@ class Controller:
         self.network.connectClient()
 
         # LANCEMENT VUE
-        self.view.drawMap(self.model.carte.matrice)
+        # TODO Draw map selon position de la mini Caméra
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
+        
         
 
         # LANCEMENT MOTEUR DE JEU
@@ -80,10 +82,16 @@ class EventListener:
 
     def __init__(self, controller):
         self.controller = controller
+        self.view = None
+        self.model = controller.model
+
+        # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
 
     def onMapRClick(self, event):
+        """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
+        """
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)
@@ -93,20 +101,23 @@ class EventListener:
             self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):
+        """ Appelée lorsque le joueur appuie sur le bouton gauche de sa souris dans la regions de la map
+        """
         self.leftClickPos = (event.x, event.y)
         self.controller.view.resetSelection()
 
 
     def onMapLRelease(self, event):
+        """ Appelée lorsque le joueur lâche le bouton gauche de sa souris dans la regions de la map
+        """
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
         self.controller.view.deleteSelectionSquare()
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
 
-
     def onMapMouseMotion(self, event):
-
-        # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
+        """ Appelée lorsque le joueur bouge sa souris dans la regions de la map
+        """
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
 
@@ -116,13 +127,12 @@ class EventListener:
         if y2 > self.controller.view.carte.height:
             y2 = self.controller.view.carte.height
 
-
-
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
 
 
     def onMapCenterClick(self, event):
+        """ Appelée lorsque le joueur fait un clique de la mollette """ 
         cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
         cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
         cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
@@ -132,76 +142,37 @@ class EventListener:
 
 
     def onMinimapLPress(self, event):
+        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
+        dans la regions de la minimap
+        """
 
         self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
-
-        self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
 
         # BOUGER LA CAMÉRA
 
         miniMapX = self.controller.view.frameMinimap.miniMapX
         MiniMapY = self.controller.view.frameMinimap.miniMapY
+        miniCamX = self.controller.view.frameMinimap.miniCameraX
+        miniCamY = self.controller.view.frameMinimap.miniCameraY
+        tailleMiniTuile = self.controller.view.frameMinimap.tailleTuile
 
-        # CONVERTIR POSITION DU RECTANGLE
-        posClicX = int((event.x - miniMapX)/2)
-        posClicY = int((event.y - MiniMapY)/2)
+        # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
+        # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
+        self.controller.view.carte.cameraX = int((miniCamX - miniMapX)/tailleMiniTuile)
+        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY)/tailleMiniTuile)
 
-        posRealX = posClicX - 8
-        posRealY = posClicY - 7
-
-
-        self.controller.view.carte.cameraX = posRealX
-        self.controller.view.carte.cameraY = posRealY
-        #self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
-
-        return
-
-        # TODO C'EST VRAIMENT LONG TRAVERSER CETTE FONCTION À PARTIR D'ICI --> OPTIMISER
-        # TODO Enlever les valeurs 'HARD CODÉES'
-
-        startTime = time.time()
-
+        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+        self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
 
         
 
-        posClicX = int((event.x - miniMapX)/2)
-        posClicY = int((event.y - MiniMapY)/2)
-
-
-
-
-        return
-
-
-       # TODO COMPRENDRE
-        posRealX = posClicX - 8
-        posRealY = posClicY - 7
-
-        if posRealX < 0:
-            posRealX = 0
-        elif posRealX > 89:
-            posRealX = 89
-        if posRealY < 0:
-            posRealY = 0
-        elif posRealY > 91:
-            posRealY = 91
-
-
-
-        self.controller.view.carte.cameraX = posRealX
-        self.controller.view.carte.cameraY = posRealY
-        #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
-        print(time.time() - startTime)
-
-
-
-
-
     def onMinimapMouseMotion(self, event):
+        """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap
+        """
         self.onMinimapLPress(event)
 
     def onCloseWindow(self):
+        """ Appelée lorsque le joueur ferme la fenêtre """
         self.controller.shutdown()
 
 

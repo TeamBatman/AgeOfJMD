@@ -10,8 +10,6 @@ from GuiAwesomeness import *
 from itertools import product
 
 
-
-
 class FrameSide():
     def __init__(self, canvas, largeurMinimap, hauteurMinimap):
         self.canvas = canvas
@@ -38,19 +36,19 @@ class FrameMiniMap():
 
         # LE CADRE
         self.width = 250  # Largeur du cadre en pixels
-        self.height = 250 # hauteur du cadre en pixels
-        self.x = int(self.canvas.cget('width')) - self.width # en pixels
-        self.y = 0 # en pixels
+        self.height = 250  # hauteur du cadre en pixels
+        self.x = int(self.canvas.cget('width')) - self.width  # en pixels
+        self.y = 0  # en pixels
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
 
         # LA MINIMAP
-        self.miniMapTag = 'miniMap' # Le tag tkinter à utiliser pour la minimap
-        self.miniMapWidth = 211   # en pixels
+        self.miniMapTag = 'miniMap'  # Le tag tkinter à utiliser pour la minimap
+        self.miniMapWidth = 211  # en pixels
         self.miniMapHeight = 211  # en pixels
 
-        ## Taille de la marge entre la cadre et la minimap en pixels
-        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2) 
+        # # Taille de la marge entre la cadre et la minimap en pixels
+        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2)
         self.minimapMargeY = int((self.height - self.miniMapHeight) / 2)
 
         # Position de la minimap en pixel par rapport au caneva
@@ -63,9 +61,6 @@ class FrameMiniMap():
 
         self.tailleTuile = 2  # Taille d'une tuile en pixels 
 
-
-
-        
 
     def bindEvents(self):
         """ Lie les évènements entre au eventListener
@@ -87,21 +82,20 @@ class FrameMiniMap():
         """ Met à jours, (re)dessine la carte de la minimap
         """
         self.canvas.delete(self.miniMapTag)
-        #x1 = self.miniMapX
+        # x1 = self.miniMapX
         #y1 = self.miniMapY
         #x2 = x1 + self.miniMapWidth
         #y2 = y1 + self.miniMapHeight
 
-        size = 106    # TODO Explication de ce chiffre
+        size = 106  # TODO Explication de ce chiffre
         itemMini = self.tailleTuile  # La grandeur des cases pour la minimap en pixels
         couleurs = {
             0: "#0B610B",  # vert
             1: "#BFBF00",  # jaune
             2: "#1C1C1C",  # gris pale
             3: "#BDBDBD",  # gris fonce
-            4: "#2E9AFE"   # bleu
+            4: "#2E9AFE"  # bleu
         }
-
 
         for x in range(size):
             for y in range(size):
@@ -130,23 +124,20 @@ class FrameMiniMap():
             y2 = y1 + item
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=tagUnits)
 
-    # TODO METTRE LA TAILLE DE LA PARTIE VISIBLE DE LA CARTE
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
         """ (Re)dessine le rectangle de caméra de la minimap
         :param clicX: position X de la souris en pixels
         :param clicY: position Y de la souris en pixels
         """
-        # TODO Mettre la taille du rectangle relativement à la portion visible de la carte
 
         width = self.tailleTuile * nbCasesX  # Largeur du Rectangle
-        height = self.tailleTuile * nbCasesY # Hauteur du Rectangle
+        height = self.tailleTuile * nbCasesY  # Hauteur du Rectangle
         couleur = 'red'
-
 
         # On centre le rectangle par rapport au Clic de la souris
 
-        self.miniCameraX = clicX - width/2
-        self.miniCameraY = clicY - height/2
+        self.miniCameraX = clicX - width / 2
+        self.miniCameraY = clicY - height / 2
 
 
         # TESTER LES LIMITES
@@ -156,25 +147,25 @@ class FrameMiniMap():
             self.miniCameraX = self.miniMapX
 
         # Limite Droite
-        if self.miniCameraX+width > self.miniMapX + self.miniMapWidth:
-            self.miniCameraX = self.miniMapX + self.miniMapWidth - width 
+        if self.miniCameraX + width > self.miniMapX + self.miniMapWidth:
+            self.miniCameraX = self.miniMapX + self.miniMapWidth - width
 
-        # Limite Haut
+            # Limite Haut
         if self.miniCameraY < self.miniMapY:
             self.miniCameraY = self.miniMapY
 
         # Limite Bas
-        if self.miniCameraY+height > self.miniMapY + self.miniMapHeight:
+        if self.miniCameraY + height > self.miniMapY + self.miniMapHeight:
             self.miniCameraY = self.miniMapY + self.miniMapHeight - height
 
         # On affiche le rectangle
         self.canvas.delete('rectMiniMap')
-        self.canvas.create_rectangle(self.miniCameraX, self.miniCameraY,  
-                                     self.miniCameraX+width,  self.miniCameraY+height, 
+        self.canvas.create_rectangle(self.miniCameraX, self.miniCameraY,
+                                     self.miniCameraX + width, self.miniCameraY + height,
                                      outline=couleur, tags='rectMiniMap')
 
 
-class FrameBottom():  # TODO COMPLETER
+class FrameBottom():
     def __init__(self, canvas, largeurMinimap):
         self.canvas = canvas
         self.width = int(self.canvas.cget('width')) - largeurMinimap
@@ -185,13 +176,10 @@ class FrameBottom():  # TODO COMPLETER
 
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
-
-
-
-
+        # TODO COMPLETER
         # self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         # self.moraleProg.setProgression(63)
-        #self.moraleProg.draw(x=self.bottomPanel.x + 35, y=self.height - self.bottomPanel.height + 25)
+        # self.moraleProg.draw(x=self.bottomPanel.x + 35, y=self.height - self.bottomPanel.height + 25)
 
 
     def draw(self):
@@ -220,14 +208,14 @@ class Carte():
         self.cameraX = 0
         self.cameraY = 0
 
+        self.tagName = 'carte'
 
-        self.canvas.create_rectangle(0,0, self.width, self.height, fill='green', tags='carte')
-        self.canvas.tag_lower('carte') # Pour que ce soit derrière le HUD
 
     def bindEvents(self):
         """ Lis les événements à la carte
         """
-
+        self.canvas.create_rectangle(0, 0, self.width, self.height, fill='green', tags=self.tagName)
+        self.canvas.tag_lower('carte')  # Pour que ce soit derrière le HUD
         self.canvas.tag_bind('carte', '<Button-2>', self.eventListener.onMapCenterClick)
         self.canvas.tag_bind('carte', '<Button-3>', self.eventListener.onMapRClick)
 
@@ -240,17 +228,19 @@ class Carte():
         """ Dessine la carte à l'écran
         :param carte: la carte
         """
+        self.canvas.delete(self.tagName)
+        # TODO OPTIMISER C'EST TROP LONG
         x1 = self.cameraX
         y1 = self.cameraY
         x2 = self.width
         y2 = self.height
 
         couleurs = {
-                    0: "#0B610B",  # vert
-                    1: "#BFBF00",  # jaune
-                    2: "#1C1C1C",  # gris pale
-                    3: "#BDBDBD",  # gris fonce
-                    4: "#2E9AFE"  # bleu
+            0: "#0B610B",  # vert
+            1: "#BFBF00",  # jaune
+            2: "#1C1C1C",  # gris pale
+            3: "#BDBDBD",  # gris fonce
+            4: "#2E9AFE"  # bleu
         }
 
         for x in range(x1, x1 + self.nbCasesX):
@@ -260,33 +250,10 @@ class Carte():
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
 
-                try:
-                    couleur = couleurs[carte[x][y].type]
-                except Exception as e:
-                    print("NOOOOOOOOOOO")
-                    print(carte[x][y].type)
-                    exit()
-                
+                couleur = couleurs[carte[x][y].type]
 
-                """
-                if carte[x][y].type == 0:
-                    couleur = "#0B610B"  # vert
-                    # self.canvas.create_image(posX1, posY1,
-                    # image=ImageTk.PhotoImage(GraphicsManager.get('Graphics/World/grass.png')))
-                    #continue
-                elif carte[x][y].type == 1:
-                    # couleur = "#D7DF01" #jaune
-                    couleur = "#BFBF00"
-                elif carte[x][y].type == 2:
-                    couleur = "#1C1C1C"  # gris pale
-                elif carte[x][y].type == 3:
-                    couleur = "#BDBDBD"  # gris fonce
-                else:
-                    couleur = "#2E9AFE"  # bleu
-                """
-                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags='carte')
-        #self.canvas.tag_lower('carte') # Pour que ce soit derrière le HUD
-        #self.canvas.tag_raise(self.regionEcoute)
+                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+        self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
 
     def drawUnits(self, units, selectedUnits):
@@ -296,13 +263,13 @@ class Carte():
         """
         self.canvas.delete('unit')
         for unit in units:
-            if self.isUnitShow(unit):
+            if self.isUnitShown(unit):
                 img = unit.activeOutline if unit in selectedUnits else unit.activeFrame
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
 
-    def isUnitShow(self, unit):
+    def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
         :param unit:
         :return: True si l'unité doit être dessiner sinon False
@@ -324,24 +291,17 @@ class Carte():
         return False
 
 
-
-
-
-
-
-
 class View(GWindow):
     """ Responsable de l'affichage graphique et de captuer les entrées de l'usager"""
 
     def __init__(self, evListener):
         GWindow.__init__(self)
-        # TODO mettre une référence au parent
 
         # PARAMÈTRES DE BASE
 
         self.width = 1024
         self.height = 768
-        self.selected = []  # Liste qui contient ce qui est selectionné
+        self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
 
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
@@ -352,16 +312,13 @@ class View(GWindow):
         self.canvas.pack()
 
 
-        # Position de la Caméra
-        self.positionX = 0
-        self.positionY = 0
-
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
 
         # LE HUD
         self.drawHUD()
-        self.carte = Carte(self.canvas, evListener, self.width, self.height, self.frameSide.width, self.frameBottom.height)
+        self.carte = Carte(self.canvas, evListener, self.width, self.height, self.frameSide.width,
+                           self.frameBottom.height)
 
         # LIAISON DES ÉVÉNEMENTS
         self.bindEvents()
@@ -430,6 +387,7 @@ class View(GWindow):
         :param x2: coord x du point bas droite
         :param y2: coord y du point bas droite
         """
+        # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
         for item in items:
             itemCoords = self.canvas.coords(item)
@@ -440,7 +398,7 @@ class View(GWindow):
                     self.selected.append(unit)  # Unité sélectionné
 
 
-    # TODO Mettre fonctions du rectangle de sélection dans la classe map
+    # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?
 
     def carreSelection(self, x1, y1, x2, y2):
         """ Dessine un rectangle de selection
@@ -460,7 +418,7 @@ class View(GWindow):
 
     def bindEvents(self):
         """ Lie les évènements de chacun des composantes du gui """
-        
+
         self.frameMinimap.bindEvents()
         self.carte.bindEvents()
 
@@ -480,8 +438,6 @@ class View(GWindow):
         self.drawUnits(units)
 
 
-
-
     def show(self):
         """ Affiche la fenêtre de jeu à l'écran
         """
@@ -496,7 +452,6 @@ class View(GWindow):
         """ Détruit la fenêtre de jeu
         """
         self.root.destroy()
-
 
 
     def createBuildingFerme(self):
