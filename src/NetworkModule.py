@@ -4,12 +4,18 @@
 """ NetworkModule.py: Ce module contient toutes les classes et fonctions nécessaires au bon fonctionnement du réseau """
 
 import json as pickle
+import random
 import socket
 import threading
 import Pyro4
 from Commands import Command
 
+
+
+
+
 # CONFIGURATION PYRO
+from Model import Joueur
 
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
 Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindre et deconnecte le client après ce délais
@@ -32,6 +38,24 @@ class ServerController:
         self.idIndex = 0  # À chaque attribution d'ID ce nombre est augmenté [il constitue l'identifiant unique]
         self.commands = []  # une liste des commandes reçues
 
+        # Les civilisations possibles
+        self.civilisations = [
+            Joueur.ROUGE,
+            Joueur.BLEU,
+            Joueur.VERT,
+
+            Joueur.MAUVE,
+            Joueur.ORANGE,
+            Joueur.ROSE,
+
+            Joueur.NOIR,
+            Joueur.BLANC,
+            Joueur.JAUNE
+        ]
+
+
+
+
     def _generateId(self):
         """ Génère un identifiant unique à être attribué à chaque utilisateur
         :return: a unique ID
@@ -44,7 +68,9 @@ class ServerController:
         """ Permet à un client de rejoindre le serveur et lui retoune un Identifiant unique
         :return: l'identifiant unique généré pour le client
         """
-        clientId = self._generateId()
+
+        random.shuffle(self.civilisations)
+        clientId = self.civilisations.pop()
         self.clients[clientId] = []
         Server.outputDebug('CLIENT %s JUST JOINED' % clientId)
         return clientId
@@ -53,7 +79,6 @@ class ServerController:
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
-        map
         for client in self.clients:
             self.clients[client].append(command)
 
@@ -157,7 +182,7 @@ class Client:
         self.host = Pyro4.Proxy(self.uri)
         self.id = self.host.join()
 
-        Client.outputDebug("Connecté à %s avec ID: %s" %(self.uri, self.id))
+        Client.outputDebug("Connecté à %s avec ID: %s" % (self.uri, self.id))
 
 
     def synchronize(self):

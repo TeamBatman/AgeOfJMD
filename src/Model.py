@@ -24,6 +24,7 @@ class Joueur:
     NOIR = 6
     BLANC = 7
     JAUNE = 8
+    
     NB_CIVLISATION = 9
 
 
@@ -392,14 +393,26 @@ class Paysan(Unit):
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
 
     def determineSpritesheet(self):
-        if self.civilisation == Joueur.ROUGE:
-            self.spriteSheet = SpriteSheet('Units/Age_I/paysan_rouge.png')
-        else:  # TODO COMPLETER
-            self.spriteSheet = SpriteSheet('Units/Age_I/paysan_bleu.png')
+
+        spritesheets = {
+            Joueur.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Joueur.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Joueur.JAUNE: 'Unit/Age_I/paysan_jaune.png',
+
+            Joueur.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Joueur.NOIR: 'Units/Age_I/paysan_noir.png',
+            Joueur.ORANGE: 'Units/Age_I/paysan_orange.png',
+
+            Joueur.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Joueur.VERT: 'Units/Age_I/paysan_vert.png',
+            Joueur.ROSE: 'Units/Age_I/paysan_rose.png'
+        }
+        self.spriteSheet = SpriteSheet(spritesheets[self.civilisation])
+
+
 
     def update(self):
         Unit.update(self)
-
 
 
 
@@ -449,12 +462,11 @@ class Model:
 
     def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
-        :param x: position x de l'unité
-        :param y: position y de l'unité
         """
-        u = self.getUnit(uId):
-        if u:
-            self.units.remove()
+        try:
+            self.units.remove(self.getUnit(uId))
+        except Exception:
+            pass   # N'existait pas
 
     def createUnit(self, uid, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités

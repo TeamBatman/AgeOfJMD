@@ -56,3 +56,6 @@ docs/_build/
 # PyCharm COnfig files
 .idea/*
 
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
