@@ -24,7 +24,7 @@ class Batiment:
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
         self.coutRecherche1 = [0,0,0]
-        self.coutRecherche2 = [0,0,0]   #[bois, metal, gaz]
+        self.coutRecherche2 = [0,0,0]   #[bois, minerais, charbon]
         self.coutCreer1 = [0,0,0]
         self.coutCreer2 = [0,0,0]
         self.coutCreer3 = [0,0,0]
@@ -45,30 +45,30 @@ class Batiment:
             self.parent.bois += 100
         elif self.type == "Eglise":
             self.parent.bois += 50
-            self.parent.metal += 50
+            self.parent.minerais += 50
         elif self.type == "Tour de guet":
             self.parent.bois += 50
-            self.parent.metal += 50
+            self.parent.minerais += 50
         elif self.type == "Baraque":
             self.parent.bois += 50
-            self.parent.metal += 50
+            self.parent.minerais += 50
         elif self.type == "Hopital":
             self.parent.bois += 50
-            self.parent.metal += 50
-            self.parent.huile += 50
+            self.parent.minerais += 50
+            self.parent.charbon += 50
         elif self.type == "Garage":
             self.parent.bois += 50
-            self.parent.metal += 50
-            self.parent.huile += 50
+            self.parent.minerais += 50
+            self.parent.charbon += 50
         elif self.type == "Ferme":
             self.parent.bois += 50
         elif self.type == "Scierie":
             self.parent.bois += 50
-            self.parent.metal += 50
+            self.parent.minerais += 50
         elif self.type == "Fonderie":
             self.parent.bois += 50
-            self.parent.metal += 50
-            self.parent.huile += 50
+            self.parent.minerais += 50
+            self.parent.charbon += 50
 
     def sortirUnites(self):
         #verifie si le batiment peut etre occupe puis s'il y a des unites dedans et les sort
@@ -289,9 +289,9 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.parent.bois >= self.coutRecherche2[0] and self.parent.metal >= self.coutRecherche2[1]:
+                    if self.parent.bois >= self.coutRecherche2[0] and self.parent.minerais >= self.coutRecherche2[1]:
                         self.parent.bois -= self.coutRecherche2[0]
-                        self.parent.metal -= self.coutRecherche2[1]
+                        self.parent.minerais -= self.coutRecherche2[1]
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche >= 60:
@@ -595,7 +595,7 @@ class Fonderie(Batiment):
         #TODO a se renseigner sur les valeurs pour la production
         if self.estOccupe:
             if time.time() - self.tempsProduction >= 10:
-                self.parent.metal += self.production
+                self.parent.minerais += self.production
                 self.tempsProduction = time.time()
 
     def recherche1(self):  #meilleure vitesse de production
