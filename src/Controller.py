@@ -143,7 +143,7 @@ class EventListener:
         self.controller.shutdown()
 
     def createBuilding(self, param):
-        if param == 0:
+        if param == View.FERME:
             print("Create building ferme")
             self.controller.view.modeConstruction = True
             if self.controller.view.modeConstruction != True:
@@ -151,9 +151,9 @@ class EventListener:
             else:
                 print("MODE CONSTRUCTION")
 
-        elif param == 1:
+        elif param == View.BARAQUE:
             print("Create building baraque")
-        elif param == 2:
+        elif param == View.HOPITAL:
             print("Create building hopital")
 
 

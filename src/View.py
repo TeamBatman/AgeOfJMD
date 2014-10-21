@@ -17,6 +17,17 @@ from PIL import ImageTk
 class View(GWindow):
     """ Responsable de l'affichage graphique et de captuer les entrées de l'usager"""
 
+    GAZON    = 0
+    FORET    = 1
+    MINERAI  = 2
+    CHARBON  = 3
+    EAU      = 4
+
+    FERME    = 0
+    BARAQUE  = 1
+    HOPITAL  = 2
+
+
     def __init__(self, evListener):
         GWindow.__init__(self)
         # TODO mettre une référence au parent
@@ -97,17 +108,17 @@ class View(GWindow):
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
 
-                if carte[x][y].type == 0:
+                if carte[x][y].type == View.GAZON:
                     couleur = "#0B610B"  # vert
                     #self.canvas.create_image(posX1, posY1,
                     #                         image=ImageTk.PhotoImage(GraphicsManager.get('Graphics/World/grass.png')))
                     #continue
-                elif carte[x][y].type == 1:
+                elif carte[x][y].type == View.FORET:
                     # couleur = "#D7DF01" #jaune
                     couleur = "#BFBF00"
-                elif carte[x][y].type == 2:
+                elif carte[x][y].type == View.MINERAI:
                     couleur = "#1C1C1C"  # gris pale
-                elif carte[x][y].type == 3:
+                elif carte[x][y].type == View.CHARBON:
                     couleur = "#BDBDBD"  # gris fonce
                 else:
                     couleur = "#2E9AFE"  # bleu
@@ -242,13 +253,13 @@ class View(GWindow):
 
 
     def createBuildingFerme(self):
-        self.eventListener.createBuilding(0)
+        self.eventListener.createBuilding(View.FERME)
 
     def createBuildingBaraque(self):
-        self.eventListener.createBuilding(1)
+        self.eventListener.createBuilding(View.BARAQUE)
 
     def createBuildingHopital(self):
-        self.eventListener.createBuilding(2)
+        self.eventListener.createBuilding(View.HOPITAL)
 
     def update(self, units, buildings, carte=None):
 
@@ -258,6 +269,7 @@ class View(GWindow):
         if carte:
             # self.drawMinimap(units, carte)
             self.drawRectMiniMap()
+            self.drawBuildings(buildings)
 
 
         self.drawMiniUnits(units)
@@ -273,15 +285,22 @@ class View(GWindow):
                                          image=img,
                                          tags='unit')
 
+    def drawBuildings(self,buildings):
         for building in buildings:
-            if building.dejaAfficher == False:
-                img = building.image
-                self.canvas.create_image(building.posX,
-                                             building.posY,
-                                             anchor=NW,
-                                             image=img,
-                                             tags='ferme')
-                building.dejaAfficher = True
+            img = building.image
+            self.canvas.create_image(building.posX,
+                                         building.posY,
+                                         anchor=NW,
+                                         image=img,
+                                         tags='ferme')
+
+    def drawSpecificBuilding(self,building):
+        img = building.image
+        self.canvas.create_image(building.posX,
+                                     building.posY,
+                                     anchor=NW,
+                                     image=img,
+                                     tags='ferme')
 
 
     def isUnitShow(self, unit):

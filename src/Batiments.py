@@ -412,7 +412,9 @@ class Ferme(Batiment):
         self.production = 10
         self.tempsProduction = 10
         self.type = "Ferme"
-        self.image = ImageTk.PhotoImage(GraphicsManager.get('Graphics/Buildings/Age_I/Farm.png'))
+        self.rawImage = GraphicsManager.get('Graphics/Buildings/Age_I/Farm.png')
+        self.resized = self.rawImage.resize((96,96),Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)
         print("bob")
 
     def produire(self):

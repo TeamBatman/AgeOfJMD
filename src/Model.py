@@ -4,6 +4,7 @@ from __future__ import division
 import Batiments
 from Commands import Command
 from Carte import Carte
+from Tuile import Tuile
 
 
 
@@ -337,14 +338,27 @@ class Model:
     def createBuilding(self,type,posX,posY):
         if type == 0:
             x,y = self.trouverCaseMatrice(posX,posY)
-            if not self.carte.matrice[x][y].type == 0:
-                print("ressource")
+            if not self.carte.matrice[x][y].isWalkable:
+                print("not walkable")
             else:
-                print(posX,posY)
-                print(x,y)
-                x = x*48
-                y = y*48
-                self.buildings.append(Batiments.Ferme(self, x, y))
+                if not self.carte.matrice[x+1][y].isWalkable:
+                    print("not walkable")
+                else:
+                    if not self.carte.matrice[x][y+1].isWalkable:
+                        print("not walkable")
+                    else:
+                        if not self.carte.matrice[x+1][y+1].isWalkable:
+                            print("not walkable")
+                        else:
+                            print(posX,posY)
+                            print(x,y)
+                            createdBuild = Batiments.Ferme(self, x*48, y*48)
+                            self.buildings.append(createdBuild)
+                            self.controller.view.drawSpecificBuilding(createdBuild)
+                            self.carte.matrice[x][y].isWalkable = False
+                            self.carte.matrice[+1][y].isWalkable = False
+                            self.carte.matrice[x][y+1].isWalkable = False
+                            self.carte.matrice[x+1][y+1].isWalkable = False
 
 
     def executeCommand(self, command):
