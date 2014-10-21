@@ -81,8 +81,8 @@ class GraphicsManager():
 
     # Types de ressources
     UNIT = 0
-    ICONS = 0
-    BUILDINGS = 0
+    ICONS = 1
+    BUILDINGS = 2
 
 
     # VARIALBES D'INSTANCE

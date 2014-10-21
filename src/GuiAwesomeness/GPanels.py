@@ -3,9 +3,11 @@
 
 __author__ = 'fireraccon A.K.A Jean-William Perreault'
 
-from GuiAwesomeness.GWidgets import GWidget
 from PIL import Image
 from PIL import ImageTk
+
+from GuiAwesomeness.GWidgets import GWidget
+
 
 try:
     # Python2

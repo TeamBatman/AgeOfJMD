@@ -24,7 +24,7 @@ class Joueur:
     NOIR = 6
     BLANC = 7
     JAUNE = 8
-    
+
     NB_CIVLISATION = 9
 
 
@@ -397,7 +397,7 @@ class Paysan(Unit):
         spritesheets = {
             Joueur.BLANC: 'Units/Age_I/paysan_blanc.png',
             Joueur.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Joueur.JAUNE: 'Unit/Age_I/paysan_jaune.png',
+            Joueur.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
             Joueur.MAUVE: 'Units/Age_I/paysan_mauve.png',
             Joueur.NOIR: 'Units/Age_I/paysan_noir.png',
@@ -425,7 +425,7 @@ class Paysan(Unit):
         else:
             self.nbRessources = self.nbRessourcesMax
             #print("MAX!", self.nbRessources)
-            #TODO Faire retourner à la base !        
+            #TODO Faire retourner à la base !
 
 
 class Model:
@@ -495,7 +495,7 @@ class Model:
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?
 
-        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.carte.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         caseX = int(x / grandeurCase)
         caseY = int(y / grandeurCase)
@@ -505,7 +505,7 @@ class Model:
     def trouverCentreCase(self, caseX, caseY):
         # TODO ? Mettre dans la vue ?
 
-        grandeurCanevasRelle = self.grandeurMat * self.controller.view.item
+        grandeurCanevasRelle = self.grandeurMat * self.controller.view.carte.item
         grandeurCase = grandeurCanevasRelle / self.grandeurMat
         centreX = (grandeurCase * caseX) + grandeurCase / 2
         centreY = (grandeurCase * caseY) + grandeurCase / 2

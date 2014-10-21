@@ -307,11 +307,9 @@ class NetworkController:
                     self.synchronizeClient()
                 else:
                     self.client = None
-                    message = "Impossible de se reconnecté au serveur... l'hôte n'existe plus"
+                    message = "Impossible de se reconnecter au serveur... l'hôte n'existe plus"
                     Client.outputDebug(message)
                     raise ClientConnectionError(message)
-
-
 
 
     def stopServer(self):
