@@ -226,7 +226,6 @@ class Unit():
                         #elif diffX > 0 and diffY > 0:
                         #    self.animDirection = 'UP'
                         else:
-                            print("lol", diffX, diffY, self.animDirection)
                             self.animDirection = 'DOWN'
                             
                         #print(diffX,diffY)
@@ -237,7 +236,7 @@ class Unit():
                 print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
                 #self.x = self.posX
                 #self.y = self.posY
-            print("FIN TOUR", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
+
             if (self.x, self.y) in self.positionDejaVue:
                 self.casesDejaVue.append(self.parent.trouverCaseMatrice(self.x, self.y))
                 nouvelleCase = self.trouverNouvelleCase(self.parent.trouverCaseMatrice(self.x,self.y))
@@ -253,17 +252,33 @@ class Unit():
             print()
 
     def trouverNouvelleCase(self, case):
+        casesPossibles = []
         liste = [-1,0,1]
         for i in liste:
             for j in liste:
                 if not(i==0 and j==0):
                     try:
                         if self.parent.carte.matrice[case[0]+i][case[1]+j].type == 0:
-                            return (case[0]+i,case[1]+j) #TODO PRENDRE LA CASE LA PLUS PROCHE DU BUT !
+                            if i==0 or j==0: # Pas de diagonale
+                                print((case[0]+i,case[1]+j) not in self.casesDejaVue, (case[0]+i,case[1]+j))
+                                if (case[0]+i,case[1]+j) not in self.casesDejaVue:
+                                    casesPossibles.append((case[0]+i,case[1]+j))
                     except:
                         print("fail nouvelle case")
                         pass #Dépasse la matrice
+
+        if casesPossibles: #Trouver la case la plus proche du but !
+            caseBut = self.parent.trouverCaseMatrice(self.cibleX, self.cibleY)
+            caseResultat = casesPossibles[0]
+            diff = abs(casesPossibles[0][0] - caseBut[0]) + abs(casesPossibles[0][1] - caseBut[1])
+            for case in casesPossibles:
+                diffCase = abs(case[0] - caseBut[0]) + abs(case[1] - caseBut[1])
+                if diff > diffCase:
+                    caseResultat = case
+            return caseResultat
+            
         print("nouvelle case no return !")
+        return case #FAIL !
 
     def deplacementTrace(self, chemin, mode):
         #TODO: Mettre les animations ! Mettre les obstacles !
