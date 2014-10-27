@@ -5,8 +5,8 @@
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
 from PIL import Image
 from PIL import ImageTk
-from PIL import ImageOps
-from PIL import ImageFilter
+from PIL import ImageEnhance
+
 
 
 class SpriteSheet():
@@ -26,7 +26,7 @@ class SpriteSheet():
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
 
         self.frames = {}  # Le dictionnaire contenant toute les frames
-        self.framesOutlines = {}
+        self.framesOutlines = {} # Le dictionnaire contenant toutes les frames en version sélectionnées
         self._splitSheet()
 
     def _splitRow(self, rowNb, rowTag):
@@ -57,25 +57,21 @@ class SpriteSheet():
         self._splitRow(3, "UP")
 
 
+        
+
+
 def colorizeImage(pilImg):
-    """ Met une image PIL en rouge
+    """ Augmente l'intensité des couleur de l'image
     :param pilImg: l'image PIL
     :return: l'image PIl en rouge
     """
-    # get an image that is greyscale with alpha
-    pilImg = pilImg.convert('LA')
-    # get the two bands
-    L, A = pilImg.split()
-    # a fully saturated band
-    S, = Image.new('L', pilImg.size, 255).split()
-    # re-combine the bands
-    # this keeps tha alpha channel in the new image
 
-    # GREY SCALE L L L A
-    pilImg = Image.merge('RGBA', (S, L, L, A))
-
-    # save
+    # COLORIZE
+    converter = ImageEnhance.Color(pilImg)
+    pilImg = converter.enhance(3)  # n* les couleurs de l'image de base
     return pilImg
+
+
 
 
 class GraphicsManager():
@@ -85,8 +81,8 @@ class GraphicsManager():
 
     # Types de ressources
     UNIT = 0
-    ICONS = 0
-    BUILDINGS = 0
+    ICONS = 1
+    BUILDINGS = 2
 
 
     # VARIALBES D'INSTANCE
@@ -134,7 +130,6 @@ class GraphicsManager():
             try:
                 loadPath = directory + filename
                 graphics = Image.open(loadPath)
-                print(loadPath)
                 graphics.convert('RGBA')
                 cls.graphics[filename] = graphics
                 GraphicsManager.outputDebug('chargement de %s' % filename)
