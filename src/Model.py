@@ -68,7 +68,6 @@ class Unit():
                 if not self.cheminAttente:
                     self.deplacement()
                 else:
-                    print("cheminAttente",len(self.cheminAttente))
                     self.deplacementTrace(self.cheminAttente, 1)
                 self.choisirTraceFail()
             else:
@@ -93,7 +92,7 @@ class Unit():
         self.cheminAttente = []
         self.time1 = 0
         self.nbTour = 0
-        self.choisirTrace()
+        self.cheminTrace = self.choisirTrace()
         
 
     def deplacement(self):
@@ -146,13 +145,6 @@ class Unit():
                 contact = True
                 break
 
-        """
-        cases1 = self.parent.trouverCaseMatrice(self.x , self.y)
-        cases2 = self.parent.trouverCaseMatrice(self.x + self.grandeur , self.y)
-        cases3 = self.parent.trouverCaseMatrice(self.x , self.y+ self.grandeur)
-        cases4 = self.parent.trouverCaseMatrice(self.x+ self.grandeur , self.y+ self.grandeur)
-        if not self.parent.carte.matrice[cases1[0]][cases1[1]].type == 0 or not self.parent.carte.matrice[cases2[0]][cases2[1]].type == 0 or not self.parent.carte.matrice[cases3[0]][cases3[1]].type == 0 or not self.parent.carte.matrice[cases4[0]][cases4[1]].type == 0:
-           """
         if contact:
             #print("obstacles")
             trouve = False
@@ -249,7 +241,6 @@ class Unit():
             
             #for i in self.dejaVue:
                 #print("DEJAVUE",i)
-            print()
 
     def trouverNouvelleCase(self, case):
         casesPossibles = []
@@ -260,7 +251,7 @@ class Unit():
                     try:
                         if self.parent.carte.matrice[case[0]+i][case[1]+j].type == 0:
                             if i==0 or j==0: # Pas de diagonale
-                                print((case[0]+i,case[1]+j) not in self.casesDejaVue, (case[0]+i,case[1]+j))
+                                #print((case[0]+i,case[1]+j) not in self.casesDejaVue, (case[0]+i,case[1]+j))
                                 if (case[0]+i,case[1]+j) not in self.casesDejaVue:
                                     casesPossibles.append((case[0]+i,case[1]+j))
                     except:
@@ -331,19 +322,6 @@ class Unit():
             # Puisqu'il y a eu un déplacement
             self.animer()
 
-            #if self.x == self.cheminTrace[-1].x and self.y == self.cheminTrace[-1].y:
-                #print("DELETE!!!")
-             #   self.nbTour += 1
-                #self.afficherList("chemin", self.cheminTrace)
-                #del self.cheminTrace[-1]
-                #self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
-                #print("dernier",self.cheminTrace[-1].x, self.cheminTrace[-1].y)
-
-            #if self.trouver == False and len(self.cheminTrace) < 20:
-            #if self.trouver == False:
-                #print("pas trouver")
-                #self.choisirTraceFail()
-
     def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
         self.animFrameIndex = 1
         self.animDirection = 'DOWN'
@@ -379,26 +357,27 @@ class Unit():
         #print("Temps a*: ", time.time() - self.time1)
         n = chemin
         if not n == -1:
-            self.cheminTrace = []
+            cheminTrace = []
             while n.parent:
-                self.cheminTrace.append(n)
+                cheminTrace.append(n)
                 centreCase = self.parent.trouverCentreCase(n.x, n.y)
                 n.x = centreCase[0]
                 n.y = centreCase[1]
                 n = n.parent
-            # print(self.cheminTrace,"len", len(self.cheminTrace))
-            if self.cheminTrace:
+            # print(cheminTrace,"len", len(cheminTrace))
+            if cheminTrace:
                 #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
                 if not self.mode == 1:  #pas en mode ressource
-                    self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
+                    cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
             else:
                 if not self.mode == 1:  #pas en mode ressource
-                    self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
+                    cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
                 else:
-                    self.cheminTrace.append(Noeud(None, self.x, self.y, None, None))
+                    cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
-            self.cibleXDeplacement = self.cheminTrace[-1].x
-            self.cibleYDeplacement = self.cheminTrace[-1].y
+            self.cibleXDeplacement = cheminTrace[-1].x
+            self.cibleYDeplacement = cheminTrace[-1].y
+        return cheminTrace
 
 
     def choisirTraceFail(self):
@@ -443,36 +422,23 @@ class Unit():
                 if self.cheminTrace:
                     print("DUDE !",self.cibleX,self.cibleY)
                     #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-                    self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)
+                    self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)                    
                 else:
                     print("DUDE !",self.cibleX,self.cibleY)
                     self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
-
-            #print("chemin", len(self.cheminTrace),self.cheminTrace[-1].x,self.cheminTrace[-1].y )
-           # print("courant", self.x,self.y , self.nbTour)
-            #self.afficherList("chemin", self.cheminTrace)
-            #self.afficherList("chemin", self.cheminTrace)
            
                 self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
                 while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
-                #print(self.x, self.cheminTrace[-1].x,self.y , self.cheminTrace[-1].y)
-                #if self.x == self.cheminTrace[-1].x and self.y == self.cheminTrace[-1].y:
-                    #print("DELETE!!!")
-                    #self.nbTour += 1
-                   # self.afficherList("chemin", self.cheminTrace)
                     del self.cheminTrace[-1]
-                   # print("dernier",self.cheminTrace[-1].x, self.cheminTrace[-1].y)
-                    
-                    
-                #for n in self.cheminTrace:
-                #    if self.x == n.x and self.y == n.y:
-                #        print("DELETE!!!")
-                 #       self.afficherList("chemin", self.cheminTrace)
-                #        index = self.cheminTrace.index(n)
-                #        self.cheminTrace = self.cheminTrace[:index]
-                 #       print("dernier",self.cheminTrace[-1].x, self.cheminTrace[-1].y, "index", index)
-                 #       break
-
+                
+                #Trouver le chemin entre le début du pathfinding et la position actuelle  
+                self.cibleX = self.cheminTrace[-1].x
+                self.cibleY = self.cheminTrace[-1].y
+                self.cibleXDeplacement = self.cheminTrace[-1].x
+                self.cibleYDeplacement = self.cheminTrace[-1].y
+                cheminDebutTrace = self.choisirTrace()
+                for case in cheminDebutTrace:
+                    self.cheminTrace.append(case)
                  
                 self.cibleXDeplacement = self.cheminTrace[-1].x
                 self.cibleYDeplacement = self.cheminTrace[-1].y
