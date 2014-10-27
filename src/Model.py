@@ -15,7 +15,7 @@ class Unit():
         self.y = y
         self.parent = parent
         self.vitesse = 5
-        self.grandeur = 32
+        self.grandeur = 41 #32 donc grandeur/2 - 16
         self.cibleX = x
         self.cibleY = y
         self.cheminTrace = []
@@ -28,6 +28,9 @@ class Unit():
         self.enDeplacement = False
         self.ancienX = self.x
         self.ancienY = self.y
+        self.positionDejaVue = []
+        self.casesDejaVue = []
+        self.cheminAttente = []
 
         # ANIMATION
         self.lastAnimtaionTime = time.time()
@@ -60,16 +63,16 @@ class Unit():
         self.lastAnimtaionTime = time.time()
 
     def update(self):
-        try:
-            if self.enDeplacement:
-                if not self.trouver:
+        if self.enDeplacement:
+            if not self.trouver:
+                if not self.cheminAttente:
                     self.deplacement()
-                    self.choisirTraceFail()
                 else:
-                    self.deplacementTrace()
-        except:
-            print("unit fail")
-            self.deplacement()
+                    print("cheminAttente",len(self.cheminAttente))
+                    self.deplacementTrace(self.cheminAttente, 1)
+                self.choisirTraceFail()
+            else:
+                self.deplacementTrace(self.cheminTrace,0)
                 
         #try:
         #    self.deplacementTrace()
@@ -86,12 +89,15 @@ class Unit():
         self.cibleYDeplacement = cibleY
         self.trouver = False
         self.enDeplacement = True
+        self.positionDejaVue = []
+        self.cheminAttente = []
         self.time1 = 0
         self.nbTour = 0
         self.choisirTrace()
         
 
     def deplacement(self):
+	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
         self.posX = self.x
         self.posY = self.y
         if abs(self.cibleX - self.x) <= self.vitesse:
@@ -115,11 +121,40 @@ class Unit():
             self.y -= self.vitesse
             self.animDirection = 'UP'
 
+        self.eviterObstacles()
+        
+        #Garder en souvenir
+        self.ancienX = self.posX
+        self.ancienY = self.posY
+        # Puisqu'il y a eu un déplacement
+        self.animer()
+
+    def eviterObstacles(self):
+        contact = False
+        casesPossibles = []
+                        
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x, self.y))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+self.grandeur/2, self.y))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x, self.y + self.grandeur/2))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+self.grandeur/2, self.y+self.grandeur/2))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x-self.grandeur/2, self.y))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x, self.y - self.grandeur/2))
+        casesPossibles.append(self.parent.trouverCaseMatrice(self.x-self.grandeur/2, self.y-self.grandeur/2))
+
+        for case in casesPossibles:
+            if not self.parent.carte.matrice[case[0]][case[1]].type == 0 or case in self.casesDejaVue:
+                contact = True
+                break
+
+        """
         cases1 = self.parent.trouverCaseMatrice(self.x , self.y)
         cases2 = self.parent.trouverCaseMatrice(self.x + self.grandeur , self.y)
         cases3 = self.parent.trouverCaseMatrice(self.x , self.y+ self.grandeur)
         cases4 = self.parent.trouverCaseMatrice(self.x+ self.grandeur , self.y+ self.grandeur)
         if not self.parent.carte.matrice[cases1[0]][cases1[1]].type == 0 or not self.parent.carte.matrice[cases2[0]][cases2[1]].type == 0 or not self.parent.carte.matrice[cases3[0]][cases3[1]].type == 0 or not self.parent.carte.matrice[cases4[0]][cases4[1]].type == 0:
+           """
+        if contact:
+            #print("obstacles")
             trouve = False
             self.x = self.posX
             self.y = self.posY
@@ -131,14 +166,31 @@ class Unit():
                 for j in liste:
                     if not(i==0 and j==0):
                         #print(i,j)
-                        cases1 = self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse))
-                        cases2 = self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur, self.y+(j*self.vitesse))
-                        cases3 = self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse) + self.grandeur)
-                        cases4 = self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur, self.y+(j*self.vitesse)+self.grandeur)
-                       # print(cases2[0],cases2[1])
-                        if (self.parent.carte.matrice[cases1[0]][cases1[1]].type == 0 and self.parent.carte.matrice[cases2[0]][cases2[1]].type == 0 and self.parent.carte.matrice[cases3[0]][cases3[1]].type == 0 and self.parent.carte.matrice[cases4[0]][cases4[1]].type == 0):
-                            #print(self.parent.carte.matrice[cases1[0]][cases1[1]].type == 0, self.parent.carte.matrice[cases2[0]][cases2[1]].type == 0,  self.parent.carte.matrice[cases3[0]][cases3[1]].type == 0 ,self.parent.carte.matrice[cases4[0]][cases4[1]].type == 0)
-                            if not self.ancienX == self.x+(i*self.vitesse) and not self.ancienY == self.y+(j*self.vitesse):
+                        deplacementPossible = True
+                        casesPossibles = []
+                        #print(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse)))
+                        
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse)))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur/2, self.y+(j*self.vitesse)))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse) + self.grandeur/2))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur/2, self.y+(j*self.vitesse)+self.grandeur/2))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)-self.grandeur/2, self.y+(j*self.vitesse)))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse) - self.grandeur/2))
+                        casesPossibles.append(self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)-self.grandeur/2, self.y+(j*self.vitesse)-self.grandeur/2))
+
+                        #Gestion des obstacles
+                        for case in casesPossibles:
+                            #if self.casesDejaVue:
+                               # print(self.casesDejaVue, "vs " , case, " bool", case in self.casesDejaVue)
+                            if not self.parent.carte.matrice[case[0]][case[1]].type == 0 or case in self.casesDejaVue:
+                               # print("break")
+                                deplacementPossible = False
+                                break
+                            
+                        if deplacementPossible:
+                            #print("deplacement possible !")
+                            if (self.x+(i*self.vitesse), self.y+(j*self.vitesse)) not in self.positionDejaVue:
+                                #if not self.ancienX == self.x+(i*self.vitesse) and not self.ancienY == self.y+(j*self.vitesse): #and not self.posX == self.x+(i*self.vitesse) and not self.posY == self.y+(j*self.vitesse):
                                 self.x = self.posX
                                 self.y = self.posY
                                 self.x += (i*self.vitesse)
@@ -152,6 +204,7 @@ class Unit():
                         #    print("ouais")
            # print(len(self.choixPossible))
             if self.choixPossible: #Choisir le meilleur point sur les points possibles
+                #print("choix possible !")
                 self.x = self.choixPossible[0][0]
                 self.y = self.choixPossible[0][1]
                 diff = abs(self.x - self.cibleX) + abs(self.y - self.cibleY)
@@ -161,42 +214,76 @@ class Unit():
                     if diff > diffCoord:
                         self.x = coord[0]
                         self.y = coord[1]
+                        diffX = self.x - self.posX
+                        diffY = self.y - self.posY
+                        
+                        if diffX > 0 and diffY == 0:
+                            self.animDirection = 'RIGHT'
+                        elif diffX < 0 and diffY == 0:
+                            self.animDirection = 'LEFT'
+                        #elif diffX > 0 and diffY < 0:
+                        #    self.animDirection = 'DOWN'
+                        #elif diffX > 0 and diffY > 0:
+                        #    self.animDirection = 'UP'
+                        else:
+                            print("lol", diffX, diffY, self.animDirection)
+                            self.animDirection = 'DOWN'
+                            
+                        #print(diffX,diffY)
                         diff = diffCoord
                         #TODO: Mettre les animations !
             if trouve == False:
-                print("rate !", self.x,self.ancienX, self.y,self.ancienY)
-                self.x = self.ancienX
-                self.y = self.ancienY
-                
-                
+                self.animDirection = 'DOWN'
+                print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
+                #self.x = self.posX
+                #self.y = self.posY
+            print("FIN TOUR", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
+            if (self.x, self.y) in self.positionDejaVue:
+                self.casesDejaVue.append(self.parent.trouverCaseMatrice(self.x, self.y))
+                nouvelleCase = self.trouverNouvelleCase(self.parent.trouverCaseMatrice(self.x,self.y))
+                destination = self.parent.trouverCentreCase(nouvelleCase[0],nouvelleCase[1])
+                self.cheminAttente.append((destination[0],destination[1]))
+                self.cibleXDeplacement = destination[0]
+                self.cibleYDeplacement = destination[1]
+                print("YOU FAILED !!!")
+            self.positionDejaVue.append((self.x, self.y))
+            
+            #for i in self.dejaVue:
+                #print("DEJAVUE",i)
+            print()
 
-        self.ancienX = self.posX
-        self.ancienY = self.posY
+    def trouverNouvelleCase(self, case):
+        liste = [-1,0,1]
+        for i in liste:
+            for j in liste:
+                if not(i==0 and j==0):
+                    try:
+                        if self.parent.carte.matrice[case[0]+i][case[1]+j].type == 0:
+                            return (case[0]+i,case[1]+j) #TODO PRENDRE LA CASE LA PLUS PROCHE DU BUT !
+                    except:
+                        print("fail nouvelle case")
+                        pass #Dépasse la matrice
+        print("nouvelle case no return !")
 
-        # Puisqu'il y a eu un déplacement
-        self.animer()
-
-
-    def deplacementTrace(self):
+    def deplacementTrace(self, chemin, mode):
         #TODO: Mettre les animations ! Mettre les obstacles !
         
         #self.afficherList("chemin", self.cheminTrace)
         #print("courant", self.x, self.y, self.cibleXDeplacement, self.cibleYDeplacement)
-        if len(self.cheminTrace) > 0:
+        #print(chemin[0], " vs ", self.cibleXDeplacement, self.x, " y ", self.y, self.cibleYDeplacement)
+        if len(chemin) > 0:
             if self.x == self.cibleXDeplacement and self.y == self.cibleYDeplacement:
-                del self.cheminTrace[-1]
+                del chemin[-1]
                 self.nbTour += 1
-                #self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
-                if len(self.cheminTrace) <= 0: #FIN
-                    self.animFrameIndex = 1
-                    self.animDirection = 'DOWN'
-                    activeFrameKey = 'DOWN_1'
-                    self.activeFrame = self.spriteSheet.frames[activeFrameKey]
-                    self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
-                    self.enDeplacement = False
-                    return -1
-                self.cibleXDeplacement = self.cheminTrace[-1].x
-                self.cibleYDeplacement = self.cheminTrace[-1].y
+                #chemin = chemin[:len(chemin)-self.nbTour]
+                if len(chemin) <= 0: #FIN
+                    if mode == 0: #vrai pathfinding
+                        return self.finDeplacementTraceVrai()
+                    else: # mode attente
+                        chemin = []
+                        return -1
+                self.cibleXDeplacement = chemin[-1].x
+                self.cibleYDeplacement = chemin[-1].y
 
             if not abs(self.cibleXDeplacement - self.x) == 0 and not abs(self.cibleYDeplacement - self.y) == 0:
                 diaganoleVit = math.sqrt(math.pow(self.vitesse,2) + math.pow(self.vitesse,2))
@@ -225,6 +312,7 @@ class Unit():
                 self.y -= diaganoleVit
                 self.animDirection = 'UP'
 
+            #self.eviterObstacles()
             # Puisqu'il y a eu un déplacement
             self.animer()
 
@@ -241,6 +329,14 @@ class Unit():
                 #print("pas trouver")
                 #self.choisirTraceFail()
 
+    def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
+        self.animFrameIndex = 1
+        self.animDirection = 'DOWN'
+        activeFrameKey = 'DOWN_1'
+        self.activeFrame = self.spriteSheet.frames[activeFrameKey]
+        self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
+        self.enDeplacement = False
+        return -1
 
     def choisirTrace(self):
         cases = self.parent.trouverCaseMatrice(self.x, self.y)
