@@ -8,6 +8,7 @@ import random
 import socket
 import threading
 import Pyro4
+import sys
 from Commands import Command
 
 
@@ -31,12 +32,14 @@ class ServerController:
      le démon Pyro4. Ainsi, ils ne pourront avoir accès qu'aux méthodes définies ici."""
 
     def __init__(self):
-
-        # Chaque clé est identifiant du client et la valeur est une liste des commandes à exécuter par le client
+        # Chaque clé est identifiant du client et la valeur est sa progression dans l'ensemble des commandes
+        # Les commandes ont toutes un ID ainsi (plus le ID est haut plus la commande est récente):
+        # X : l'ID de la dernière commande
+        # X-1: Valeur progression d'un client signifiant qu'il est en StandBy ,il attend de recevoir une cmd du serveur
+        # X-2: La commande précédant X
         self.clients = {}
-
-        self.idIndex = 0  # À chaque attribution d'ID ce nombre est augmenté [il constitue l'identifiant unique]
-        self.commands = []  # une liste des commandes reçues
+        self.idIndex = 0  # À chaque attributionID ce nombre est augmenté [constitue l'ID unique des commandes]
+        self.commands = {}  # une dict des commandes reçues la clé est l'ID de la commande etl a valeur la commande
 
         # Les civilisations possibles
         self.civilisations = [
@@ -54,44 +57,77 @@ class ServerController:
         ]
 
 
-
-
     def _generateId(self):
         """ Génère un identifiant unique à être attribué à chaque utilisateur
         :return: a unique ID
         """
-        genId = self.idIndex
-        self.idIndex += 1
-        return genId
+        self.idIndex += 2
+        return self.idIndex
 
     def join(self):
         """ Permet à un client de rejoindre le serveur et lui retoune un Identifiant unique
         :return: l'identifiant unique généré pour le client
         """
-
         random.shuffle(self.civilisations)
         clientId = self.civilisations.pop()
-        self.clients[clientId] = []
-        Server.outputDebug('CLIENT %s JUST JOINED' % clientId)
+        self.clients[clientId] = 0
+        Server.outputDebug('LE CLIENT %s A REJOINT LA PARTIE' % clientId)
         return clientId
 
     def sendCommand(self, command):
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
-        for client in self.clients:
-            self.clients[client].append(command)
+        self.commands[self._generateId()] = command
 
-    def getLatestCommand(self, clientId):
-        """ Permet à un client de se renseigner sur la dernière commande envoyée et non synchronisée
+
+    def getNextCommand(self, clientId):
+        """ Permet à un client de se renseigner sur sa prochaine commande à exécuter
         :param clientId: le numéro d'identification du client
-        :return: Les dernières commandes non synchronisées par le client ou []
+        :return: La prochaine commande à exécuter par le client
         """
-        if self.clients[clientId]:
-            cmds = self.clients[clientId]
-            self.clients[clientId] = []  # Flush les vieilles commandes
-            return cmds
-        return []
+
+        clientIndex = self.clients[clientId]
+
+        # Le client vient-il de terminer une commande?
+        if clientIndex % 2 == 0:    # Le client vient de terminer une commande
+
+            # Y a til une commande après celle qu'on vient de terminer?
+            if clientIndex == self.idIndex:
+                return []    # Rien de nouveau
+
+            # On le met donc en Stand By
+            self.clients[clientId] += 1
+            return []
+
+
+        # Le client est donc en STAND BY
+
+        # Y a t-il quelqu'un plus en retard que nous?
+        if self.isSomeoneMoreLate(clientId):
+            return []     # On Attend que tout le monde ait terminé leur choses
+
+        # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
+        self.clients[clientId] += 1
+        return self.commands[self.idIndex]
+
+
+
+
+    def isSomeoneMoreLate(self, clientId):
+        """ Trouves si un client est plus en retard que le client en paramètre
+        :param clientId: Le client à compararer au autres
+        :return: True si quelqu'un est plus en retard autrement False: Nous somme le plus en retard
+        """
+        clientIndex = self.clients[clientId]
+        for cId, cVal in self.clients.items():
+            if cId < clientIndex:
+                return True
+
+        return False
+
+
+
 
 
     def leave(self, clientId):
@@ -99,7 +135,7 @@ class ServerController:
         :param clientId:
         """
         self.clients.pop(clientId)
-        Server.outputDebug((' client: %s left the game' % clientId))
+        Server.outputDebug(('CLIENT: %s A QUITTER LA PARTIE' % clientId))
 
 
     def ping(self):
@@ -107,7 +143,6 @@ class ServerController:
         existe toujours
         """
         pass
-
 
 
 class Server:
@@ -142,11 +177,11 @@ class Server:
         """
         self.running = True
 
-        Server.outputDebug('SERVER STARTED AT %s' % self.uri)
+        Server.outputDebug('SERVEUR DÉMARRÉ À %s' % self.uri)
 
         self.daemon.requestLoop(loopCondition=self.isRunning)
 
-        Server.outputDebug('SERVER STOPPED')
+        Server.outputDebug('SERVEUR ARRÊTÉ')
 
     def isRunning(self):
         return self.running
@@ -191,7 +226,7 @@ class Client:
         :return: la dernière commande reçue (si il y avait une) autrement on retourne None
         """
         try:
-            response = self.host.getLatestCommand(self.id)
+            response = self.host.getNextCommand(self.id)
             if response:
                 commands = []
                 for chunk in response:
@@ -199,9 +234,8 @@ class Client:
                 return commands
             else:
                 return []
-        except Exception:   # Pyro4.errors.CommunicationError:
+        except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError:
             raise ClientConnectionError("Impossible de SYNCHRONISER")
-
 
 
     def attemptReconnect(self):
@@ -214,11 +248,8 @@ class Client:
             self.host.pyroReconnect()
             Client.outputDebug('Reconnecté!')
             return True
-        except Exception:  # Pyro4.errors.CommunicationError:
-            return False  # Échec de la tentative... le serveur n'existe surement plus
-
-
-
+        except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError:
+            return False  # Échec de la tentative... le serveur n'existe peut-être plus
 
 
     def sendCommand(self, command):
@@ -232,7 +263,7 @@ class Client:
             cmd_ser = pickle.dumps(command)
             # ENVOIE DE LA COMMANDE SÉRIALISÉE VERS L'HÔTE
             self.host.sendCommand(cmd_ser)
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             raise ClientConnectionError("Impossible d'ENVOYER LA COMMANDE AU SERVEUR")
 
     @staticmethod
@@ -243,7 +274,7 @@ class Client:
     def disconnect(self):
         try:
             self.host.leave(self.id)
-        except Exception:  # Pyro4.errors.CommunicationError
+        except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError
             raise ClientConnectionError('Échec lors de la tentative d\'abandon de la partie')
 
 
@@ -269,7 +300,7 @@ class NetworkController:
     def disconnectClient(self):
         try:
             self.client.disconnect()
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             pass
 
     def getClientId(self):
@@ -289,7 +320,7 @@ class NetworkController:
             self.server.initDaemon()
             self.server.registerController()
             self.server.start()
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
                                self.server.port)
 
@@ -301,15 +332,15 @@ class NetworkController:
         try:
             return self.client.synchronize()
         except ClientConnectionError as e:
-                # TENTATIVE DE RECONNECTION
-                Client.outputDebug(e.message)
-                if self.client.attemptReconnect():
-                    self.synchronizeClient()
-                else:
-                    self.client = None
-                    message = "Impossible de se reconnecter au serveur... l'hôte n'existe plus"
-                    Client.outputDebug(message)
-                    raise ClientConnectionError(message)
+            # TENTATIVE DE RECONNECTION
+            Client.outputDebug(e.message)
+            if self.client.attemptReconnect():
+                self.synchronizeClient()
+            else:
+                self.client = None
+                message = "Impossible de se reconnecter au serveur... l'hôte n'existe plus"
+                Client.outputDebug(message)
+                raise ClientConnectionError(message)
 
 
     def stopServer(self):
