@@ -199,7 +199,7 @@ class Client:
                 return commands
             else:
                 return []
-        except Exception:   # Pyro4.errors.CommunicationError:
+        except Pyro4.errors.CommunicationError:   # Pyro4.errors.CommunicationError:
             raise ClientConnectionError("Impossible de SYNCHRONISER")
 
 
@@ -214,7 +214,7 @@ class Client:
             self.host.pyroReconnect()
             Client.outputDebug('Reconnecté!')
             return True
-        except Exception:  # Pyro4.errors.CommunicationError:
+        except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError:
             return False  # Échec de la tentative... le serveur n'existe surement plus
 
 
@@ -232,7 +232,7 @@ class Client:
             cmd_ser = pickle.dumps(command)
             # ENVOIE DE LA COMMANDE SÉRIALISÉE VERS L'HÔTE
             self.host.sendCommand(cmd_ser)
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             raise ClientConnectionError("Impossible d'ENVOYER LA COMMANDE AU SERVEUR")
 
     @staticmethod
@@ -243,7 +243,7 @@ class Client:
     def disconnect(self):
         try:
             self.host.leave(self.id)
-        except Exception:  # Pyro4.errors.CommunicationError
+        except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError
             raise ClientConnectionError('Échec lors de la tentative d\'abandon de la partie')
 
 
@@ -269,7 +269,7 @@ class NetworkController:
     def disconnectClient(self):
         try:
             self.client.disconnect()
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             pass
 
     def getClientId(self):
@@ -289,7 +289,7 @@ class NetworkController:
             self.server.initDaemon()
             self.server.registerController()
             self.server.start()
-        except Exception:
+        except Pyro4.errors.CommunicationError:
             Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
                                self.server.port)
 
