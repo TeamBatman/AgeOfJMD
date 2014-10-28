@@ -84,7 +84,7 @@ class EventListener:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
-            self.controller.model.createBuilding(clientId,0,currentX,currentY)
+            self.controller.model.createBuilding(clientId,self.controller.view.lastConstructionType,currentX,currentY)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
         else:
@@ -198,16 +198,32 @@ class EventListener:
     def createBuilding(self, param):
         if param == View.FERME:
             print("Create building ferme")
+            self.controller.view.lastConstructionType = View.FERME
             self.controller.view.modeConstruction = True
+
             if self.controller.view.modeConstruction != True:
                 print("oups")
             else:
                 print("MODE CONSTRUCTION")
 
+
         elif param == View.BARAQUE:
             print("Create building baraque")
+
+
         elif param == View.HOPITAL:
             print("Create building hopital")
+
+
+        elif param == View.BASE:
+            print("Create building base")
+            self.controller.view.lastConstructionType = View.BASE
+            self.controller.view.modeConstruction = True
+
+            if self.controller.view.modeConstruction != True:
+                print("oups")
+            else:
+                print("MODE CONSTRUCTION")
 
 
 if __name__ == '__main__':

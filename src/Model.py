@@ -503,6 +503,9 @@ class Model:
                             pass
                         elif type == self.controller.view.HOPITAL:
                             pass
+                        elif type == self.controller.view.BASE:
+                            newID = Batiments.Batiment.generateId(userId)
+                            createdBuild = Batiments.Base(self,newID,x,y)
                         self.buildings[newID] = createdBuild
                         print(newID)
                         self.controller.view.carte.drawSpecificBuilding(createdBuild)

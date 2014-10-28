@@ -277,6 +277,7 @@ class CarteView():
 
     def drawBuildings(self,buildings):
         self.canvas.delete("ferme")
+        self.canvas.delete("base")
         for building in buildings.values():
             img = building.image
             posX = (building.posX*48) - (self.cameraX * self.item)
@@ -285,8 +286,9 @@ class CarteView():
                                      posY,
                                      anchor=NW,
                                      image=img,
-                                     tags=('ferme', building.id))
+                                     tags=(building.type, building.id))
         self.canvas.tag_lower("ferme")
+        self.canvas.tag_lower("base")
         self.canvas.tag_lower(self.tagName)
 
     def drawSpecificBuilding(self,building):
@@ -297,7 +299,7 @@ class CarteView():
                                  posY,
                                  anchor=NW,
                                  image=img,
-                                 tags=('ferme', building.id))
+                                 tags=(building.type, building.id))
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
@@ -333,6 +335,7 @@ class View(GWindow):
     FERME    = 0
     BARAQUE  = 1
     HOPITAL  = 2
+    BASE     = 9
 
     def __init__(self, evListener):
         GWindow.__init__(self)
@@ -343,6 +346,7 @@ class View(GWindow):
         self.height = 768
         self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
         self.modeConstruction = False
+        self.lastConstructionType = None
 
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
@@ -384,6 +388,9 @@ class View(GWindow):
         self.buttonBaraque.draw(x=self.width - 123, y=280)
         self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
         self.buttonHopital.draw(x=self.width - 222, y=390)
+        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
+                                        iconPath="Graphics/Buildings/Age_I/Base.png")
+        self.buttonBase.draw(x=self.width - 123, y=390)
 
         # LE CADRE DU BAS
         self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
@@ -530,3 +537,6 @@ class View(GWindow):
 
     def createBuildingHopital(self):
         self.eventListener.createBuilding(View.HOPITAL)
+
+    def createBuildingBase(self):
+        self.eventListener.createBuilding(View.BASE)
