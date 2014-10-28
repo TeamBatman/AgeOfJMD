@@ -214,7 +214,7 @@ class Base(Batiment):
                 self.tempsDepartCreation = time.time()
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.createUnit(Model.generateId(self.parent.getId()),self.posX+1, self.posY+1, self.parent.civilisation)
+            self.parent.createUnit(Model.generateId(self.parent.civilisation),self.posX+1, self.posY+1, self.parent.civilisation)
             self.enCreation = False
 
 
