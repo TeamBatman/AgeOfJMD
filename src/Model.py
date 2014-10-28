@@ -80,7 +80,9 @@ class Unit():
             #self.deplacement()
 
 
-    def changerCible(self, cibleX, cibleY):
+    def changerCible(self, cibleX, cibleY, leader = 1):
+        print("unit:", cibleX, cibleY , leader)
+        self.leader = leader #Pour sélection multiple
         self.mode = 0
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -661,7 +663,20 @@ class Model:
         elif command.data['TYPE'] == Command.MOVE_UNIT:
             for unit in self.units:
                 if unit.x == command.data['X1'] and unit.y == command.data['Y1']:
-                    unit.changerCible(command.data['X2'], command.data['Y2'])
+                    unit.changerCible(command.data['X2'], command.data['Y2'], command.data['LEADER'])
+
+    def trouverPlusProche(self, listeElements, coordBut):
+        """On reçoit des x,y et non des cases ! """
+        if listeElements:
+            elementResultat = listeElements[0]
+            diff = abs(listeElements[0].x - coordBut[0]) + abs(listeElements[0].y - coordBut[1])
+
+            for element in listeElements:
+                diffCase = abs(element.x - coordBut[0]) + abs(element.y - coordBut[1])
+                if diff > diffCase:
+                    elementResultat = element
+            return elementResultat
+            
 
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?

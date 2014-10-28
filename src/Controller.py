@@ -73,12 +73,20 @@ class EventListener:
 
 
     def onRClick(self, event):
+        print("len",len(self.controller.view.selected))
+        x2 = event.x + (self.controller.view.positionX * self.controller.view.item)
+        y2 = event.y + (self.controller.view.positionY * self.controller.view.item)
+        ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2))
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.positionX * self.controller.view.item))
-            cmd.addData('Y2', event.y + (self.controller.view.positionY * self.controller.view.item))
+            cmd.addData('X2', x2)
+            cmd.addData('Y2', y2)
+            if unitSelected == ledearUnit:
+                cmd.addData('LEADER', 1)
+            else:
+                cmd.addData('LEADER', 2)
             self.controller.network.client.sendCommand(cmd)
 
     def onLPress(self, event):
@@ -118,7 +126,6 @@ class EventListener:
             x2, y2 = event.x, event.y
             self.controller.view.deleteSelectionSquare()
             self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
-
 
     def onMouseMotion(self, event):
         if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
