@@ -209,7 +209,7 @@ class Unit():
         caseY = cases[1]
         self.mode = 0
         casesCible = self.parent.trouverCaseMatrice(self.cibleX, self.cibleY)
-        if not self.parent.carte.matrice[casesCible[0]][casesCible[1]].type == 0:
+        if not self.parent.carte.matrice[casesCible[0]][casesCible[1]].isWalkable:
             if isinstance(self, Paysan):
                 print("ressource")
                 self.parent.enRessource.append(self)
@@ -293,24 +293,24 @@ class Unit():
     def aCoteMur(self, caseX, caseY):  # Pour ne pas aller en diagonale et rentrer dans un mur
         # TODO BUG traverse un mur en diagonale
         if caseY - 1 >= 0:
-            if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY - 1].type == 0:
+            if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY - 1].isWalkable:
                 return True
-            if not self.parent.carte.matrice[caseX][caseY - 1].type == 0:
+            if not self.parent.carte.matrice[caseX][caseY - 1].isWalkable:
                 return True
-            if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY - 1].type == 0:
+            if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY - 1].isWalkable:
                 return True
 
-        if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY] == 0:
+        if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY].isWalkable:
             return False
-        if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY] == 0:
+        if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY].isWalkable:
             return False
 
         if caseY + 1 < self.parent.grandeurMat:
-            if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY + 1].type == 0:
+            if caseX - 1 >= 0 and not self.parent.carte.matrice[caseX - 1][caseY + 1].isWalkable:
                 return True
-            if not self.parent.carte.matrice[caseX][caseY + 1].type == 0:
+            if not self.parent.carte.matrice[caseX][caseY + 1].isWalkable:
                 return True
-            if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY + 1].type == 0:
+            if caseX + 1 < self.parent.grandeurMat and not self.parent.carte.matrice[caseX + 1][caseY + 1].isWalkable:
                 return True
 
         return False
@@ -325,28 +325,28 @@ class Unit():
         caseCibleY = casesCible[1]
 
         if caseY - 1 >= 0:
-            if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY - 1].type == 0 and not self.aCoteMur(
+            if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY - 1].isWalkable and not self.aCoteMur(
                             caseX - 1, caseY - 1):
                 caseTransition.append(Noeud(n, caseX - 1, caseY - 1, caseCibleX, caseCibleY))
-            if self.parent.carte.matrice[caseX][caseY - 1].type == 0:
+            if self.parent.carte.matrice[caseX][caseY - 1].isWalkable:
                 caseTransition.append(Noeud(n, caseX, caseY - 1, caseCibleX, caseCibleY))
             if caseX + 1 < self.parent.grandeurMat and self.parent.carte.matrice[caseX + 1][
-                        caseY - 1].type == 0 and not self.aCoteMur(caseX + 1, caseY - 1):
+                        caseY - 1].isWalkable and not self.aCoteMur(caseX + 1, caseY - 1):
                 caseTransition.append(Noeud(n, caseX + 1, caseY - 1, caseCibleX, caseCibleY))
 
-        if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY].type == 0:
+        if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY].isWalkable:
             caseTransition.append(Noeud(n, caseX - 1, caseY, caseCibleX, caseCibleY))
-        if caseX + 1 < self.parent.grandeurMat and self.parent.carte.matrice[caseX + 1][caseY].type == 0:
+        if caseX + 1 < self.parent.grandeurMat and self.parent.carte.matrice[caseX + 1][caseY].isWalkable:
             caseTransition.append(Noeud(n, caseX + 1, caseY, caseCibleX, caseCibleY))
 
         if caseY + 1 < self.parent.grandeurMat:
-            if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY + 1].type == 0 and not self.aCoteMur(
+            if caseX - 1 >= 0 and self.parent.carte.matrice[caseX - 1][caseY + 1].isWalkable and not self.aCoteMur(
                             caseX - 1, caseY + 1):
                 caseTransition.append(Noeud(n, caseX - 1, caseY + 1, caseCibleX, caseCibleY))
-            if self.parent.carte.matrice[caseX][caseY + 1].type == 0:
+            if self.parent.carte.matrice[caseX][caseY + 1].isWalkable:
                 caseTransition.append(Noeud(n, caseX, caseY + 1, caseCibleX, caseCibleY))
             if caseX + 1 < self.parent.grandeurMat and self.parent.carte.matrice[caseX + 1][
-                        caseY + 1].type == 0 and not self.aCoteMur(caseX + 1, caseY + 1):
+                        caseY + 1].isWalkable and not self.aCoteMur(caseX + 1, caseY + 1):
                 caseTransition.append(Noeud(n, caseX + 1, caseY + 1, caseCibleX, caseCibleY))
 
         return caseTransition
@@ -495,7 +495,7 @@ class Model:
                         else:
                             print(posX,posY)
                             print(x,y)
-                            createdBuild = Batiments.Ferme(self, x*48, y*48)
+                            createdBuild = Batiments.Ferme(self, x, y)
                             self.buildings.append(createdBuild)
                             self.controller.view.drawSpecificBuilding(createdBuild)
                             self.carte.matrice[x][y].isWalkable = False

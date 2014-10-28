@@ -110,7 +110,7 @@ class EventListener:
             x1, y1 = self.leftClickPos
             x2, y2 = event.x, event.y
             self.controller.view.deleteSelectionSquare()
-            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, self.controller.model.buildings, clientId)
+            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
 
     def unitClick(self, event):

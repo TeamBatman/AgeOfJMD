@@ -275,6 +275,18 @@ class CarteView():
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
 
+    def drawBuildings(self,buildings):
+        self.canvas.delete("ferme")
+        for building in buildings:
+            img = building.image
+            posX = (building.posX*48) - (self.cameraX * self.item)
+            posY = (building.posY*48) - (self.cameraY * self.item)
+            self.canvas.create_image(posX,
+                                     posY,
+                                     anchor=NW,
+                                     image=img,
+                                     tags='ferme')
+
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
         :param unit:
@@ -318,6 +330,7 @@ class View(GWindow):
         self.width = 1024
         self.height = 768
         self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
+        self.modeConstruction = False
 
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
@@ -397,18 +410,12 @@ class View(GWindow):
         self.frameMinimap.drawRectMiniMap(clicX, clicY)
 
     def drawBuildings(self,buildings):
-        for building in buildings:
-            img = building.image
-            self.canvas.create_image(building.posX,
-                                         building.posY,
-                                         anchor=NW,
-                                         image=img,
-                                         tags='ferme')
+        self.carte.drawBuildings(buildings)
 
     def drawSpecificBuilding(self,building):
         img = building.image
-        self.canvas.create_image(building.posX,
-                                     building.posY,
+        self.canvas.create_image(building.posX*48,
+                                     building.posY*48,
                                      anchor=NW,
                                      image=img,
                                      tags='ferme')
