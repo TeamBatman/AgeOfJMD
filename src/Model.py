@@ -478,30 +478,34 @@ class Model:
         # self.units.append(Unit(x, y, self))
         self.units.append(Paysan(uid, x, y, self, civilisation))
 
-    def createBuilding(self,type,posX,posY):
-        if type == 0:
-            x,y = self.trouverCaseMatrice(posX,posY)
-            if not self.carte.matrice[x][y].isWalkable:
+    def createBuilding(self, uid, type, posX, posY):
+        x,y = self.trouverCaseMatrice(posX,posY)
+        if not self.carte.matrice[x][y].isWalkable:
+            print("not walkable")
+        else:
+            if not self.carte.matrice[x+1][y].isWalkable:
                 print("not walkable")
             else:
-                if not self.carte.matrice[x+1][y].isWalkable:
+                if not self.carte.matrice[x][y+1].isWalkable:
                     print("not walkable")
                 else:
-                    if not self.carte.matrice[x][y+1].isWalkable:
+                    if not self.carte.matrice[x+1][y+1].isWalkable:
                         print("not walkable")
                     else:
-                        if not self.carte.matrice[x+1][y+1].isWalkable:
-                            print("not walkable")
-                        else:
-                            print(posX,posY)
-                            print(x,y)
-                            createdBuild = Batiments.Ferme(self, x, y)
-                            self.buildings.append(createdBuild)
-                            self.controller.view.carte.drawSpecificBuilding(createdBuild)
-                            self.carte.matrice[x][y].isWalkable = False
-                            self.carte.matrice[+1][y].isWalkable = False
-                            self.carte.matrice[x][y+1].isWalkable = False
-                            self.carte.matrice[x+1][y+1].isWalkable = False
+                        print(posX,posY)
+                        print(x,y)
+                        if type == self.controller.view.FERME:
+                            createdBuild = Batiments.Ferme(self, Batiments.Batiment.generateId(uid), x, y)
+                        elif type == self.controller.view.BARAQUE:
+                            pass
+                        elif type == self.controller.view.HOPITAL:
+                            pass
+                        self.buildings.append(createdBuild)
+                        self.controller.view.carte.drawSpecificBuilding(createdBuild)
+                        self.carte.matrice[x][y].isWalkable = False
+                        self.carte.matrice[+1][y].isWalkable = False
+                        self.carte.matrice[x][y+1].isWalkable = False
+                        self.carte.matrice[x+1][y+1].isWalkable = False
 
     def executeCommand(self, command):
         """ Exécute une commande

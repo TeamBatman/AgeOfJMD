@@ -12,9 +12,12 @@ import Model
 
 
 class Batiment:
-    def __init__(self, parent, posX, posY):
+    COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque batiment
+
+    def __init__(self, parent, uid, posX, posY):
         self.posX = posX
         self.posY = posY
+        self.id = uid
         self.peutEtreOccupe = False
         self.estOccupe = False
         self.pointsDeVie = 100
@@ -28,6 +31,27 @@ class Batiment:
         self.enCreation = False  #booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
+
+    def getClientId(self):
+        """ Returns the Id of the client using the id of the unit
+        :return: the id of the clients
+        """
+        return self.id.split('_')[0]
+
+    def estUniteDe(self, clientId):
+        """ Vérifie si l'unité appartient au client ou non
+        :param clientId: le client à tester
+        :return: True si elle lui appartient Sinon False
+        """
+        masterId = int(self.getClientId())
+        clientId = int(clientId)
+        return masterId == clientId
+
+    @staticmethod
+    def generateId(clientId):
+        gId = "%s_%s" % (clientId, Batiment.COUNT)
+        Batiment.COUNT += 1
+        return gId
 
     def detruire(self):
         self.sortirUnites()
@@ -406,8 +430,8 @@ def miseAJour(self):
 
 
 class Ferme(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
+    def __init__(self, parent, uid, posX, posY):
+        super().__init__(parent, uid, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10

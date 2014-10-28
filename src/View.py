@@ -226,8 +226,8 @@ class CarteView():
 
         self.canvas.tag_bind('unit', '<Button-1>', self.eventListener.unitClick)
 
-        self.canvas.tag_bind('building', '<ButtonPress-1>', self.eventListener.onMapLRelease)
-        self.canvas.tag_bind('building', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
+        self.canvas.tag_bind('ferme', '<ButtonPress-1>', self.eventListener.onMapLPress)
+        self.canvas.tag_bind('ferme', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
 
 
     def draw(self, carte):
@@ -286,7 +286,8 @@ class CarteView():
                                      anchor=NW,
                                      image=img,
                                      tags='ferme')
-
+        self.canvas.tag_lower("ferme")
+        self.canvas.tag_lower(self.tagName)
 
     def drawSpecificBuilding(self,building):
         img = building.image
@@ -433,10 +434,11 @@ class View(GWindow):
         self.selected = []
 
     # TODO ? mettre dans carte ? 
-    def detectSelected(self, x1, y1, x2, y2, units, clientId):
+    def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):
         """ Ajoute toutes les unités sélectionné dans le rectangle spécifié
         à la liste d'unité sélectionnées
         :param units: All the possible units
+        :param buildings: All the possible buildings
         :param x1: coord x du point haut gauche
         :param y1: coord y du point haut gauche
         :param x2: coord x du point bas droite
@@ -444,7 +446,9 @@ class View(GWindow):
         """
         # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
+        hasUnit = False
         for item in items:
+
             itemCoords = self.canvas.coords(item)
             itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),
                          itemCoords[1] + self.carte.sizeUnit / 2 + (self.carte.cameraY * self.carte.item))
@@ -452,7 +456,12 @@ class View(GWindow):
             for unit in units:
                 if unit.estUniteDe(clientId):
                     if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
+                        hasUnit = True
                         self.selected.append(unit)  # Unité sélectionné
+
+            if not hasUnit:
+                if "ferme" in self.canvas.gettags(item):
+                    print("trouver")
 
 
     # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?

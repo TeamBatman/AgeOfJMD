@@ -83,7 +83,8 @@ class EventListener:
         if self.controller.view.modeConstruction == True:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-            self.controller.model.createBuilding(0,currentX,currentY)
+            clientId = self.controller.network.getClientId()
+            self.controller.model.createBuilding(clientId,0,currentX,currentY)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
         else:
@@ -114,18 +115,18 @@ class EventListener:
             x1, y1 = self.leftClickPos
             x2, y2 = event.x, event.y
             self.controller.view.deleteSelectionSquare()
-            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
+            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, self.controller.model.buildings, clientId)
 
 
     def unitClick(self, event):
         """
-        Appelée lorsqu'on clique sur une unité
+        Appelée lorsqu'on clique sur une unité ou un batiment
         :param event:
         """
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
+        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, self.controller.model.units, clientId)
 
 
 
