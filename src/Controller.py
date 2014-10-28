@@ -42,8 +42,8 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
-        self.network.startServer()
-        self.network.connectClient()
+        self.network.startServer(port=47098)
+        self.network.connectClient(ipAddress="10.57.100.152", port=47098)
 
         self.model.creerJoueur(self.network.getClientId())
         self.view.drawMinimap(self.model.carte.matrice)
@@ -61,8 +61,6 @@ class Controller:
         sys.exit(0)
 
 
-
-
 class EventListener:
     """ Écoute les évènement de la Vue (en pratique la vue appelle les méthodes de cette classe)
         Et
@@ -76,17 +74,24 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-
     def onMapRClick(self, event):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
+        print("len", len(self.controller.view.selected))
+        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
-            cmd.addData('Y2', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+            cmd.addData('X2', x2)
+            cmd.addData('Y2', y2)
+            if unitSelected == ledearUnit:
+                cmd.addData('LEADER', 1)
+            else:
+                cmd.addData('LEADER', 2)
             self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):
@@ -117,7 +122,6 @@ class EventListener:
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
 
-
     def onMapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la map
         """
@@ -132,10 +136,8 @@ class EventListener:
 
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
-
-
     def onMapCenterClick(self, event):
-        """ Appelée lorsque le joueur fait un clique de la mollette """ 
+        """ Appelée lorsque le joueur fait un clique de la mollette """
         # CRÉATION D'UNITÉ
         clientId = self.controller.network.client.id
         cmd = Command(clientId, Command.CREATE_UNIT)
@@ -144,9 +146,6 @@ class EventListener:
         cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
         cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
-
-
-
 
     def onMinimapLPress(self, event):
         """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
@@ -165,13 +164,16 @@ class EventListener:
 
         # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
         # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
-        self.controller.view.carte.cameraX = int((miniCamX - miniMapX)/tailleMiniTuile)
-        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY)/tailleMiniTuile)
+        self.controller.view.carte.cameraX = int((miniCamX - miniMapX) / tailleMiniTuile)
+        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY) / tailleMiniTuile)
+
+
+        # print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
+
 
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
 
-        
 
     def onMinimapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap
