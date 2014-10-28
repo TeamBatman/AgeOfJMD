@@ -42,8 +42,8 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
-        self.network.startServer()
-        self.network.connectClient()
+        self.network.startServer(port=47098)
+        self.network.connectClient(ipAddress="192.168.2.12", port=47099)
 
         self.model.creerJoueur(self.network.getClientId())
         self.view.drawMinimap(self.model.carte.matrice)

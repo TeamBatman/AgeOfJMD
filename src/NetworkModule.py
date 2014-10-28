@@ -7,16 +7,18 @@ import json as pickle
 import random
 import socket
 import threading
+
 import Pyro4
-import sys
+
 from Commands import Command
+from Model import Joueur
 
 
 
 
 
 # CONFIGURATION PYRO
-from Model import Joueur
+
 
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
 Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindre et deconnecte le client après ce délais
@@ -24,7 +26,7 @@ Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindr
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
 CLIENT_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du client
-LOCAL_TEST = True  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
+LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
 
 
 class ServerController:
@@ -108,8 +110,9 @@ class ServerController:
             return []     # On Attend que tout le monde ait terminé leur choses
 
         # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
+        Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
         self.clients[clientId] += 1
-        return self.commands[self.idIndex]
+        return [self.commands[self.clients[clientId]]]
 
 
 
@@ -121,7 +124,7 @@ class ServerController:
         """
         clientIndex = self.clients[clientId]
         for cId, cVal in self.clients.items():
-            if cId < clientIndex:
+            if cVal < clientIndex:
                 return True
 
         return False
@@ -290,12 +293,16 @@ class NetworkController:
         self.server = None  # Instance du serveur (Seulement lorsque le joueur décide de hoster une partie)
         self.serverThread = None  # Le Fil d'éxécution du serveur
 
-    def connectClient(self, ipAddress='127.0.0.1', port=3333):
+    def connectClient(self, ipAddress, port):
         """ Connecte le
         :param ipAddress: L'adresse IP du serveur auquel on veut se connecter
         :param port: Le port du serveur
         """
-        self.client.connect(ipAddress, port)
+        try:
+            self.client.connect(ipAddress, port)
+        except Pyro4.errors.CommunicationError:
+            raise ClientConnectionError("IMPOSSIBLE DE SE CONNECTER À L'HOTE AUCUN OBJET PYRO DÉTECTER À L'ADRESSE"
+                                        "ET AU PORT SPÉCIFIÉ")
 
     def disconnectClient(self):
         try:
@@ -306,21 +313,21 @@ class NetworkController:
     def getClientId(self):
         return self.client.id if self.client else -1
 
-    def startServer(self):
+    def startServer(self, port):
         """ Lance le serveur dans un nouveau fil d'exécution
         """
-        self.serverThread = threading.Thread(target=self._startServer)
+        self.serverThread = threading.Thread(target=lambda: self._startServer(port))
         self.serverThread.start()
 
-    def _startServer(self):
+    def _startServer(self, port):
         """ Crée l'instance du serveur et lance ce dernier
         """
-        self.server = Server()
+        self.server = Server(port=port)
         try:
             self.server.initDaemon()
             self.server.registerController()
             self.server.start()
-        except Pyro4.errors.CommunicationError:
+        except OSError:
             Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
                                self.server.port)
 
