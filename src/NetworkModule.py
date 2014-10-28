@@ -255,6 +255,7 @@ class Client:
             return False  # Échec de la tentative... le serveur n'existe peut-être plus
 
 
+
     def sendCommand(self, command):
         """ Envoie un objet commande à l'hôte dans un format sérialisé JSON
         :param command: la commande à envoyer [OBJET]

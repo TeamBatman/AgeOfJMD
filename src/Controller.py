@@ -74,17 +74,24 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-
     def onMapRClick(self, event):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
+        print("len", len(self.controller.view.selected))
+        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
-            cmd.addData('Y2', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+            cmd.addData('X2', x2)
+            cmd.addData('Y2', y2)
+            if unitSelected == ledearUnit:
+                cmd.addData('LEADER', 1)
+            else:
+                cmd.addData('LEADER', 2)
             self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):
@@ -129,7 +136,6 @@ class EventListener:
 
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
-
     def onMapCenterClick(self, event):
         """ Appelée lorsque le joueur fait un clique de la mollette """
         # CRÉATION D'UNITÉ
@@ -140,7 +146,6 @@ class EventListener:
         cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
         cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
-
 
     def onMinimapLPress(self, event):
         """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
@@ -163,7 +168,7 @@ class EventListener:
         self.controller.view.carte.cameraY = int((miniCamY - MiniMapY) / tailleMiniTuile)
 
 
-        #print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
+        # print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
 
 
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
