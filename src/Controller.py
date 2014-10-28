@@ -81,7 +81,11 @@ class EventListener:
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
         if self.controller.view.modeConstruction == True:
-            self.controller.model.createBuilding(0,event.x,event.y)
+            currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            self.controller.model.createBuilding(0,currentX,currentY)
+            self.controller.view.modeConstruction = False
+            print("MODE SELECTION")
         else:
             for unitSelected in self.controller.view.selected:
                 cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)

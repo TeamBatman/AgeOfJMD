@@ -497,7 +497,7 @@ class Model:
                             print(x,y)
                             createdBuild = Batiments.Ferme(self, x, y)
                             self.buildings.append(createdBuild)
-                            self.controller.view.drawSpecificBuilding(createdBuild)
+                            self.controller.view.carte.drawSpecificBuilding(createdBuild)
                             self.carte.matrice[x][y].isWalkable = False
                             self.carte.matrice[+1][y].isWalkable = False
                             self.carte.matrice[x][y+1].isWalkable = False

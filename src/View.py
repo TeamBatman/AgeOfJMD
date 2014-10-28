@@ -287,6 +287,17 @@ class CarteView():
                                      image=img,
                                      tags='ferme')
 
+
+    def drawSpecificBuilding(self,building):
+        img = building.image
+        posX = (building.posX*48) - (self.cameraX * self.item)
+        posY = (building.posY*48) - (self.cameraY * self.item)
+        self.canvas.create_image(posX,
+                                 posY,
+                                 anchor=NW,
+                                 image=img,
+                                 tags='ferme')
+
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
         :param unit:
@@ -411,14 +422,6 @@ class View(GWindow):
 
     def drawBuildings(self,buildings):
         self.carte.drawBuildings(buildings)
-
-    def drawSpecificBuilding(self,building):
-        img = building.image
-        self.canvas.create_image(building.posX*48,
-                                     building.posY*48,
-                                     anchor=NW,
-                                     image=img,
-                                     tags='ferme')
 
     def addBuildingToCursor(self,posX,posY):
         #self.buildingSprite =
