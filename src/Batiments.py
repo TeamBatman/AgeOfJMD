@@ -14,10 +14,10 @@ import Model
 class Batiment:
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque batiment
 
-    def __init__(self, parent, uid, posX, posY):
+    def __init__(self, parent, bid, posX, posY):
         self.posX = posX
         self.posY = posY
-        self.id = uid
+        self.id = bid
         self.peutEtreOccupe = False
         self.estOccupe = False
         self.pointsDeVie = 100
@@ -39,7 +39,7 @@ class Batiment:
         return self.id.split('_')[0]
 
     def estUniteDe(self, clientId):
-        """ Vérifie si l'unité appartient au client ou non
+        """ Vérifie si le batiment appartient au client ou non
         :param clientId: le client à tester
         :return: True si elle lui appartient Sinon False
         """
@@ -430,8 +430,8 @@ def miseAJour(self):
 
 
 class Ferme(Batiment):
-    def __init__(self, parent, uid, posX, posY):
-        super().__init__(parent, uid, posX, posY)
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10

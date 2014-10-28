@@ -24,7 +24,7 @@ class FrameSide():
 
 
     def draw(self):
-        """ Affiche le CADRE 
+        """ Affiche le CADRE
         """
         self.frame.draw(self.x, self.y)
 
@@ -59,7 +59,7 @@ class FrameMiniMap():
         self.miniCameraX = self.miniMapX
         self.miniCameraY = self.miniMapY
 
-        self.tailleTuile = 2  # Taille d'une tuile en pixels 
+        self.tailleTuile = 2  # Taille d'une tuile en pixels
 
 
     def bindEvents(self):
@@ -116,7 +116,7 @@ class FrameMiniMap():
         self.canvas.delete(tagUnits)
         color = 'red'  # TODO METTRE LES COULEURS SELON LA CIVILISATION
         item = 2
-        for unit in units:
+        for unit in units.values():
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
@@ -268,16 +268,16 @@ class CarteView():
         :param units: une liste d'unités
         """
         self.canvas.delete('unit')
-        for unit in units:
+        for unit in units.values():
             if self.isUnitShown(unit):
                 img = unit.activeOutline if unit in selectedUnits else unit.activeFrame
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
-                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
+                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit',unit.id))
 
     def drawBuildings(self,buildings):
         self.canvas.delete("ferme")
-        for building in buildings:
+        for building in buildings.values():
             img = building.image
             posX = (building.posX*48) - (self.cameraX * self.item)
             posY = (building.posY*48) - (self.cameraY * self.item)
@@ -285,7 +285,7 @@ class CarteView():
                                      posY,
                                      anchor=NW,
                                      image=img,
-                                     tags='ferme')
+                                     tags=('ferme', building.id))
         self.canvas.tag_lower("ferme")
         self.canvas.tag_lower(self.tagName)
 
@@ -297,7 +297,7 @@ class CarteView():
                                  posY,
                                  anchor=NW,
                                  image=img,
-                                 tags='ferme')
+                                 tags=('ferme', building.id))
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
@@ -398,7 +398,7 @@ class View(GWindow):
         self.carte.draw(carte)
 
     def drawUnits(self, units):
-        """ Affiche les unités sur la carte 
+        """ Affiche les unités sur la carte
         """
         self.carte.drawUnits(units, self.selected)
 
@@ -433,7 +433,7 @@ class View(GWindow):
         """
         self.selected = []
 
-    # TODO ? mettre dans carte ? 
+    # TODO ? mettre dans carte ?
     def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):
         """ Ajoute toutes les unités sélectionné dans le rectangle spécifié
         à la liste d'unité sélectionnées
@@ -444,24 +444,25 @@ class View(GWindow):
         :param x2: coord x du point bas droite
         :param y2: coord y du point bas droite
         """
-        # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
+
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
-        hasUnit = False
+
         for item in items:
+            # :param allTags: devrait avoir l'air de ('type_de_item', 'id_unique')
+            allTags = self.canvas.gettags(item)
+            if allTags[0] == "ferme":
+                building = buildings[allTags[1]]
+                if building.estUniteDe(self.eventListener.controller.network.getClientId()):
+                    print("one of your building was selected")
+                    print(building.id)
+                    return
 
-            itemCoords = self.canvas.coords(item)
-            itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),
-                         itemCoords[1] + self.carte.sizeUnit / 2 + (self.carte.cameraY * self.carte.item))
+            elif allTags[0] == "unit":
+                unit = units[allTags[1]]
+                if unit.estUniteDe(self.eventListener.controller.network.getClientId()):
+                    print("one unit and maybe more where selected")
+                    self.selected.append(unit)
 
-            for unit in units:
-                if unit.estUniteDe(clientId):
-                    if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
-                        hasUnit = True
-                        self.selected.append(unit)  # Unité sélectionné
-
-            if not hasUnit:
-                if "ferme" in self.canvas.gettags(item):
-                    print("trouver")
 
 
     # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?

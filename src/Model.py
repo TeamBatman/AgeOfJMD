@@ -433,11 +433,12 @@ class Model:
     def __init__(self, controller):
         self.controller = controller
         self.joueur = None
-        self.units = []
-        self.buildings = []
+        self.units = {}
+        self.buildings = {}
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
+
 
     def update(self):
         self.updateUnits()
@@ -445,7 +446,7 @@ class Model:
 
 
     def updateUnits(self):
-        [u.update() for u in self.units]
+        [u.update() for u in self.units.values()]
 
 
     def updatePaysans(self):
@@ -460,7 +461,8 @@ class Model:
         """ Returns a unit according to its ID
         :param uId: the id of the unit to find
         """
-        return next((u for u in self.units if u.id == uId), None)
+
+        return next((u for u in self.units.values() if u.id == uId), None)
 
     def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
@@ -476,9 +478,9 @@ class Model:
         :param y: position y de l'unité
         """
         # self.units.append(Unit(x, y, self))
-        self.units.append(Paysan(uid, x, y, self, civilisation))
+        self.units[uid] = Paysan(uid, x, y, self, civilisation)
 
-    def createBuilding(self, uid, type, posX, posY):
+    def createBuilding(self, userId, type, posX, posY):
         x,y = self.trouverCaseMatrice(posX,posY)
         if not self.carte.matrice[x][y].isWalkable:
             print("not walkable")
@@ -495,12 +497,14 @@ class Model:
                         print(posX,posY)
                         print(x,y)
                         if type == self.controller.view.FERME:
-                            createdBuild = Batiments.Ferme(self, Batiments.Batiment.generateId(uid), x, y)
+                            newID = Batiments.Batiment.generateId(userId)
+                            createdBuild = Batiments.Ferme(self, newID, x, y)
                         elif type == self.controller.view.BARAQUE:
                             pass
                         elif type == self.controller.view.HOPITAL:
                             pass
-                        self.buildings.append(createdBuild)
+                        self.buildings[newID] = createdBuild
+                        print(newID)
                         self.controller.view.carte.drawSpecificBuilding(createdBuild)
                         self.carte.matrice[x][y].isWalkable = False
                         self.carte.matrice[+1][y].isWalkable = False
