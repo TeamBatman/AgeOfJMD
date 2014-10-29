@@ -116,7 +116,7 @@ class ServerController:
             return []     # On Attend que tout le monde ait terminé leur choses
 
         # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
-        Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
+        #Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
         self.clients[clientId] += 1
         return [self.commands[self.clients[clientId]]]
 

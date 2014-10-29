@@ -6,6 +6,7 @@ class Command():
     CREATE_UNIT = 0
     DELETE_UNIT = 1
     MOVE_UNIT = 2
+    ATTACK_UNIT = 3
 
     def __init__(self, clientId=-1, cmdType=-1):
         self.clientId = clientId

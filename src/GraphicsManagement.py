@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from Timer import Timer
 
 
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
@@ -8,8 +9,49 @@ from PIL import ImageTk
 from PIL import ImageEnhance
 
 
+class AnimationSheet():
+    """ Permet de splitter une image et d'en retournant les sous parties
+    """
+    def __init__(self, imgPath, nbCol, nbRow):
+        """
+        :param imgPath:  Le chemin vers l'image de la feuille d'Animation
+        """
+        self.NB_FRAME_COL = nbCol
+        self.NB_FRAME_ROW = nbRow
+
+
+        self.imgPath = imgPath  # Le chemin vers la feuille d'animation
+        self.sheet = GraphicsManager.get(imgPath)   # La feuille de sprite en tant qu'image
+        self.sheet.convert('RGBA')
+
+        width, height = self.sheet.size
+        self.CELL_WIDTH = int(width / self.NB_FRAME_ROW)  # La largeur d'une frame d'animation
+        self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
+
+
+        self.frames = [[y for y in range(self.NB_FRAME_COL)] for x in range(self.NB_FRAME_ROW)]  # [row][column]
+        self._splitSheet()
+
+    def _splitSheet(self):
+        for y in range(self.NB_FRAME_COL):
+            for x in range(self.NB_FRAME_ROW):
+                x1 = x * self.CELL_WIDTH
+                y1 = x * self.CELL_HEIGHT
+                x2 = x1 + self.CELL_WIDTH
+                y2 = y1 + self.CELL_HEIGHT
+
+                rectangle = (x1, y1, x2, y2)
+                img = self.sheet.crop(rectangle)
+                self.frames[x][y] = ImageTk.PhotoImage(img)
 
 class SpriteSheet():
+
+    class Direction:
+        UP = 'UP'
+        DOWN = 'DOWN'
+        LEFT = 'LEFT'
+        RIGHT = 'RIGHT'
+
     def __init__(self, imgPath):
         """
         :param imgPath: Le chemin vers l'image de la feuille de sprite
@@ -26,7 +68,7 @@ class SpriteSheet():
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
 
         self.frames = {}  # Le dictionnaire contenant toute les frames
-        self.framesOutlines = {} # Le dictionnaire contenant toutes les frames en version sélectionnées
+        self.framesOutlines = {}    # Le dictionnaire contenant toutes les frames en version sélectionnées
         self._splitSheet()
 
     def _splitRow(self, rowNb, rowTag):
@@ -51,13 +93,58 @@ class SpriteSheet():
         """ divise une feuille de sprite en chacune de ses partie
         et de ses frames d'animation la numérotation se fait à partir de 0
         """
-        self._splitRow(0, "DOWN")
-        self._splitRow(1, "LEFT")
-        self._splitRow(2, "RIGHT")
-        self._splitRow(3, "UP")
+        self._splitRow(0, SpriteSheet.Direction.DOWN)
+        self._splitRow(1, SpriteSheet.Direction.LEFT)
+        self._splitRow(2, SpriteSheet.Direction.RIGHT)
+        self._splitRow(3, SpriteSheet.Direction.UP)
 
 
-        
+
+class SpriteAnimation():
+    def __init__(self, spriteSheet, frameDelay):
+        """ Contains an animation of a sprite
+        And animates it on call
+        :param frameDelay: the delay between frames
+        :param spriteSheet: the spriteSheet to use
+        """
+        self.spriteSheet = spriteSheet
+        self.timer = Timer(frameDelay)
+
+        self.direction = SpriteSheet.Direction.DOWN
+        self.frameIndex = 1
+
+        self.activeFrame = None
+        self.activeOutline = None
+
+        self._updateActiveFrameKey()
+        self.timer.start()
+
+
+    def _updateActiveFrameKey(self):
+        activeFrameKey = '%s_%s' % (self.direction, self.frameIndex)
+        self.activeFrame = self.spriteSheet.frames[activeFrameKey]
+        self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
+
+    def setActiveFrameKey(self, direction, frameIndex):
+        self.frameIndex = frameIndex
+        self.direction = direction
+        self._updateActiveFrameKey()
+
+    def animate(self):
+        if not self.timer.isDone():
+            return
+
+        self.frameIndex += 1
+        if self.frameIndex == self.spriteSheet.NB_FRAME_ROW:
+            self.frameIndex = 0
+        if self.frameIndex == 1:  # POSITION NEUTRE ON NE VEUT PAS ÇA
+            self.frameIndex = 2
+
+        self._updateActiveFrameKey()
+        self.timer.reset()
+
+
+
 
 
 def colorizeImage(pilImg):

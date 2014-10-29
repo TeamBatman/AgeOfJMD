@@ -106,20 +106,34 @@ class EventListener:
 
 
     def onUnitRClick(self, event):
+        """
+        Appelée lorsqu'on clique sur une unité avec le bouton droit de la souris
+        :param event: Tkinter Event
+        """
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
-        if not unit.estUniteDe(clientId):
+        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
+        #if not targetUnit.estUniteDe(clientId):
+        for unitSelected in self.controller.view.selected:
+            cmd = Command(self.controller.network.client.id, Command.ATTACK_UNIT)
+            cmd.addData('TARGET_ID', targetUnit.id)
+            cmd.addData('SOURCE_ID', unitSelected.id)
+            cmd.addData('X1', unitSelected.x)
+            cmd.addData('Y1', unitSelected.y)
+            cmd.addData('X2', targetUnit.x)
+            cmd.addData('Y2', targetUnit.y)
+            self.controller.network.client.sendCommand(cmd)
             print("ATTAQUE")    # ATTAQUE
 
 
 
     def onUnitLClick(self, event):
         """
-        Appelée lorsqu'on clique sur une unité
-        :param event:
+        Appelée lorsqu'on clique sur une unité avec le bouton gauche de la souris
+        :param event: Tkinter Event
         """
+        self.controller.view.resetSelection()
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y

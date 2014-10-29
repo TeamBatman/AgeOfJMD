@@ -1,7 +1,7 @@
 import random
 import sys
 import time
-from GraphicsManagement import SpriteSheet
+from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation
 from Joueurs import Joueur
 from Timer import Timer
 
@@ -41,25 +41,25 @@ class Unit():
         self.timerDeplacement.start()
 
         # ANIMATION
-        self.timerAnimation = Timer(333)   # 1000/333 = 3 fois par secondes
-        self.timerAnimation.start()
         self.spriteSheet = None
-        self.determineSpritesheet()
-
-        self.animDirection = 'DOWN'
-        self.animFrameIndex = 1
-
-        activeFrameKey = '%s_%s' % (self.animDirection, self.animFrameIndex)
-        self.activeFrame = self.spriteSheet.frames[activeFrameKey]
-        self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
+        self.animation = SpriteAnimation(self.determineSpritesheet(), 333)  # 1000/333 = 3 fois par secondes
 
         # Kombat
-        self.hp = 100       # Health Points, Points de Vie
+        # Health Points, Points de Vie
+        self.hpMax = 20
+        self.hp = 20
         # Force à laquelle l'unité frappe
         self.attackMin = 0
         self.attackMax = 5
-        self.uniteEnnemie = None
+        self.ennemiCible = None
+        self.modeAttack = Unit.PASSIF
+        self.timerAttack = Timer(900)
+        self.timerAttack.start()
 
+        self.animHurtSheet = AnimationSheet('Graphics/Animations/003-Attack01.png', 2, 5)
+        self.animHurt = None
+
+        self.animHurtIndex = 0
 
 
 
@@ -83,8 +83,8 @@ class Unit():
         """ permet de déterminer le spritesheet à utiliser
         selon la civilisation de l'unité
         """
-        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit")
-        sys.exit(1)
+        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit "
+                        "retourner la sprite sheet")
 
     @staticmethod
     def generateId(clientId):
@@ -93,24 +93,10 @@ class Unit():
         return gId
 
 
-    def animer(self):
-        """ Lance l'animation de l'unité
-        """
-        if not self.timerAnimation.isDone():
-            return
-
-        self.animFrameIndex += 1
-        if self.animFrameIndex == self.spriteSheet.NB_FRAME_ROW:
-            self.animFrameIndex = 0
-        if self.animFrameIndex == 1:  # POSITION NEUTRE ON NE VEUT PAS ÇA
-            self.animFrameIndex = 2
-
-        activeFrameKey = '%s_%s' % (self.animDirection, self.animFrameIndex)
-        self.activeFrame = self.spriteSheet.frames[activeFrameKey]
-        self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
-        self.timerAnimation.reset()
-
     def update(self):
+
+        self.determineCombatBehaviour()
+
         try:
             self.deplacementTrace()
         except:
@@ -132,25 +118,23 @@ class Unit():
 
         if self.cibleX > self.x:
             self.x += self.vitesse
-            self.animDirection = 'RIGHT'
+            self.animation.direction = SpriteSheet.Direction.RIGHT
 
         elif self.cibleX < self.x:
             self.x -= self.vitesse
-            self.animDirection = 'LEFT'
+            self.animation.direction = SpriteSheet.Direction.LEFT
 
         if self.cibleY > self.y:
             self.y += self.vitesse
-            self.animDirection = 'DOWN'
+            self.animation.direction = SpriteSheet.Direction.DOWN
 
         elif self.cibleY < self.y:
             self.y -= self.vitesse
-            self.animDirection = 'UP'
+            self.animation.direction = SpriteSheet.Direction.UP
 
         # Puisqu'il y a eu un déplacement
-        self.animer()
+        self.animation.animate()
         self.timerDeplacement.reset()
-
-
 
 
     def deplacement(self):
@@ -166,11 +150,7 @@ class Unit():
             if self.x == self.cibleX and self.y == self.cibleY:
                 del self.cheminTrace[-1]
                 if len(self.cheminTrace) <= 0:
-                    self.animFrameIndex = 1
-                    self.animDirection = 'DOWN'
-                    activeFrameKey = 'DOWN_1'
-                    self.activeFrame = self.spriteSheet.frames[activeFrameKey]
-                    self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
+                    self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
                     return -1
                 self.cibleX = self.cheminTrace[-1].x
                 self.cibleY = self.cheminTrace[-1].y
@@ -179,7 +159,6 @@ class Unit():
                 self.x = self.cibleX
             if abs(self.cibleY - self.y) <= self.vitesse:
                 self.y = self.cibleY
-
             self.deplacer()
 
 
@@ -206,7 +185,7 @@ class Unit():
         self.open.append(noeudInit)
         time1 = time.time()
         chemin = self.aEtoile()
-        print("Temps a*: ", time.time() - time1)
+        # print("Temps a*: ", time.time() - time1)
         n = chemin
         if not n == -1:
             self.cheminTrace = []
@@ -262,8 +241,8 @@ class Unit():
                     # self.afficherList("open", self.open)
                     # return -1
                     self.open = self.open[:nbNoeud]
-                    #print(len(self.open))
-                    #self.parent.parent.v.afficherCourantPath(self.open)
+                    # print(len(self.open))
+                    # self.parent.parent.v.afficherCourantPath(self.open)
         return -1
 
     def afficherList(self, nom, liste):
@@ -345,34 +324,60 @@ class Unit():
         return False
 
 
-
     # KOMBAT ==========================================================
 
+    def determineCombatBehaviour(self):
+        """ Détermine le comportement de combat à adopter
+        dépendemment du mode de combat (Actif ou Passif)
+        """
+        # PASSIF
+        if self.modeAttack == Unit.PASSIF:
+            if self.ennemiCible:
+                self.attaquer()
 
-    def attaquer(self, idUniteEnnemie):
+        # ACTIF
+        if self.modeAttack == Unit.ACTIF:
+            pass     # TODO
+            # Chercher une cible dans sans champ de vision
+            # Lancer une commande attaque vers la cible
+
+
+
+    def attaquer(self):
         """ Permet d'attaquer une unité
-        :param idUniteEnnemie: l'ID de l'unité
         """
-        attack = random.randint(self.attackMin, self.attackMax)
-        # TODO Faire une commande Attaquer et l'envoyer en réseau
+        if self.ennemiCible.hp == 0:
+            self.ennemiCible = None
+            return
 
-    def recevoirDommage(self, attack):
-        """
+        # Si je suis trop loin je me rapproche de l'ennemi
+
+        if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur:
+            self.changerCible(self.ennemiCible.x - self.grandeur, self.ennemiCible.y - self.grandeur)
+            return
+
+        if self.timerAttack.isDone():
+            attack = random.randint(self.attackMin, self.attackMax)
+            self.ennemiCible.recevoirAttaque(self, attack)
+            self.timerAttack.reset()
+
+    def recevoirAttaque(self, attaquant, attack):
+        """ Permet d'affaiblir une unité
         :param attack: Force d'attaque (int)
         """
         self.hp -= attack
+        if self.hp <= 0:
+            self.hp = 0  # UNITÉ MORTE
+
+        try:
+            self.animHurt = self.animHurtSheet.frames[0][self.animHurtIndex]
+        except KeyError:
+            self.animHurtIndex = 0
 
 
 
-
-
-
-
-
-
-
-
-
+            # RIPOSTER
+            # self.ennemiCible = attaquant
 
 
 class Paysan(Unit):
@@ -384,7 +389,6 @@ class Paysan(Unit):
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
 
     def determineSpritesheet(self):
-
         spritesheets = {
             Joueur.BLANC: 'Units/Age_I/paysan_blanc.png',
             Joueur.BLEU: 'Units/Age_I/paysan_bleu.png',
@@ -398,12 +402,7 @@ class Paysan(Unit):
             Joueur.VERT: 'Units/Age_I/paysan_vert.png',
             Joueur.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        self.spriteSheet = SpriteSheet(spritesheets[self.civilisation])
-
-
-
-    def update(self):
-        Unit.update(self)
+        return SpriteSheet(spritesheets[self.civilisation])
 
 
     def chercherRessources(self):
@@ -414,8 +413,8 @@ class Paysan(Unit):
             self.nbRessources += self.vitesseRessource
         else:
             self.nbRessources = self.nbRessourcesMax
-            #print("MAX!", self.nbRessources)
-            #TODO Faire retourner à la base !
+            # print("MAX!", self.nbRessources)
+            # TODO Faire retourner à la base !
 
 
 class Noeud:

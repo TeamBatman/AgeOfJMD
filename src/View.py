@@ -270,15 +270,15 @@ class CarteView():
         self.canvas.delete('unit')
         for unit in units.values():
             if self.isUnitShown(unit):
-                img = unit.activeOutline if unit in selectedUnits else unit.activeFrame
+                img = unit.animation.activeOutline if unit in selectedUnits else unit.animation.activeFrame
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
                 # Barre de vie
                 if unit in selectedUnits:
-                    
                     tailleBarre = 32  # en pixels
-                    hp = int(unit.hp * 100 / tailleBarre)
+                    hp = int(unit.hp * tailleBarre / unit.hpMax)
                     self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unit')
                     self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unit')
 
@@ -419,7 +419,6 @@ class View(GWindow):
         """
         # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
-        print(items)
         for item in items:
             itemCoords = self.canvas.coords(item)
             itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),
@@ -470,16 +469,6 @@ class View(GWindow):
         self.drawMiniUnits(units)
         self.drawUnits(units)
 
-
-    def show(self):
-        """ Affiche la fenêtre de jeu à l'écran
-        """
-        self.root.mainloop()
-
-    def after(self, ms, func):
-        """ Raccourci vers la méthode de root after
-        """
-        self.root.after(ms, func)
 
     def destroy(self):
         """ Détruit la fenêtre de jeu

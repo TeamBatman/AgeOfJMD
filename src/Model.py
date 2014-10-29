@@ -28,7 +28,9 @@ class Model:
     def updateUnits(self):
         """ Met à jour chacune des unités
         """
-        [u.update() for u in self.units.values()]
+        [u.update() for u in self.units.values() if u.hp > 0]
+
+
 
 
     def updatePaysans(self):
@@ -43,15 +45,15 @@ class Model:
         """ Returns a unit according to its ID
         :param uId: the id of the unit to find
         """
-        return next((u for u in self.units.values() if u.id == uId), None)
+        return self.units[uId]
 
     def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
         """
         try:
-            self.units.remove(self.getUnit(uId))
+            self.units.pop(uId)
         except Exception:
-            pass   # N'existait pas
+            pass  # N'existait pas
 
     def createUnit(self, uid, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités
@@ -65,14 +67,31 @@ class Model:
         """ Exécute une commande
         :param command: la commande à exécuter
         """
-        if command.data['TYPE'] == Command.CREATE_UNIT:
-            self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIV'])
+        commands = {
+            Command.CREATE_UNIT: self.executeCreateUnit,
+            Command.MOVE_UNIT: self.executeMoveUnit,
+            Command.ATTACK_UNIT: self.executeAttackUnit,
+        }
+        exe = commands[command.data['TYPE']]
+        exe(command)
 
-        elif command.data['TYPE'] == Command.DELETE_UNIT:
-            self.deleteUnit(command.data['X'], command.data['Y'])
 
-        elif command.data['TYPE'] == Command.MOVE_UNIT:
-            self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'])
+    def executeCreateUnit(self, command):
+        self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIV'])
+
+    def executeMoveUnit(self, command):
+        unit = self.units[command.data['ID']]
+        unit.ennemiCible = None
+        unit.changerCible(command.data['X2'], command.data['Y2'])
+
+    def executeAttackUnit(self, command):
+        attacker = self.units[command.data['SOURCE_ID']]
+        target = self.units[command.data['TARGET_ID']]
+        print(target)
+        attacker.ennemiCible = target
+
+
+
 
 
 
