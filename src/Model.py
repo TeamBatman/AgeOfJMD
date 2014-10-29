@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import time
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
@@ -27,11 +28,11 @@ class Model:
 
     def updateUnits(self):
         """ Met à jour chacune des unités
+            Et supprime les unités mortes de la liste
         """
-        [u.update() for u in self.units.values() if u.hp > 0]
-
-
-
+        [u.update() for u in self.units.values()]
+        # On retire les morts
+        self.units = {uid: u for uid, u in self.units.items() if u.hp > 0}
 
     def updatePaysans(self):
         for paysan in self.enRessource:
@@ -89,11 +90,6 @@ class Model:
         target = self.units[command.data['TARGET_ID']]
         print(target)
         attacker.ennemiCible = target
-
-
-
-
-
 
 
     def trouverCaseMatrice(self, x, y):

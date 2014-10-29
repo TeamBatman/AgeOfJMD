@@ -94,7 +94,8 @@ class Unit():
 
 
     def update(self):
-
+        if self.hp == 0:
+            return
         self.determineCombatBehaviour()
 
         try:
@@ -374,10 +375,8 @@ class Unit():
         except KeyError:
             self.animHurtIndex = 0
 
-
-
-            # RIPOSTER
-            # self.ennemiCible = attaquant
+        # RIPOSTER
+        self.ennemiCible = attaquant
 
 
 class Paysan(Unit):

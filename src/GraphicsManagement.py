@@ -2,11 +2,25 @@
 # -*- coding: utf-8 -*-
 from Timer import Timer
 
-
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
+
 from PIL import Image
 from PIL import ImageTk
 from PIL import ImageEnhance
+
+
+def colorizeImage(pilImg):
+    """ Augmente l'intensité des couleur de l'image
+    :param pilImg: l'image PIL
+    :return: l'image PIl en rouge
+    """
+
+    # COLORIZE
+    converter = ImageEnhance.Color(pilImg)
+    pilImg = converter.enhance(3)  # n* les couleurs de l'image de base
+    return pilImg
+
+
 
 
 class AnimationSheet():
@@ -99,11 +113,35 @@ class SpriteSheet():
         self._splitRow(3, SpriteSheet.Direction.UP)
 
 
+class Animation():
+    """ Représente une animation Générique
+    """
+    def __init__(self, animationSheet, frameDelay):
+        self.sheet = animationSheet
+        self.frameIndex = 0
+        self.activeFrame = None
+
+        self.timer = Timer(frameDelay)
+        self.timer.start()
+
+    def animate(self):
+        if not self.timer.isDone():
+            return
+
+        self.frameIndex += 1
+        try:
+            self.activeFrame = self.sheet.frames[self.frameIndex]
+        except IndexError:  # On est allé trop loin
+            self.activeFrame = 0
+
+        self.timer.reset()
+
 
 class SpriteAnimation():
+    """ Correspond à l'animation d'un sprite et l'anime au besoin (manuellement via animate() )
+    """
     def __init__(self, spriteSheet, frameDelay):
-        """ Contains an animation of a sprite
-        And animates it on call
+        """
         :param frameDelay: the delay between frames
         :param spriteSheet: the spriteSheet to use
         """
@@ -137,27 +175,11 @@ class SpriteAnimation():
         self.frameIndex += 1
         if self.frameIndex == self.spriteSheet.NB_FRAME_ROW:
             self.frameIndex = 0
-        if self.frameIndex == 1:  # POSITION NEUTRE ON NE VEUT PAS ÇA
+        if self.frameIndex == 1:  # POSITION NEUTRE ON NE VEUT PAS ÇA DURANT L'ANIMATION
             self.frameIndex = 2
 
         self._updateActiveFrameKey()
         self.timer.reset()
-
-
-
-
-
-def colorizeImage(pilImg):
-    """ Augmente l'intensité des couleur de l'image
-    :param pilImg: l'image PIL
-    :return: l'image PIl en rouge
-    """
-
-    # COLORIZE
-    converter = ImageEnhance.Color(pilImg)
-    pilImg = converter.enhance(3)  # n* les couleurs de l'image de base
-    return pilImg
-
 
 
 

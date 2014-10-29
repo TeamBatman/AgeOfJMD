@@ -24,3 +24,6 @@ Si j'envoie une unité A attaqer une unité B qui est plutôt éloignée et que 
 
 ### Champs de Vision
 Va-t-on afficher le champs de vision d'une unité lorsqu'on clique sur celle-ci?
+
+### RIPOSTE
+Est-ce que les unités ripostent?
