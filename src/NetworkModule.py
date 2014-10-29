@@ -29,6 +29,12 @@ CLIENT_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du client
 LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
 
 
+
+def detectIP():
+    return socket.gethostbyname(socket.gethostname())
+
+
+
 class ServerController:
     """ Contrôleur serveur. C'est une instance de cette classe qui sera mis à disposition des clients. Enregistrée dans
      le démon Pyro4. Ainsi, ils ne pourront avoir accès qu'aux méthodes définies ici."""
@@ -155,7 +161,7 @@ class Server:
 
     def __init__(self, port=3333):
         self.port = port  # Le port du serveur
-        self.host = socket.gethostbyname(socket.gethostname())  # L'adresse IP du serveur. Détectée automatiquement
+        self.host = detectIP()  # L'adresse IP du serveur. Détectée automatiquement
         if LOCAL_TEST:
             self.host = '127.0.0.1'
 
@@ -298,6 +304,8 @@ class NetworkController:
         :param ipAddress: L'adresse IP du serveur auquel on veut se connecter
         :param port: Le port du serveur
         """
+        if self.serverThread:
+            ipAddress = detectIP()
         try:
             self.client.connect(ipAddress, port)
         except Pyro4.errors.CommunicationError:
