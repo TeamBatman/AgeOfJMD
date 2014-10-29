@@ -4,7 +4,7 @@
 from __future__ import division
 from Commands import Command
 from Carte import Carte
-from Joueur import Joueur
+from Joueurs import Joueur
 
 from Units import Paysan
 

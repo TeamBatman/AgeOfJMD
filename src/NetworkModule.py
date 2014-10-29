@@ -11,7 +11,7 @@ import threading
 import Pyro4
 
 from Commands import Command
-from Joueur import Joueur
+from Joueurs import Joueur
 
 
 

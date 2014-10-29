@@ -1,7 +1,7 @@
 import sys
 import time
 from GraphicsManagement import SpriteSheet
-from Joueur import Joueur
+from Joueurs import Joueur
 from Timer import Timer
 
 
