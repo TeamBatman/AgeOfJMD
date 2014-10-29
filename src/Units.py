@@ -46,6 +46,13 @@ class Unit():
         self.activeFrame = self.spriteSheet.frames[activeFrameKey]
         self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
 
+        # Kombat
+        self.hp = 100       # Health Points, Points de Vie
+        self.damage = 50    # Force à laquelle l'unité frappe
+
+
+
+
 
     def getClientId(self):
         """ Returns the Id of the client using the id of the unit
