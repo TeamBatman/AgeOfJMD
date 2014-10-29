@@ -4,9 +4,9 @@
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
+from Units import Unit
 from View import View
 import sys
-from Model import Unit
 
 
 class Controller:
