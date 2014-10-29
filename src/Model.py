@@ -8,6 +8,7 @@ from Carte import Carte
 from GraphicsManagement import SpriteSheet
 
 import time
+from Timer import Timer
 
 
 class Joueur:
@@ -61,10 +62,12 @@ class Unit():
         self.cibleXTrace = y
         self.mode = 0  # 1=ressource
 
+        self.timerDeplacement = Timer(60)
+        self.timerDeplacement.start()
 
         # ANIMATION
-        self.lastAnimtaionTime = time.time()
-        self.animationRate = 333  # in millisecond
+        self.timerAnimation = Timer(333)   # 1000/333 = 3 fois par secondes
+        self.timerAnimation.start()
         self.spriteSheet = None
         self.determineSpritesheet()
 
@@ -108,11 +111,10 @@ class Unit():
     def animer(self):
         """ Lance l'animation de l'unité
         """
-        if not time.time() - self.lastAnimtaionTime >= self.animationRate / 1000:
+        if not self.timerAnimation.isDone():
             return
 
         self.animFrameIndex += 1
-
         if self.animFrameIndex == self.spriteSheet.NB_FRAME_ROW:
             self.animFrameIndex = 0
         if self.animFrameIndex == 1:  # POSITION NEUTRE ON NE VEUT PAS ÇA
@@ -121,7 +123,7 @@ class Unit():
         activeFrameKey = '%s_%s' % (self.animDirection, self.animFrameIndex)
         self.activeFrame = self.spriteSheet.frames[activeFrameKey]
         self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
-        self.lastAnimtaionTime = time.time()
+        self.timerAnimation.reset()
 
     def update(self):
         try:
@@ -137,16 +139,15 @@ class Unit():
         self.cibleY = cibleY
         self.choisirTrace()
 
-    def deplacement(self):
-        if abs(self.cibleX - self.x) <= self.vitesse:
-            self.x = self.cibleX
-        if abs(self.cibleY - self.y) <= self.vitesse:
-            self.y = self.cibleY
+
+    def deplacer(self):
+
+        if not self.timerDeplacement.isDone():
+            return
 
         if self.cibleX > self.x:
             self.x += self.vitesse
             self.animDirection = 'RIGHT'
-
 
         elif self.cibleX < self.x:
             self.x -= self.vitesse
@@ -162,6 +163,18 @@ class Unit():
 
         # Puisqu'il y a eu un déplacement
         self.animer()
+        self.timerDeplacement.reset()
+
+
+
+
+    def deplacement(self):
+        if abs(self.cibleX - self.x) <= self.vitesse:
+            self.x = self.cibleX
+        if abs(self.cibleY - self.y) <= self.vitesse:
+            self.y = self.cibleY
+
+        self.deplacer()
 
     def deplacementTrace(self):
         if len(self.cheminTrace) > 0:
@@ -182,24 +195,7 @@ class Unit():
             if abs(self.cibleY - self.y) <= self.vitesse:
                 self.y = self.cibleY
 
-            if self.cibleX > self.x:
-                self.x += self.vitesse
-                self.animDirection = 'RIGHT'
-
-            elif self.cibleX < self.x:
-                self.x -= self.vitesse
-                self.animDirection = 'LEFT'
-
-            if self.cibleY > self.y:
-                self.y += self.vitesse
-                self.animDirection = 'DOWN'
-
-            elif self.cibleY < self.y:
-                self.y -= self.vitesse
-                self.animDirection = 'UP'
-
-            # Puisqu'il y a eu un déplacement
-            self.animer()
+            self.deplacer()
 
 
     def choisirTrace(self):

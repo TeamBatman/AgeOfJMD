@@ -39,9 +39,10 @@ class TimerException(Exception):
 
 
 # EXEMPLE UTILISATION
-t = Timer(1000)
-t.start()
-while 1:
-    if t.isDone():
-        print("Running time: %ssec" % t.getRunningTime())
-        t.reset()
+def exemple():
+    t = Timer(1000)
+    t.start()
+    while 1:
+        if t.isDone():
+            print("Running time: %ssec" % t.getRunningTime())
+            t.reset()
