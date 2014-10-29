@@ -275,6 +275,7 @@ class CarteView():
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit',unit.id))
 
+
     def drawBuildings(self,buildings):
         self.canvas.delete("ferme")
         self.canvas.delete("base")
@@ -287,9 +288,7 @@ class CarteView():
                                      anchor=NW,
                                      image=img,
                                      tags=(building.type, building.id))
-        self.canvas.tag_lower("ferme")
-        self.canvas.tag_lower("base")
-        self.canvas.tag_lower(self.tagName)
+        self.lowerAllItemsOnMap()
 
     def drawSpecificBuilding(self,building):
         img = building.image
@@ -321,6 +320,11 @@ class CarteView():
             return True
 
         return False
+
+    def lowerAllItemsOnMap(self):
+        self.canvas.tag_lower("ferme")
+        self.canvas.tag_lower("base")
+        self.canvas.tag_lower(self.tagName)
 
 
 class View(GWindow):
@@ -457,11 +461,22 @@ class View(GWindow):
         for item in items:
             # :param allTags: devrait avoir l'air de ('type_de_item', 'id_unique')
             allTags = self.canvas.gettags(item)
-            if allTags[0] == "ferme":
+
+            if allTags[0] == "base":
+                building = buildings[allTags[1]]
+                if building.estUniteDe(self.eventListener.controller.network.getClientId()):
+                    print("you just selected your base")
+                    print(building.type + ": " + building.id)
+                    self.selected.append(building)
+                    building.estSelectionne = True
+                    return
+
+            elif allTags[0] == "ferme":
                 building = buildings[allTags[1]]
                 if building.estUniteDe(self.eventListener.controller.network.getClientId()):
                     print("one of your building was selected")
-                    print(building.id)
+                    print(building.type + ": " + building.id)
+                    building.estSelectionne = True
                     return
 
             elif allTags[0] == "unit":
@@ -469,8 +484,6 @@ class View(GWindow):
                 if unit.estUniteDe(self.eventListener.controller.network.getClientId()):
                     print("one unit and maybe more where selected")
                     self.selected.append(unit)
-
-
 
     # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?
 

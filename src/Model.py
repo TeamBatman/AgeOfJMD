@@ -32,6 +32,7 @@ class Joueur:
     def __init__(self, civilisation):
         self.civilisation = civilisation
         self.base = None
+        self.baseVivante = False # À modifier, doit être true quand on commence une vraie partie
         self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.morale = 0
         self.nbNourriture = 0
@@ -468,7 +469,7 @@ class Model:
         """ Supprime une unité à la liste d'unités
         """
         try:
-            self.units.remove(self.getUnit(uId))
+            self.units.remove(self.units[uId])
         except Exception:
             pass   # N'existait pas
 
@@ -504,8 +505,13 @@ class Model:
                         elif type == self.controller.view.HOPITAL:
                             pass
                         elif type == self.controller.view.BASE:
-                            newID = Batiments.Batiment.generateId(userId)
-                            createdBuild = Batiments.Base(self,newID,x,y)
+                            if self.joueur.baseVivante == False:
+                                newID = Batiments.Batiment.generateId(userId)
+                                createdBuild = Batiments.Base(self,newID,x,y)
+                                self.joueur.baseVivante = True
+                            else:
+                                print("base already exist")
+                                return
                         self.buildings[newID] = createdBuild
                         print(newID)
                         self.controller.view.carte.drawSpecificBuilding(createdBuild)
@@ -525,7 +531,7 @@ class Model:
             self.deleteUnit(command.data['X'], command.data['Y'])
 
         elif command.data['TYPE'] == Command.MOVE_UNIT:
-            self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'])
+            self.units[command.data['ID']].changerCible(command.data['X2'], command.data['Y2'])
 
 
 
