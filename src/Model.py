@@ -13,7 +13,7 @@ class Model:
     def __init__(self, controller):
         self.controller = controller
         self.joueur = None
-        self.units = []
+        self.units = {}
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
@@ -28,7 +28,7 @@ class Model:
     def updateUnits(self):
         """ Met à jour chacune des unités
         """
-        [u.update() for u in self.units]
+        [u.update() for u in self.units.values()]
 
 
     def updatePaysans(self):
@@ -43,7 +43,7 @@ class Model:
         """ Returns a unit according to its ID
         :param uId: the id of the unit to find
         """
-        return next((u for u in self.units if u.id == uId), None)
+        return next((u for u in self.units.values() if u.id == uId), None)
 
     def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
@@ -59,7 +59,7 @@ class Model:
         :param y: position y de l'unité
         """
         # self.units.append(Unit(x, y, self))
-        self.units.append(Paysan(uid, x, y, self, civilisation))
+        self.units[uid] = Paysan(uid, x, y, self, civilisation)
 
     def executeCommand(self, command):
         """ Exécute une commande

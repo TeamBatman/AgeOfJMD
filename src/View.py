@@ -84,8 +84,8 @@ class FrameMiniMap():
         self.canvas.delete(self.miniMapTag)
         # x1 = self.miniMapX
         # y1 = self.miniMapY
-        #x2 = x1 + self.miniMapWidth
-        #y2 = y1 + self.miniMapHeight
+        # x2 = x1 + self.miniMapWidth
+        # y2 = y1 + self.miniMapHeight
 
         size = 106  # TODO Explication de ce chiffre
         itemMini = self.tailleTuile  # La grandeur des cases pour la minimap en pixels
@@ -116,7 +116,7 @@ class FrameMiniMap():
         self.canvas.delete(tagUnits)
         color = 'red'  # TODO METTRE LES COULEURS SELON LA CIVILISATION
         item = 2
-        for unit in units:
+        for unit in units.values():
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
@@ -211,7 +211,6 @@ class CarteView():
         self.tagName = 'carte'
 
 
-
     def bindEvents(self):
         """ Lis les événements à la carte
         """
@@ -224,7 +223,8 @@ class CarteView():
         self.canvas.tag_bind('carte', '<B1-Motion>', self.eventListener.onMapMouseMotion)
         self.canvas.tag_bind('carte', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
 
-        self.canvas.tag_bind('unit', '<Button-1>', self.eventListener.unitClick)
+        self.canvas.tag_bind('unit', '<Button-1>', self.eventListener.onUnitLClick)
+        self.canvas.tag_bind('unit', '<Button-3>', self.eventListener.onUnitRClick)
 
         self.canvas.tag_bind('building', '<ButtonPress-1>', self.eventListener.onMapLRelease)
         self.canvas.tag_bind('building', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
@@ -268,12 +268,19 @@ class CarteView():
         :param units: une liste d'unités
         """
         self.canvas.delete('unit')
-        for unit in units:
+        for unit in units.values():
             if self.isUnitShown(unit):
                 img = unit.activeOutline if unit in selectedUnits else unit.activeFrame
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
-                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
+                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+                # Barre de vie
+                if unit in selectedUnits:
+                    
+                    tailleBarre = 32  # en pixels
+                    hp = int(unit.hp * 100 / tailleBarre)
+                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unit')
+                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unit')
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
@@ -383,7 +390,24 @@ class View(GWindow):
         """
         self.selected = []
 
-    # TODO ? mettre dans carte ? 
+    # TODO ? mettre dans carte ?
+
+
+
+
+    def detectUnits(self, x1, y1, x2, y2, units):
+        """ Retourne une liste d'unités faisant partie de la region passé en paramètre
+        :param x1: coord x du point haut gauche
+        :param y1: coord y du point haut gauche
+        :param x2: coord x du point bas droite
+        :param y2: coord y du point bas droite
+        :return: une liste d'unités
+        """
+        items = [item for item in self.canvas.find_overlapping(x1, y1, x2, y2) if 'unit' in self.canvas.gettags(item)]
+        units = [units[self.canvas.gettags(i)[1]] for i in items]  # Le duexième tag est toujours l'id de l'unité
+        return units
+
+
     def detectSelected(self, x1, y1, x2, y2, units, clientId):
         """ Ajoute toutes les unités sélectionné dans le rectangle spécifié
         à la liste d'unité sélectionnées
@@ -395,12 +419,13 @@ class View(GWindow):
         """
         # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
+        print(items)
         for item in items:
             itemCoords = self.canvas.coords(item)
             itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),
                          itemCoords[1] + self.carte.sizeUnit / 2 + (self.carte.cameraY * self.carte.item))
 
-            for unit in units:
+            for unit in units.values():
                 if unit.estUniteDe(clientId):
                     if unit.x == itemCoord[0] and unit.y == itemCoord[1]:
                         self.selected.append(unit)  # Unité sélectionné

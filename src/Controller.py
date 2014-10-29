@@ -78,6 +78,7 @@ class EventListener:
     def onMapRClick(self, event):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
+
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
@@ -104,7 +105,17 @@ class EventListener:
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
 
-    def unitClick(self, event):
+    def onUnitRClick(self, event):
+        clientId = self.controller.network.getClientId()
+        x1, y1 = event.x, event.y
+        x2, y2 = event.x, event.y
+        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
+        if not unit.estUniteDe(clientId):
+            print("ATTAQUE")    # ATTAQUE
+
+
+
+    def onUnitLClick(self, event):
         """
         Appelée lorsqu'on clique sur une unité
         :param event:

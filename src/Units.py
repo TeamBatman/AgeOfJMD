@@ -1,3 +1,4 @@
+import random
 import sys
 import time
 from GraphicsManagement import SpriteSheet
@@ -7,6 +8,12 @@ from Timer import Timer
 
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
+
+
+    # COMBAT
+    ACTIF = 0
+    PASSIF = 0
+
 
     def __init__(self, uid, x, y, parent, civilisation):
         """
@@ -48,7 +55,10 @@ class Unit():
 
         # Kombat
         self.hp = 100       # Health Points, Points de Vie
-        self.damage = 50    # Force à laquelle l'unité frappe
+        # Force à laquelle l'unité frappe
+        self.attackMin = 0
+        self.attackMax = 5
+        self.uniteEnnemie = None
 
 
 
@@ -333,6 +343,36 @@ class Unit():
                         noeud.y - caseCibleY) <= 1 and self.mode == 1:  # pour les ressources
             return True
         return False
+
+
+
+    # KOMBAT ==========================================================
+
+
+    def attaquer(self, idUniteEnnemie):
+        """ Permet d'attaquer une unité
+        :param idUniteEnnemie: l'ID de l'unité
+        """
+        attack = random.randint(self.attackMin, self.attackMax)
+        # TODO Faire une commande Attaquer et l'envoyer en réseau
+
+    def recevoirDommage(self, attack):
+        """
+        :param attack: Force d'attaque (int)
+        """
+        self.hp -= attack
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Paysan(Unit):
