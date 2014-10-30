@@ -30,7 +30,7 @@ class Model:
         """ Met à jour chacune des unités
             Et supprime les unités mortes de la liste
         """
-        [u.update() for u in self.units.values()]
+        [u.update(self) for u in self.units.values()]
         # On retire les morts
         self.units = {uid: u for uid, u in self.units.items() if u.hp > 0}
 
@@ -86,10 +86,12 @@ class Model:
         unit.changerCible(command.data['X2'], command.data['Y2'])
 
     def executeAttackUnit(self, command):
-        attacker = self.units[command.data['SOURCE_ID']]
-        target = self.units[command.data['TARGET_ID']]
-        print(target)
-        attacker.ennemiCible = target
+        try:
+            attacker = self.units[command.data['SOURCE_ID']]
+            target = self.units[command.data['TARGET_ID']]
+            attacker.ennemiCible = target
+        except KeyError:
+            pass    # L'une des deux unités est mortes alors la commande est inutiles
 
 
     def trouverCaseMatrice(self, x, y):

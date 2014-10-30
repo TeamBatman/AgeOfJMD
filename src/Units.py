@@ -1,6 +1,7 @@
 import random
 import sys
 import time
+import math
 from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation
 from Joueurs import Joueur
 from Timer import Timer
@@ -49,16 +50,17 @@ class Unit():
         self.hpMax = 20
         self.hp = 20
         # Force à laquelle l'unité frappe
-        self.attackMin = 0
+        self.attackMin = 5
         self.attackMax = 5
+
+        self.rayonVision = 100  # la rayon de la vision en pixel
         self.ennemiCible = None
-        self.modeAttack = Unit.PASSIF
+
+        self.modeAttack = Unit.ACTIF
         self.timerAttack = Timer(900)
         self.timerAttack.start()
 
         self.animHurt = None
-
-
 
 
     def getClientId(self):
@@ -90,10 +92,10 @@ class Unit():
         return gId
 
 
-    def update(self):
+    def update(self, model):
         if self.hp == 0:
             return
-        self.determineCombatBehaviour()
+        self.determineCombatBehaviour(model)
 
         try:
             self.deplacementTrace()
@@ -324,7 +326,7 @@ class Unit():
 
     # KOMBAT ==========================================================
 
-    def determineCombatBehaviour(self):
+    def determineCombatBehaviour(self, model):
         """ Détermine le comportement de combat à adopter
         dépendemment du mode de combat (Actif ou Passif)
         """
@@ -333,18 +335,37 @@ class Unit():
             if self.ennemiCible:
                 self.attaquer()
 
+
         # ACTIF
         if self.modeAttack == Unit.ACTIF:
-            pass     # TODO
+            # vision range
+
+            units = model.controller.view.detectUnits(self.x + self.rayonVision, self.y,
+                                                      self.x - self.rayonVision, self.y - self.rayonVision,
+                                                      units=model.units)
+            #units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
+            units = [u for u in units if u.id != self.id]
+            if not units:
+                return
+
+            #Prendre la plus proche
+            closestDistance = 2000
+            closestUnit = units[0]
+            for unit in units:
+                d = math.hypot(self.x - unit.x, self.y - unit.y)
+                if d > closestDistance:
+                    closestUnit = unit
+
+            model.controller.sendAttackCommand(closestUnit, self)
+
             # Chercher une cible dans sans champ de vision
             # Lancer une commande attaque vers la cible
-
 
 
     def attaquer(self):
         """ Permet d'attaquer une unité
         """
-        #try:
+        # try:
         #    self.animHurt.animate()
         #except AttributeError:
         #    pass
@@ -371,7 +392,7 @@ class Unit():
         self.hp -= attack
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
-        #try:
+        # try:
         #    self.animHurt.animate()
         #except AttributeError:
         #    self.animHurt = Animation(AnimationSheet('Graphics/Animations/mayoche.png', 1, 3), 30)

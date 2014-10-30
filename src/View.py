@@ -268,23 +268,41 @@ class CarteView():
         :param units: une liste d'unités
         """
         self.canvas.delete('unit')
+        self.canvas.delete('unitHP')
+        self.canvas.delete('unitVision')
+
+
         for unit in units.values():
             if self.isUnitShown(unit):
-                img = unit.animation.activeOutline if unit in selectedUnits else unit.animation.activeFrame
+                img = unit.animation.activeFrame
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
-                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
 
                 try:
-                    self.canvas.create_image(posX, posY, anchor=NW, image=unit.animHurt.activeFrame, tags=('unit', unit.id))
+                    self.canvas.create_image(posX, posY, anchor=NW, image=unit.animHurt.activeFrame,
+                                             tags=('unit', unit.id))
                 except AttributeError:
                     pass
-                # Barre de vie
+
                 if unit in selectedUnits:
-                    tailleBarre = 32  # en pixels
+                    img = unit.animation.activeOutline
+
+                    # BARRE DE VIE
+                    tailleBarre = unit.grandeur  # en pixels
                     hp = int(unit.hp * tailleBarre / unit.hpMax)
-                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unit')
-                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unit')
+                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unitHP')
+                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unitHP')
+
+                    # VISION
+                    vx1 = unit.x - unit.rayonVision
+                    vy1 = unit.y - unit.rayonVision
+                    vx2 = unit.x + unit.rayonVision
+                    vy2 = unit.y + unit.rayonVision
+                    # TODO Mettre une couleur selon la civilisation
+                    self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
+
+                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
@@ -411,6 +429,20 @@ class View(GWindow):
         units = [units[self.canvas.gettags(i)[1]] for i in items]  # Le duexième tag est toujours l'id de l'unité
         return units
 
+    def detectClosestUnitID(self, x, y, rayon=None):
+        """ Permet de retourner l'unité la plus proche du point spécifié dans un certain rayon
+        :param x: point x
+        :param y: point y
+        :param rayon: rayon dans lequel on veut chercher le plus proche
+        :param units: une listes d'unités potentielles
+        :return: l'ID de l'unité la plus proche sinon None
+        """
+        item = self.canvas.find_closest(x, y, halo=rayon)
+        if 'unit' in self.canvas.gettags(item):
+            a = self.canvas.gettags(item)
+
+        return None
+
 
     def detectSelected(self, x1, y1, x2, y2, units, clientId):
         """ Ajoute toutes les unités sélectionné dans le rectangle spécifié
@@ -423,6 +455,7 @@ class View(GWindow):
         """
         # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
+        print()
         for item in items:
             itemCoords = self.canvas.coords(item)
             itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),
