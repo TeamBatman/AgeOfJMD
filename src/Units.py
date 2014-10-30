@@ -1,7 +1,7 @@
 import random
 import sys
 import time
-from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation
+from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation
 from Joueurs import Joueur
 from Timer import Timer
 
@@ -56,10 +56,7 @@ class Unit():
         self.timerAttack = Timer(900)
         self.timerAttack.start()
 
-        self.animHurtSheet = AnimationSheet('Graphics/Animations/003-Attack01.png', 2, 5)
         self.animHurt = None
-
-        self.animHurtIndex = 0
 
 
 
@@ -347,6 +344,11 @@ class Unit():
     def attaquer(self):
         """ Permet d'attaquer une unité
         """
+        #try:
+        #    self.animHurt.animate()
+        #except AttributeError:
+        #    pass
+
         if self.ennemiCible.hp == 0:
             self.ennemiCible = None
             return
@@ -369,11 +371,13 @@ class Unit():
         self.hp -= attack
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
+        #try:
+        #    self.animHurt.animate()
+        #except AttributeError:
+        #    self.animHurt = Animation(AnimationSheet('Graphics/Animations/mayoche.png', 1, 3), 30)
 
-        try:
-            self.animHurt = self.animHurtSheet.frames[0][self.animHurtIndex]
-        except KeyError:
-            self.animHurtIndex = 0
+
+
 
         # RIPOSTER
         self.ennemiCible = attaquant

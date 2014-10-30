@@ -275,6 +275,10 @@ class CarteView():
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
 
+                try:
+                    self.canvas.create_image(posX, posY, anchor=NW, image=unit.animHurt.activeFrame, tags=('unit', unit.id))
+                except AttributeError:
+                    pass
                 # Barre de vie
                 if unit in selectedUnits:
                     tailleBarre = 32  # en pixels

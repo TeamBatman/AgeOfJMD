@@ -26,12 +26,12 @@ def colorizeImage(pilImg):
 class AnimationSheet():
     """ Permet de splitter une image et d'en retournant les sous parties
     """
-    def __init__(self, imgPath, nbCol, nbRow):
+    def __init__(self, imgPath, nbFrameCol, nbFrameRow):
         """
         :param imgPath:  Le chemin vers l'image de la feuille d'Animation
         """
-        self.NB_FRAME_COL = nbCol
-        self.NB_FRAME_ROW = nbRow
+        self.NB_FRAME_COL = nbFrameCol
+        self.NB_FRAME_ROW = nbFrameRow
 
 
         self.imgPath = imgPath  # Le chemin vers la feuille d'animation
@@ -43,20 +43,19 @@ class AnimationSheet():
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
 
 
-        self.frames = [[y for y in range(self.NB_FRAME_COL)] for x in range(self.NB_FRAME_ROW)]  # [row][column]
+        self.frames = []
         self._splitSheet()
 
     def _splitSheet(self):
         for y in range(self.NB_FRAME_COL):
             for x in range(self.NB_FRAME_ROW):
                 x1 = x * self.CELL_WIDTH
-                y1 = x * self.CELL_HEIGHT
+                y1 = y * self.CELL_HEIGHT
                 x2 = x1 + self.CELL_WIDTH
                 y2 = y1 + self.CELL_HEIGHT
-
                 rectangle = (x1, y1, x2, y2)
                 img = self.sheet.crop(rectangle)
-                self.frames[x][y] = ImageTk.PhotoImage(img)
+                self.frames.append(ImageTk.PhotoImage(img))
 
 class SpriteSheet():
 
@@ -120,6 +119,7 @@ class Animation():
         self.sheet = animationSheet
         self.frameIndex = 0
         self.activeFrame = None
+
 
         self.timer = Timer(frameDelay)
         self.timer.start()
