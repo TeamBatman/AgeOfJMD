@@ -3,7 +3,8 @@
 
 from Commands import Command
 from Model import Model
-from NetworkModule import NetworkController
+from NetworkModule import NetworkController, ClientConnectionError
+from Units import Unit
 from View import View
 import sys
 
@@ -21,15 +22,18 @@ class Controller:
         self.refreshRate = 64  # Nombre de fois par seconde
 
     def mainLoop(self):
-        cmd = self.network.client.synchronize()
-        if cmd:
-            self.model.executeCommand(cmd)
 
-        for paysan in self.model.enRessource:
-            if paysan.mode == 1:
-                paysan.chercherRessources()
-            else:
-                del paysan
+        try:
+            cmds = self.network.synchronizeClient()
+            if cmds:
+                for cmd in cmds:
+                    self.model.executeCommand(cmd)
+        except ClientConnectionError:
+            self.shutdown()
+        # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+
+
+
         self.model.update()
 
         self.view.update(self.model.units)
@@ -38,9 +42,11 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
-        self.network.startServer()
-        self.network.connectClient()
-        self.view.drawMinimap(self.model.units, self.model.carte.matrice)
+        self.network.startServer(port=47098)
+        self.network.connectClient(ipAddress="10.57.100.152", port=47098)
+
+        self.model.creerJoueur(self.network.getClientId())
+        self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
         self.mainLoop()
@@ -48,18 +54,11 @@ class Controller:
 
     def shutdown(self):
         self.view.destroy()
-        self.network.disconnectClient()
+        if self.network.client:
+            self.network.disconnectClient()
         if self.network.server:
             self.network.stopServer()
         sys.exit(0)
-
-
-    def actionListener(self, userInput, info):
-        """ Méthode utilisée par la vue pour notifier le contrôleur des
-
-        :param userInput:
-        :param info:
-        """
 
 
 class EventListener:
@@ -69,16 +68,21 @@ class EventListener:
 
     def __init__(self, controller):
         self.controller = controller
+        self.view = None
+        self.model = controller.model
+
+        # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-
-    def onRClick(self, event):
-        print("len",len(self.controller.view.selected))
-        x2 = event.x + (self.controller.view.positionX * self.controller.view.item)
-        y2 = event.y + (self.controller.view.positionY * self.controller.view.item)
+    def onMapRClick(self, event):
+        """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
+        """
+        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2))
         for unitSelected in self.controller.view.selected:
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+            cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
             cmd.addData('X2', x2)
@@ -89,86 +93,102 @@ class EventListener:
                 cmd.addData('LEADER', 2)
             self.controller.network.client.sendCommand(cmd)
 
-    def onLPress(self, event):
-
-        # Minimap
-        if (event.x >= self.controller.view.width - 233 and event.x <= self.controller.view.width - 22) and (event.y >= 18 and event.y <= 229):
-                posClicX = int((event.x - self.controller.view.width-233)/2)+233
-                posClicY = int((event.y - 18) /2)
-
-                posRealX = posClicX - 8
-                posRealY = posClicY - 7
-
-                if posRealX < 0:
-                    posRealX = 0
-                elif posRealX > 89:
-                    posRealX = 89
-                if posRealY < 0:
-                    posRealY = 0
-                elif posRealY > 91:
-                    posRealY = 91
+    def onMapLPress(self, event):
+        """ Appelée lorsque le joueur appuie sur le bouton gauche de sa souris dans la regions de la map
+        """
+        self.leftClickPos = (event.x, event.y)
+        self.controller.view.resetSelection()
 
 
-                self.controller.view.positionX = posRealX
-                self.controller.view.positionY = posRealY
-                #self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
-
-        elif event.y < self.controller.view.height - 100:
-            self.leftClickPos = (event.x, event.y)
-            self.controller.view.resetSelection()
-
-
-    def onLRelease(self, event):
-
-        if not (self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22):
-            x1, y1 = self.leftClickPos
-            x2, y2 = event.x, event.y
-            self.controller.view.deleteSelectionSquare()
-            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units)
-
-    def onMouseMotion(self, event):
-        if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
-            if 18 <= event.y <= 229:
-                self.controller.view.deleteSelectionSquare()#selection de la carte
-
-                posClicX = int((event.x - self.controller.view.width-233)/2)+233
-                posClicY = int((event.y - 18) /2)
-
-                posRealX = posClicX - 8
-                posRealY = posClicY - 7
-
-                if posRealX < 0:
-                    posRealX = 0
-                elif posRealX > 89:
-                    posRealX = 89
-                if posRealY < 0:
-                    posRealY = 0
-                elif posRealY > 91:
-                    posRealY = 91
-
-                self.controller.view.positionX = posRealX
-                self.controller.view.positionY = posRealY
-                # self.controller.view.drawMinimap(self.controller.model.units,self.controller.model.carte.matrice)
-                self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
-        else:
-            x1, y1 = self.leftClickPos
-            x2, y2 = event.x, event.y
-            self.controller.view.carreSelection(x1, y1, x2, y2)
-
-        # TODO Mettre maximum en x et en y pour ne pas prolonger la sélection dans les panneaux
-        #
+    def onMapLRelease(self, event):
+        """ Appelée lorsque le joueur lâche le bouton gauche de sa souris dans la regions de la map
+        """
+        clientId = self.controller.network.getClientId()
+        x1, y1 = self.leftClickPos
+        x2, y2 = event.x, event.y
+        self.controller.view.deleteSelectionSquare()
+        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
 
+    def unitClick(self, event):
+        """
+        Appelée lorsqu'on clique sur une unité
+        :param event:
+        """
+        clientId = self.controller.network.getClientId()
+        x1, y1 = event.x, event.y
+        x2, y2 = event.x, event.y
+        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
 
-    def onCenterClick(self, event):
-        cmd = Command(self.controller.network.client.id, Command.CREATE_UNIT)
-        cmd.addData('X', event.x + (self.controller.view.positionX * self.controller.view.item))
-        cmd.addData('Y', event.y + (self.controller.view.positionY * self.controller.view.item))
+
+    def onMapMouseMotion(self, event):
+        """ Appelée lorsque le joueur bouge sa souris dans la regions de la map
+        """
+        x1, y1 = self.leftClickPos
+        x2, y2 = event.x, event.y
+
+        if x2 > self.controller.view.carte.width:
+            x2 = self.controller.view.carte.width
+
+        if y2 > self.controller.view.carte.height:
+            y2 = self.controller.view.carte.height
+
+        self.controller.view.carreSelection(x1, y1, x2, y2)
+
+#    def onMouseMotion(self, event):
+#        if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
+#            if 18 <= event.y <= 229:
+#                self.controller.view.deleteSelectionSquare()#selection de la carte
+
+
+    def onMapCenterClick(self, event):
+        """ Appelée lorsque le joueur fait un clique de la mollette """
+        # CRÉATION D'UNITÉ
+        clientId = self.controller.network.client.id
+        cmd = Command(clientId, Command.CREATE_UNIT)
+        cmd.addData('ID', Unit.generateId(clientId))
+        cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
+        cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+        cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
 
-    def requestCloseWindow(self):
+    def onMinimapLPress(self, event):
+        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
+        dans la regions de la minimap
+        """
+
+        self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
+
+        # BOUGER LA CAMÉRA
+
+        miniMapX = self.controller.view.frameMinimap.miniMapX
+        MiniMapY = self.controller.view.frameMinimap.miniMapY
+        miniCamX = self.controller.view.frameMinimap.miniCameraX
+        miniCamY = self.controller.view.frameMinimap.miniCameraY
+        tailleMiniTuile = self.controller.view.frameMinimap.tailleTuile
+
+        # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
+        # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
+        self.controller.view.carte.cameraX = int((miniCamX - miniMapX) / tailleMiniTuile)
+        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY) / tailleMiniTuile)
+
+
+        #print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
+
+
+        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+        self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
+
+
+    def onMinimapMouseMotion(self, event):
+        """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap
+        """
+        self.onMinimapLPress(event)
+
+    def onCloseWindow(self):
+        """ Appelée lorsque le joueur ferme la fenêtre """
         self.controller.shutdown()
+
 
     def createBuilding(self, param):
         if param == 0:

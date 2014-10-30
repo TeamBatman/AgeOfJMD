@@ -1,0 +1,17 @@
+# AGE OF JMD: Remise DOC
+Membres de la Team Batman:
+	- Aleksandr Yuvzhenko
+	- Alex Bouffard
+	- Liam Giverin
+	- François Genest
+	- Jean-William Perreault
+	- Julien Métivier
+
+
+
+# FICHIERS INCLUS
+ - Manuel du gameplay (Gameplay.pdf)
+ - Planification Générale (Scrum Manager)
+
+address github du projet: https://github.com/TeamBatman/AgeOfJMD
+
