@@ -7,13 +7,18 @@
 
 
 ## TODO
+### Principal
 - [x] Les unités doivent disparaître de la carte lorsqu'elles sont mortes.
 - [x] Le mode passif
-- [-] Le mode actif
+- [x] Le mode actif
 - [-] Morale (Valeurs dépendantes de la morale)
-- [-] Animation de combat [Bonus] Ou bien "flasher Unité en rouge lorsque touchée"
 - [x] Faire Icônes passif/actif
-- [-] Affichant l'icône le mode d'attaque
+- [x] Affichant l'icône le mode d'attaque
+- [-] Corriger les Bugs du mode actif
+
+### Bonus
+- [-] Animation de combat [Bonus] Ou bien "flasher Unité en rouge lorsque touchée"
+- [-] Image Gazon au lieu d'un carré Vert
 
 
 ## QUESTIONS DE GROUPES
@@ -29,3 +34,11 @@ Va-t-on afficher le champs de vision d'une unité lorsqu'on clique sur celle-ci?
 
 ### RIPOSTE YES
 Est-ce que les unités ripostent?
+
+## COMMUNICATIONS
+Le gestionnaire de ressources à subit quelques modifications
+la méthode get à été rempalcée par getImage() pour permettre l'existance de d'autres méthodes soit:
+- **getPhotoImage()**
+- **getSpritesheet()**
+
+

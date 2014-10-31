@@ -261,6 +261,11 @@ class CarteView():
                 couleur = couleurs[carte[x][y].type]
 
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                if carte[x][y].type == 0:  # Gazon
+                    self.canvas.create_image(posX1, posY1, anchor=NW,
+                                             image=GraphicsManager.getPhotoImage('World/grass.png'),
+                                             tags=self.tagName)
+
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
 
@@ -307,9 +312,8 @@ class CarteView():
                 ico = GraphicsManager.getPhotoImage(
                     'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
                     'Icones/modePassif.png')
-                self.canvas.create_image(posX-16, posY, anchor=NW, image=ico, tags='unitAttackMode')
+                self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitAttackMode')
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
-
 
 
     def isUnitShown(self, unit):
