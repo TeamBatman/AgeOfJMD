@@ -40,6 +40,8 @@ class Unit():
         self.positionDejaVue = []
         self.casesDejaVue = []
         self.cheminAttente = []
+        self.groupe = [] #Pour le leader
+        self.leader = 0
 
         self.timerDeplacement = Timer(60)
         self.timerDeplacement.start()
@@ -109,19 +111,23 @@ class Unit():
         self.timerAnimation.reset()
 
     def update(self):
+        #print(len(self.groupe))
         if self.enDeplacement:
+            #print("---", self.leader, self.enDeplacement, self.trouver)
+            #self.afficherList("cheminTrace", self.cheminTrace)
             if not self.trouver:
                 if not self.cheminAttente:
                     self.deplacement()
                 else:
                     self.deplacementTrace(self.cheminAttente, 1)
-                self.choisirTraceFail()
+                if self.leader == 1:
+                    self.choisirTraceFail()
             else:
                 self.deplacementTrace(self.cheminTrace,0)
 
 
     def changerCible(self, cibleX, cibleY, leader = 1):
-        print("unit:", cibleX, cibleY , leader)
+        #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         self.mode = 0
         self.cibleX = cibleX
@@ -134,7 +140,11 @@ class Unit():
         self.cheminAttente = []
         self.time1 = 0
         self.nbTour = 0
-        self.cheminTrace = self.choisirTrace()
+        if self.leader == 1:
+            self.cheminTrace = self.choisirTrace()
+            #self.afficherList("cheminTrace", self.cheminTrace)
+            if self.trouver:
+                 self.trouverCheminMultiSelection()
 
     def deplacer(self, cibleX, cibleY, vitesse):
         if not self.timerDeplacement.isDone():
@@ -346,6 +356,7 @@ class Unit():
         self.activeFrame = self.spriteSheet.frames[activeFrameKey]
         self.activeOutline = self.spriteSheet.framesOutlines[activeFrameKey]
         self.enDeplacement = False
+        
         return -1
 
     def choisirTrace(self):
@@ -435,29 +446,51 @@ class Unit():
                 n = n.parent
             #print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.trouver == True:
-                if self.cheminTrace:
-                    print("DUDE !",self.cibleX,self.cibleY)
-                    #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-                    self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)                    
-                else:
-                    print("DUDE !",self.cibleX,self.cibleY)
-                    self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
+                self.finTrace()
+
+    def finTrace(self):
+        if self.cheminTrace:
+            print("DUDE !",self.cibleX,self.cibleY)
+            #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+            self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)                    
+        else:
+            print("DUDE !",self.cibleX,self.cibleY)
+            self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
            
-                self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
-                while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
-                    del self.cheminTrace[-1]
+        self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
+        while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
+            del self.cheminTrace[-1]
                 
-                #Trouver le chemin entre le début du pathfinding et la position actuelle  
-                self.cibleX = self.cheminTrace[-1].x
-                self.cibleY = self.cheminTrace[-1].y
-                self.cibleXDeplacement = self.cheminTrace[-1].x
-                self.cibleYDeplacement = self.cheminTrace[-1].y
-                cheminDebutTrace = self.choisirTrace()
-                for case in cheminDebutTrace:
-                    self.cheminTrace.append(case)
-                 
-                self.cibleXDeplacement = self.cheminTrace[-1].x
-                self.cibleYDeplacement = self.cheminTrace[-1].y
+        self.trouverDebutPath(self)
+        self.trouverCheminMultiSelection()
+
+    def trouverDebutPath(self, unit):
+        #Trouver le chemin entre le début du pathfinding et la position actuelle
+        unit.cibleX = self.cheminTrace[-1].x
+        unit.cibleY = self.cheminTrace[-1].y
+        unit.cibleXDeplacement = self.cheminTrace[-1].x
+        unit.cibleYDeplacement = self.cheminTrace[-1].y
+        cheminDebutTrace = unit.choisirTrace()
+        
+        for case in cheminDebutTrace:
+            unit.cheminTrace.append(case)
+            
+        unit.cibleXDeplacement = unit.cheminTrace[-1].x
+        unit.cibleYDeplacement = unit.cheminTrace[-1].y
+
+    def trouverCheminMultiSelection(self):
+        if self.leader == 1 and self.groupe:
+            for unit in self.groupe:
+                unit.cheminTrace = self.cheminTrace[:]
+                #print(self.cheminTrace, " vs ", unit.cheminTrace)
+                self.trouverDebutPath(unit)
+                unit.trouver = True
+                #unit.cibleXDeplacement = self.cibleXDeplacement
+                #unit.cibleYDeplacement = self.cibleYDeplacement
+                
+        
+        self.leader = 0 #defaut
+        self.groupe = []
 
     def aEtoile(self, tempsMax):
         nbNoeud = 100
@@ -465,7 +498,7 @@ class Unit():
             n = self.open[0]
             if self.goal(n):
                 self.trouver = True
-                print("changeent true trouver !")
+                #print("changeent true trouver !")
                 self.ancienOpen = []
                 self.ancienClosed = []
                 return n
@@ -625,6 +658,7 @@ class Paysan(Unit):
         # print(int(self.nbRessources))
         # TODO Regarder le type de la ressource !
         # TODO Enlever nbRessources à la case ressource !
+        print(self.nbRessources)
         if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
             self.nbRessources += self.vitesseRessource
         else:

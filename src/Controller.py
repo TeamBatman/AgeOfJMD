@@ -89,6 +89,9 @@ class EventListener:
             cmd.addData('Y2', y2)
             if unitSelected == ledearUnit:
                 cmd.addData('LEADER', 1)
+                groupe = self.controller.view.selected
+                unitSelected.groupe = groupe[:]
+                unitSelected.groupe.remove(unitSelected)
             else:
                 cmd.addData('LEADER', 2)
             self.controller.network.client.sendCommand(cmd)
