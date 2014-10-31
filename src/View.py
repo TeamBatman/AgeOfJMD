@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from GraphicsManagement import GraphicsManager
+from Units import Unit
 
 try:
     from tkinter import *  # Python 3
@@ -270,7 +272,7 @@ class CarteView():
         self.canvas.delete('unit')
         self.canvas.delete('unitHP')
         self.canvas.delete('unitVision')
-
+        self.canvas.delete('unitAttackMode')
 
         for unit in units.values():
             if self.isUnitShown(unit):
@@ -301,7 +303,13 @@ class CarteView():
                     # TODO Mettre une couleur selon la civilisation
                     self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
 
+                # ICÔNE MODE COMBAT
+                ico = GraphicsManager.getPhotoImage(
+                    'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+                    'Icones/modePassif.png')
+                self.canvas.create_image(posX-16, posY, anchor=NW, image=ico, tags='unitAttackMode')
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
 
 
     def isUnitShown(self, unit):
@@ -455,7 +463,6 @@ class View(GWindow):
         """
         # TODO utiliser l'identifiant de l'unité comme tag et détecter ceci
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
-        print()
         for item in items:
             itemCoords = self.canvas.coords(item)
             itemCoord = (itemCoords[0] + self.carte.sizeUnit / 2 + (self.carte.cameraX * self.carte.item),

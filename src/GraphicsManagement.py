@@ -35,7 +35,7 @@ class AnimationSheet():
 
 
         self.imgPath = imgPath  # Le chemin vers la feuille d'animation
-        self.sheet = GraphicsManager.get(imgPath)   # La feuille de sprite en tant qu'image
+        self.sheet = GraphicsManager.getImage(imgPath)   # La feuille de sprite en tant qu'image
         self.sheet.convert('RGBA')
 
         width, height = self.sheet.size
@@ -73,7 +73,7 @@ class SpriteSheet():
         self.NB_FRAME_COL = 4  # Nombre de frames par colonne
 
         self.imgPath = imgPath  # Le chemin vers la Sprite Sheet
-        self.sheet = GraphicsManager.get(imgPath)  # La feuille de sprite en tant qu'image
+        self.sheet = GraphicsManager.getImage(imgPath)  # La feuille de sprite en tant qu'image
         self.sheet.convert('RGBA')
 
         width, height = self.sheet.size
@@ -184,8 +184,13 @@ class SpriteAnimation():
 
 
 class GraphicsManager():
-    """ Objet à une instance seulement puisqu'il doit être disponible pour la totalité
-        de l'instance du programme
+    """ Objet à instance unique puisqu'il doit être disponible pour la totalité
+        de du programme permettant de gérer les ressources et éviter d'avoir de nombreuses
+        copies à tervers le programme.
+        Les ressources disponibles sont:
+            - Des PIL.Image
+            - Des ImageTk.PhotoImage
+            - Des SpriteSheets
     """
 
     # Types de ressources
@@ -197,10 +202,17 @@ class GraphicsManager():
     # VARIALBES D'INSTANCE
     directories = []  # Une liste de dossiers dans lesquels chercher les ressources
     graphics = {}  # Les ressources chargées
+    photoImages = {}   # Les ressources chargées en tant que photoImage
+    spritesheets = {}  # Les Spritesheets chargées
 
+    isInitialized = False
     @classmethod
     def initialize(cls):
-        cls.addDirectory('Graphics/')
+        try:
+            cls.addDirectory('Graphics/')
+        except KeyError:
+            return
+
 
     @classmethod
     def addDirectory(cls, directory):
@@ -211,15 +223,18 @@ class GraphicsManager():
             cls.directories.append(directory)
 
     @classmethod
-    def get(cls, filename):  # TODO subdiviser en plus petites fonctions
+    def getImage(cls, filename):  # TODO subdiviser en plus petites fonctions
 
         # Vérifie si on a la ressource de charger en mémoire
         """ Permet d'obtenir une ressource par son nom
         :param filename: le nom du fichier de la ressource
-        :return: la ressource
+        :return: la ressource en tant qu'image PIL.Image
         """
-        if filename in cls.graphics:
-            return cls.graphics.get(filename)
+        cls.initialize()
+        try:
+            return cls.graphics[filename]
+        except KeyError:
+            pass
 
         # À ce stade la ressource n'est pas déjà en mémoire,
         # on va donc la charger à partir de son chemin
@@ -231,7 +246,6 @@ class GraphicsManager():
             return cls.graphics[filename]
         except FileNotFoundError:
             pass
-
 
         # À ce stade son chemin n'était pas complet alros on va chercher dans la liste
         # de nos dossiers
@@ -252,6 +266,42 @@ class GraphicsManager():
         cls.graphics[filename] = Image.new('RGB', (32, 32), 'black')
         return cls.graphics[filename]
 
+
+    @classmethod
+    def getPhotoImage(cls, filename):
+        """ Retourne une PhotoImage de l'image en filename
+        :param filename: le nom du fichier de la ressource
+        :return:la ressource en tatn que ImageTk.PhotoImage
+        """
+        try:
+            return cls.photoImages[filename]
+        except KeyError:
+            pass
+
+        # La PhotoImage n'était pas en mémoire, on va donc l'ajouter
+        photoImage = ImageTk.PhotoImage(cls.getImage(filename))
+        cls.photoImages[filename] = photoImage
+
+        # Et on la retourne
+        return photoImage
+
+    @classmethod
+    def getSpriteSheet(cls, filename):
+        """ Retourne une photo image de l'image en filename
+        :param filename: le nom du fichier de la feuille de sprite
+        :return:la ressource en tatn que ImageTk.PhotoImage
+        """
+        try:
+            return cls.spritesheets[filename]
+        except KeyError:
+            pass
+
+        # La feuille de sprite n'était pas en mémoire, on va donc l'ajouter
+        spritesheet = SpriteSheet(filename)
+        cls.spritesheets[filename] = spritesheet
+
+        # Et on la retourne
+        return spritesheet
 
     @staticmethod
     def outputDebug(msg):

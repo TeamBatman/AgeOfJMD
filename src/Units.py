@@ -2,7 +2,7 @@ import random
 import sys
 import time
 import math
-from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation
+from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation, GraphicsManager
 from Joueurs import Joueur
 from Timer import Timer
 
@@ -13,7 +13,7 @@ class Unit():
 
     # COMBAT
     ACTIF = 0
-    PASSIF = 0
+    PASSIF = 1
 
 
     def __init__(self, uid, x, y, parent, civilisation):
@@ -56,7 +56,7 @@ class Unit():
         self.rayonVision = 100  # la rayon de la vision en pixel
         self.ennemiCible = None
 
-        self.modeAttack = Unit.ACTIF
+        self.modeAttack = Unit.PASSIF
         self.timerAttack = Timer(900)
         self.timerAttack.start()
 
@@ -330,16 +330,14 @@ class Unit():
         """ Détermine le comportement de combat à adopter
         dépendemment du mode de combat (Actif ou Passif)
         """
-        # PASSIF
-        if self.modeAttack == Unit.PASSIF:
-            if self.ennemiCible:
-                self.attaquer()
+        if self.ennemiCible:
+            self.attaquer()
 
 
         # ACTIF
         if self.modeAttack == Unit.ACTIF:
+            # On se choisie une cible et on envoie une commande pour l'attaquer
             # vision range
-
             units = model.controller.view.detectUnits(self.x + self.rayonVision, self.y,
                                                       self.x - self.rayonVision, self.y - self.rayonVision,
                                                       units=model.units)
@@ -426,7 +424,7 @@ class Paysan(Unit):
             Joueur.VERT: 'Units/Age_I/paysan_vert.png',
             Joueur.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        return SpriteSheet(spritesheets[self.civilisation])
+        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
 
     def chercherRessources(self):

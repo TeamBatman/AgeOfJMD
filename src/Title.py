@@ -14,7 +14,7 @@ class TitleScreen(GWindow):
                              highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
         self.canvas.pack()
 
-        self.title = GraphicsManager.get('Graphics/Screens/title.jpg')
+        self.title = GraphicsManager.getImage('Graphics/Screens/title.jpg')
         self.title = ImageTk.PhotoImage(self.title)
         self.canvas.create_image(0, 0, anchor=NW, image=self.title)
 
