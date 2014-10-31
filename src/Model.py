@@ -32,9 +32,10 @@ class Model:
     def updatePaysans(self):
         for paysan in self.enRessource:
             if paysan.mode == 1:
-                paysan.chercherRessources()
+                if not paysan.enDeplacement:
+                    paysan.chercherRessources()
             else:
-                del paysan
+                self.enRessource.remove(paysan)
 
 
     def getUnit(self, uId):
