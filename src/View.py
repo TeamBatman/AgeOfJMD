@@ -112,11 +112,25 @@ class FrameMiniMap():
         """ (Re)dessine les unités à l'écran
         :param units: les unités
         """
+
+        couleursCiv = {
+            0: "#D34343",  # rouge
+            1: "#3D99BB",  # bleu
+            2: "#26BE2E",  # vert
+            3: "#5637DD",  # mauve
+            4: "#F39621",  # orange
+            5: "#CF4592",  # rose
+            6: "#0F0F0F",  # noir
+            7: "#FFFFFF",  # blanc
+            8: "#F5F520",  # jaune
+        }
+        
         tagUnits = 'miniUnits'
         self.canvas.delete(tagUnits)
-        color = 'red'  # TODO METTRE LES COULEURS SELON LA CIVILISATION
+        
         item = 2
         for unit in units:
+            color = couleursCiv[unit.civilisation]
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
@@ -150,7 +164,7 @@ class FrameMiniMap():
         if self.miniCameraX + width > self.miniMapX + self.miniMapWidth:
             self.miniCameraX = self.miniMapX + self.miniMapWidth - width
 
-            # Limite Haut
+        # Limite Haut
         if self.miniCameraY < self.miniMapY:
             self.miniCameraY = self.miniMapY
 
@@ -274,6 +288,7 @@ class CarteView():
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
+                
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
