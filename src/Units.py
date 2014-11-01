@@ -40,8 +40,9 @@ class Unit():
         self.positionDejaVue = []
         self.casesDejaVue = []
         self.cheminAttente = []
-        self.groupe = [] #Pour le leader
+        self.groupeID = [] #Pour le leader
         self.leader = 0
+        self.finMultiSelection = None
 
         self.timerDeplacement = Timer(60)
         self.timerDeplacement.start()
@@ -111,7 +112,7 @@ class Unit():
         self.timerAnimation.reset()
 
     def update(self):
-        #print(len(self.groupe))
+        #print(len(self.groupeID))
         if self.enDeplacement:
             #print("---", self.leader, self.enDeplacement, self.trouver)
             #self.afficherList("cheminTrace", self.cheminTrace)
@@ -126,9 +127,10 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-    def changerCible(self, cibleX, cibleY, leader = 1):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
+        #print("leader", self.leader)
         self.mode = 0
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -136,15 +138,22 @@ class Unit():
         self.cibleYDeplacement = cibleY
         self.trouver = False
         self.enDeplacement = True
+        
         self.positionDejaVue = []
         self.cheminAttente = []
         self.time1 = 0
         self.nbTour = 0
         if self.leader == 1:
+            self.groupeID = groupeID
+            self.finMultiSelection = None
             self.cheminTrace = self.choisirTrace()
             #self.afficherList("cheminTrace", self.cheminTrace)
             if self.trouver:
-                 self.trouverCheminMultiSelection()
+                self.trouverCheminMultiSelection()
+        else:
+            #print("NOEUD", finMultiSelection)
+            self.finMultiSelection = Noeud(None, finMultiSelection[0], finMultiSelection[1], None, None)
+            #print("NOEUD", self.finMultiSelection.x, self.finMultiSelection.y )
 
     def deplacer(self, cibleX, cibleY, vitesse):
         if not self.timerDeplacement.isDone():
@@ -172,7 +181,10 @@ class Unit():
 
     def deplacement(self):
         if not self.timerDeplacement.isDone():
-            return 
+            return
+        if self.x == self.cibleX and self.y == self.cibleY:
+            print("fix", self.x, self.cibleX, self.y, self.cibleY)
+            return self.finDeplacementTraceVrai() #Quick Fix
 	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
         self.posX = self.x
         self.posY = self.y
@@ -479,18 +491,22 @@ class Unit():
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
     def trouverCheminMultiSelection(self):
-        if self.leader == 1 and self.groupe:
-            for unit in self.groupe:
+        if self.leader == 1 and self.groupeID:
+            for id in self.groupeID:
+                unit = self.parent.getUnit(id)
                 unit.cheminTrace = self.cheminTrace[:]
-                #print(self.cheminTrace, " vs ", unit.cheminTrace)
                 self.trouverDebutPath(unit)
+                #print("tourver", unit.leader, unit.finMultiSelection, len(self.groupeID), self.leader)
+                unit.cheminTrace[0] = unit.finMultiSelection
+                unit.cibleX = unit.finMultiSelection.x
+                unit.cibleY = unit.finMultiSelection.y
+                #print(unit.cibleX, unit.cibleY, unit.finMultiSelection.x, unit.finMultiSelection.y)
                 unit.trouver = True
-                #unit.cibleXDeplacement = self.cibleXDeplacement
-                #unit.cibleYDeplacement = self.cibleYDeplacement
+
                 
         
-        self.leader = 0 #defaut
-        self.groupe = []
+        #self.leader = 0 #defaut
+        self.groupeID = []
 
     def aEtoile(self, tempsMax):
         nbNoeud = 100

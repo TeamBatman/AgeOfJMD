@@ -79,21 +79,37 @@ class EventListener:
         """
         x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-        ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2))
-        for unitSelected in self.controller.view.selected:
+        leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2))   
+        posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(self.controller.view.selected)-1, self.controller.view.selected[0].grandeur)
+        groupeSansLeader = self.controller.view.selected[:]
+        groupeSansLeader.remove(leaderUnit)
+        
+        for unitSelected in groupeSansLeader:
+            self.selectionnerUnit(unitSelected, leaderUnit, posFin, x2, y2)
+
+        self.selectionnerUnit(leaderUnit, leaderUnit, posFin, x2, y2 )#Faire le leader en dernier
+            
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2):
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
             cmd.addData('X2', x2)
             cmd.addData('Y2', y2)
-            if unitSelected == ledearUnit:
+            if unitSelected == leaderUnit:
                 cmd.addData('LEADER', 1)
-                groupe = self.controller.view.selected
-                unitSelected.groupe = groupe[:]
-                unitSelected.groupe.remove(unitSelected)
+                cmd.addData('FIN', None)
+                groupe = self.controller.view.selected[:]
+                groupeID = []
+                for unit in groupe:
+                    groupeID.append(unit.id)
+                    
+                groupeID.remove(unitSelected.id)
+                cmd.addData('GROUPE',groupeID)
             else:
                 cmd.addData('LEADER', 2)
+                cmd.addData('FIN', posFin.pop(0))
+                cmd.addData('GROUPE',None)
             self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):

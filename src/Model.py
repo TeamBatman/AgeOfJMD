@@ -71,7 +71,7 @@ class Model:
             self.deleteUnit(command.data['X'], command.data['Y'])
 
         elif command.data['TYPE'] == Command.MOVE_UNIT:
-            self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'], command.data['LEADER'])
+            self.getUnit(command.data['ID']).changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'], command.data['LEADER'])
 
     def trouverPlusProche(self, listeElements, coordBut):
         """On reçoit des x,y et non des cases ! """
@@ -84,6 +84,27 @@ class Model:
                 if diff > diffCase:
                     elementResultat = element
             return elementResultat
+
+    def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact): #cible en x,y
+        posFin = []
+        liste = [-contact, 0, contact]
+        # while len(posFin) < nbUnits:
+        #TODO TROUVER PAR CADRAN...
+        #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
+        #Marche si pas plus de 9 unités
+        for i in liste:
+            for j in liste:
+                if not (i == 0 and j == 0):
+                    posX = cibleX + i
+                    posY = cibleY + j
+                    cases = self.trouverCaseMatrice(posX,posY)
+                    if self.carte.matrice[cases[0]][cases[1]].type == 0:
+                        posFin.append((posX, posY))
+                        if len(posFin) == nbUnits:
+                            return posFin
+
+        return -1#FAIL
+            
 
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?
