@@ -13,8 +13,9 @@
 - [x] Le mode actif
 - [-] Morale (Valeurs dépendantes de la morale)
 - [x] Faire Icônes passif/actif
-- [x] Affichant l'icône le mode d'attaque
-- [-] Corriger les Bugs du mode actif
+- [x] Afficher l'icône le mode d'attaque
+- [ ] Position des unités lors d'un affrontement
+- [-] Corriger les Bugs du mode actif: Client essaie de tuer unité déjà morte
 
 ### Bonus
 - [-] Animation de combat [Bonus] Ou bien "flasher Unité en rouge lorsque touchée"

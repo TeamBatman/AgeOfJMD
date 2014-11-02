@@ -2,6 +2,7 @@ import random
 import sys
 import time
 import math
+from Commands import Command
 from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation, GraphicsManager
 from Joueurs import Joueur
 from Timer import Timer
@@ -50,7 +51,7 @@ class Unit():
         self.hpMax = 20
         self.hp = 20
         # Force à laquelle l'unité frappe
-        self.attackMin = 5
+        self.attackMin = 0
         self.attackMax = 5
 
         self.rayonVision = 100  # la rayon de la vision en pixel
@@ -64,8 +65,8 @@ class Unit():
 
 
     def getClientId(self):
-        """ Returns the Id of the client using the id of the unit
-        :return: the id of the clients
+        """ Retourne l'ID du propriétaire de l'unité
+        :return: l'id du propriétaire (str)
         """
         return self.id.split('_')[0]
 
@@ -95,8 +96,8 @@ class Unit():
     def update(self, model):
         if self.hp == 0:
             return
-        self.determineCombatBehaviour(model)
 
+        self.determineCombatBehaviour(model)
         try:
             self.deplacementTrace()
         except:
@@ -331,8 +332,8 @@ class Unit():
         dépendemment du mode de combat (Actif ou Passif)
         """
         if self.ennemiCible:
-            self.attaquer()
-
+            self.attaquer(model)
+            return
 
         # ACTIF
         if self.modeAttack == Unit.ACTIF:
@@ -353,21 +354,18 @@ class Unit():
                 d = math.hypot(self.x - unit.x, self.y - unit.y)
                 if d > closestDistance:
                     closestUnit = unit
-
-            model.controller.sendAttackCommand(closestUnit, self)
-
+            self.ennemiCible = closestUnit
             # Chercher une cible dans sans champ de vision
             # Lancer une commande attaque vers la cible
 
 
-    def attaquer(self):
+    def attaquer(self, model):
         """ Permet d'attaquer une unité
         """
         # try:
         #    self.animHurt.animate()
         #except AttributeError:
         #    pass
-
         if self.ennemiCible.hp == 0:
             self.ennemiCible = None
             return
@@ -375,31 +373,41 @@ class Unit():
         # Si je suis trop loin je me rapproche de l'ennemi
 
         if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur:
-            self.changerCible(self.ennemiCible.x - self.grandeur, self.ennemiCible.y - self.grandeur)
+            cmd = Command(model.controller.network.client.id, Command.MOVE_UNIT)
+            cmd.addData('ID', self.id)
+            cmd.addData('X1', self.x)
+            cmd.addData('Y1', self.y)
+            cmd.addData('X2', self.ennemiCible.x-self.grandeur)
+            cmd.addData('Y2', self.ennemiCible.y-self.grandeur)
+            model.controller.network.client.sendCommand(cmd)
             return
+
 
         if self.timerAttack.isDone():
             attack = random.randint(self.attackMin, self.attackMax)
-            self.ennemiCible.recevoirAttaque(self, attack)
+            # TODO ENVOYER L'ATTAQUE AU SERVEUR
+            cmd = Command(model.controller.network.client.id, Command.ATTACK_UNIT)
+            cmd.addData('SOURCE_ID', self.id)
+            cmd.addData('TARGET_ID', self.ennemiCible.id)
+            cmd.addData('DMG', attack)
+            model.controller.network.client.sendCommand(cmd)
             self.timerAttack.reset()
 
-    def recevoirAttaque(self, attaquant, attack):
+    def recevoirAttaque(self, model, attaquant, attack):
         """ Permet d'affaiblir une unité
         :param attack: Force d'attaque (int)
         """
         self.hp -= attack
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
-        # try:
-        #    self.animHurt.animate()
-        #except AttributeError:
-        #    self.animHurt = Animation(AnimationSheet('Graphics/Animations/mayoche.png', 1, 3), 30)
-
-
-
+            # TODO Envoyer la commande au serveur que je suis mort
+            cmd = Command(self.getClientId(), Command.DESTROY_UNIT)
+            cmd.addData('ID', self.id)
+            model.controller.network.client.sendCommand(cmd)
 
         # RIPOSTER
-        self.ennemiCible = attaquant
+        if int(self.getClientId()) == model.joueur.civilisation:
+            self.ennemiCible = attaquant
 
 
 class Paysan(Unit):

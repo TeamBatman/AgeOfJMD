@@ -5,7 +5,7 @@ from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
 from Units import Unit
-from View import View
+from View import View, UnitView
 import sys
 
 
@@ -59,15 +59,7 @@ class Controller:
         sys.exit(0)
 
 
-    def sendAttackCommand(self, targetUnit, attackingUnit):
-        cmd = Command(self.network.client.id, Command.ATTACK_UNIT)
-        cmd.addData('TARGET_ID', targetUnit.id)
-        cmd.addData('SOURCE_ID', attackingUnit.id)
-        cmd.addData('X1', attackingUnit.x)
-        cmd.addData('Y1', attackingUnit.y)
-        cmd.addData('X2', targetUnit.x)
-        cmd.addData('Y2', targetUnit.y)
-        self.network.client.sendCommand(cmd)
+
 
 
 
@@ -127,7 +119,7 @@ class EventListener:
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
         #if not targetUnit.estUniteDe(clientId):
         for unitSelected in self.controller.view.selected:
-            self.controller.sendAttackCommand(targetUnit, unitSelected)
+                unitSelected.ennemiCible = targetUnit
 
 
 
@@ -141,6 +133,21 @@ class EventListener:
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
+
+        # TODO REMOVE C'EST JUSTE POUR DES TEST
+        can = self.controller.view.canvas
+        try:
+            unit = self.controller.view.selected[0]
+            x = self.controller.view.frameSide.x
+            y = self.controller.view.frameSide.y
+            w = self.controller.view.frameSide.width
+            h = self.controller.view.frameSide.height
+            v = UnitView(can, unit, x, y, w, h)
+            v.draw()
+        except IndexError:
+            pass
+
+
 
 
     def onMapMouseMotion(self, event):

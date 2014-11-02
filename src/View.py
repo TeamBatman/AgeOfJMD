@@ -523,7 +523,6 @@ class View(GWindow):
         """
         self.root.destroy()
 
-
     def createBuildingFerme(self):
         self.eventListener.createBuilding(0)
 
@@ -532,3 +531,59 @@ class View(GWindow):
 
     def createBuildingHopital(self):
         self.eventListener.createBuilding(2)
+
+
+class UnitView():   # TODO Supprimer (C'est juste pour du test)
+    def __init__(self, canvas, unit, x, y, width, height):
+        self.canvas = canvas
+        self.x = x
+        self.y = y
+        self.unit = unit
+
+        self.width = width
+        self.height = height
+
+        self.btnActive = GMediumButton(canvas, command=self.setActive, iconPath='Graphics/Icones/modeActif.png')
+        self.btnPassive = GMediumButton(canvas, command=self.setPassive, iconPath='Graphics/Icones/modePassif.png')
+
+    def setActive(self):
+        self.unit.modeAttack = Unit.ACTIF
+
+    def setPassive(self):
+        self.unit.modeAttack = Unit.PASSIF
+
+    def draw(self):
+        # DrawUnit HP Bar and Mode
+        posX = self.x + self.width / 2 - 32
+        posY = self.y + 50
+        img = self.unit.animation.activeFrame
+
+        # BARRE DE VIE
+        tailleBarre = self.unit.grandeur  # en pixels
+        hp = int(self.unit.hp * tailleBarre / self.unit.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - 4, fill='black', tags='unitView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - 4, fill='red', tags='unitView')
+
+
+        # ICÔNE MODE COMBAT
+        ico = GraphicsManager.getPhotoImage(
+            'Icones/modeActif.png') if self.unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+            'Icones/modePassif.png')
+        self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
+        self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unitView', self.unit.id))
+
+        self.btnActive.draw(self.x + 30, self.y + 150)
+        self.btnPassive.draw(self.x + 135, self.y + 150)
+
+
+
+
+
+
+
+
+
+
+
+
+

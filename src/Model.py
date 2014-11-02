@@ -31,8 +31,6 @@ class Model:
             Et supprime les unités mortes de la liste
         """
         [u.update(self) for u in self.units.values()]
-        # On retire les morts
-        self.units = {uid: u for uid, u in self.units.items() if u.hp > 0}
 
     def updatePaysans(self):
         for paysan in self.enRessource:
@@ -72,6 +70,7 @@ class Model:
             Command.CREATE_UNIT: self.executeCreateUnit,
             Command.MOVE_UNIT: self.executeMoveUnit,
             Command.ATTACK_UNIT: self.executeAttackUnit,
+            Command.DESTROY_UNIT: self.executeDestroyUnit
         }
         exe = commands[command.data['TYPE']]
         exe(command)
@@ -82,16 +81,24 @@ class Model:
 
     def executeMoveUnit(self, command):
         unit = self.units[command.data['ID']]
-        unit.ennemiCible = None
         unit.changerCible(command.data['X2'], command.data['Y2'])
 
     def executeAttackUnit(self, command):
         try:
             attacker = self.units[command.data['SOURCE_ID']]
             target = self.units[command.data['TARGET_ID']]
-            attacker.ennemiCible = target
-        except KeyError:
-            pass    # L'une des deux unités est mortes alors la commande est inutiles
+            target.recevoirAttaque(self, attacker, command.data['DMG'])
+        except KeyError:    # On a essayer d'attaquer une unité morte
+            pass
+
+
+    def executeDestroyUnit(self, command):
+        try:
+            uId = command.data['ID']
+            self.units.pop(uId)
+        except KeyError:    # L'unité n'existe déjà plus
+            pass
+
 
 
     def trouverCaseMatrice(self, x, y):
