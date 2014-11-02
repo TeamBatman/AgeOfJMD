@@ -87,22 +87,40 @@ class Model:
 
     def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact): #cible en x,y
         posFin = []
-        liste = [-contact, 0, contact]
-        # while len(posFin) < nbUnits:
+        liste = [0,-contact, contact]
         #TODO TROUVER PAR CADRAN...
         #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
         #Marche si pas plus de 9 unités
-        for i in liste:
-            for j in liste:
-                if not (i == 0 and j == 0):
-                    posX = cibleX + i
-                    posY = cibleY + j
-                    cases = self.trouverCaseMatrice(posX,posY)
-                    if self.carte.matrice[cases[0]][cases[1]].type == 0:
-                        posFin.append((posX, posY))
-                        if len(posFin) == nbUnits:
-                            return posFin
+        for multi in range(1,self.grandeurMat):
+            for i in liste:
+                for j in liste:
+                    if not (i == 0 and j == 0 and multi == 1):
+                        print(multi*i,multi*j)
+                        posX = cibleX + multi*i
+                        posY = cibleY + multi*j
+                        deplacementPossible =  True
+                        try:
+                            casesPossibles = [  self.trouverCaseMatrice(posX, posY),
+                                            self.trouverCaseMatrice(posX+contact/2, posY),
+                                            self.trouverCaseMatrice(posX, posY + contact/2),
+                                            self.trouverCaseMatrice(posX+contact/2, posY + contact/2),
+                                            self.trouverCaseMatrice(posX-contact/2, posY),
+                                            self.trouverCaseMatrice(posX, posY - contact/2),
+                                            self.trouverCaseMatrice(posX-contact/2, posY - contact/2)]
 
+                            #Gestion des obstacles
+                            for case in casesPossibles:
+                                if not self.carte.matrice[case[0]][case[1]].type == 0:
+                                    deplacementPossible = False
+                                    break
+
+                            if deplacementPossible:
+                                posFin.append((posX, posY))
+                                if len(posFin) == nbUnits:
+                                    return posFin
+                        except:
+                            print("hors de la matrice")
+                            pass #Hors de la matrice
         return -1#FAIL
             
 

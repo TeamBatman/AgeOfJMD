@@ -503,8 +503,6 @@ class Unit():
                 #print(unit.cibleX, unit.cibleY, unit.finMultiSelection.x, unit.finMultiSelection.y)
                 unit.trouver = True
 
-                
-        
         #self.leader = 0 #defaut
         self.groupeID = []
 
