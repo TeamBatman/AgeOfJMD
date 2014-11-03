@@ -136,7 +136,7 @@ class FrameMiniMap():
             y1 = self.minimapMargeY + (caseY * item)
             x2 = x1 + item
             y2 = y1 + item
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=tagUnits)
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
         """ (Re)dessine le rectangle de caméra de la minimap

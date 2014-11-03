@@ -91,6 +91,7 @@ class EventListener:
         self.selectionnerUnit(leaderUnit, leaderUnit, posFin, x2, y2 )#Faire le leader en dernier
             
     def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2):
+            """Pour la fonction onMapRClick !!!"""
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
@@ -171,7 +172,7 @@ class EventListener:
         cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
 
-    def onMinimapLPress(self, event):
+    def onMinimapLPress(self, event, redo = 0):
         """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
         dans la regions de la minimap
         """
@@ -197,7 +198,9 @@ class EventListener:
 
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
-
+        if redo == 0: #QUICK FIX
+            #print("cam",self.controller.view.carte.cameraX , self.controller.view.carte.cameraY)
+            self.onMinimapLPress(event, -1)
 
     def onMinimapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap
