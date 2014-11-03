@@ -101,8 +101,8 @@ class FrameMiniMap():
             for y in range(size):
                 posX1 = self.miniMapX + x * itemMini
                 posY1 = self.miniMapY + y * itemMini
-                posX2 = posX1 + itemMini
-                posY2 = posY1 + itemMini
+                posX2 = posX1 + itemMini 
+                posY2 = posY1 + itemMini 
                 couleur = couleurs[carte[x][y].type]
 
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.miniMapTag)
@@ -288,6 +288,12 @@ class CarteView():
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags='unit')
+                #if unit.leader == 1:
+                #     self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
+                #elif unit.leader == 2:
+                #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='green', tags='unit')
+                #elif unit.leader == 0:
+                #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
                 
 
     def isUnitShown(self, unit):

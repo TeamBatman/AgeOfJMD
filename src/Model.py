@@ -83,6 +83,7 @@ class Model:
                 diffCase = abs(element.x - coordBut[0]) + abs(element.y - coordBut[1])
                 if diff > diffCase:
                     elementResultat = element
+
             return elementResultat
 
     def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact): #cible en x,y
@@ -95,7 +96,7 @@ class Model:
             for i in liste:
                 for j in liste:
                     if not (i == 0 and j == 0 and multi == 1):
-                        print(multi*i,multi*j)
+                        #print(multi*i,multi*j)
                         posX = cibleX + multi*i
                         posY = cibleY + multi*j
                         deplacementPossible =  True
@@ -110,17 +111,18 @@ class Model:
 
                             #Gestion des obstacles
                             for case in casesPossibles:
-                                if not self.carte.matrice[case[0]][case[1]].type == 0:
+                                if not self.carte.matrice[case[0]][case[1]].type == 0 or case[0] < 0 or case[1] < 0 or case[0] > self.grandeurMat or case[1] > self.grandeurMat:
                                     deplacementPossible = False
                                     break
 
                             if deplacementPossible:
                                 posFin.append((posX, posY))
-                                if len(posFin) == nbUnits:
+                                if len(posFin) >= nbUnits:
                                     return posFin
                         except:
                             print("hors de la matrice")
                             pass #Hors de la matrice
+        print(len(posFin))
         return -1#FAIL
             
 

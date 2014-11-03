@@ -282,7 +282,7 @@ class Unit():
 
             if trouve == False:
                 self.animDirection = 'DOWN'
-                print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
+                #print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
 
             if (self.x, self.y) in self.positionDejaVue:
                 self.casesDejaVue.append(self.parent.trouverCaseMatrice(self.x, self.y))
@@ -291,7 +291,7 @@ class Unit():
                 self.cheminAttente.append((destination[0],destination[1]))
                 self.cibleXDeplacement = destination[0]
                 self.cibleYDeplacement = destination[1]
-                print("YOU FAILED !!!")
+                #print("YOU FAILED !!!")
                 
             self.positionDejaVue.append((self.x, self.y))
 
@@ -337,6 +337,7 @@ class Unit():
                     else: # mode attente
                         chemin = []
                         return -1
+
                 self.cibleXDeplacement = chemin[-1].x
                 self.cibleYDeplacement = chemin[-1].y
 
@@ -417,6 +418,7 @@ class Unit():
 
             self.cibleXDeplacement = cheminTrace[-1].x
             self.cibleYDeplacement = cheminTrace[-1].y
+            
         return cheminTrace
     
     def choisirTraceFail(self):
@@ -490,6 +492,40 @@ class Unit():
         unit.cibleXDeplacement = unit.cheminTrace[-1].x
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
+    def trouverFinPath(self, unit):
+        #self.afficherList("unit chemin AVANT", unit.cheminTrace)
+        unit.cibleX = unit.cheminTrace[0].x
+        unit.cibleY = unit.cheminTrace[0].y
+        xSave = unit.x
+        ySave = unit.y
+        try:
+            unit.x = unit.cheminTrace[1].x
+            unit.y = unit.cheminTrace[1].y
+        except:
+            print("petit chemin")
+            pass
+        unit.cibleXDeplacement = unit.cheminTrace[0].x
+        unit.cibleYDeplacement = unit.cheminTrace[0].y
+        #print("toruev FIn path x", unit.x, unit.y, unit.cibleX, unit.cibleY)
+        cheminFinTrace = unit.choisirTrace()
+        
+        unit.cheminTrace.reverse()
+        unit.cheminTrace.pop()
+
+        cheminFinTrace.reverse()
+        for case in cheminFinTrace:
+            #print(case.x,case.y)
+            unit.cheminTrace.append(case)
+
+        unit.cheminTrace.reverse()
+
+        unit.x = xSave
+        unit.y = ySave
+        #self.afficherList("unit chemin", unit.cheminTrace)
+        #print("-----------")
+        unit.cibleXDeplacement = unit.cheminTrace[-1].x
+        unit.cibleYDeplacement = unit.cheminTrace[-1].y
+
     def trouverCheminMultiSelection(self):
         if self.leader == 1 and self.groupeID:
             for id in self.groupeID:
@@ -498,6 +534,7 @@ class Unit():
                 self.trouverDebutPath(unit)
                 #print("tourver", unit.leader, unit.finMultiSelection, len(self.groupeID), self.leader)
                 unit.cheminTrace[0] = unit.finMultiSelection
+                self.trouverFinPath(unit)
                 unit.cibleX = unit.finMultiSelection.x
                 unit.cibleY = unit.finMultiSelection.y
                 #print(unit.cibleX, unit.cibleY, unit.finMultiSelection.x, unit.finMultiSelection.y)

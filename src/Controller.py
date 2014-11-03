@@ -81,6 +81,7 @@ class EventListener:
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2))   
         posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(self.controller.view.selected)-1, self.controller.view.selected[0].grandeur)
+        
         groupeSansLeader = self.controller.view.selected[:]
         groupeSansLeader.remove(leaderUnit)
         
@@ -127,7 +128,6 @@ class EventListener:
         x2, y2 = event.x, event.y
         self.controller.view.deleteSelectionSquare()
         self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
-
 
     def unitClick(self, event):
         """
