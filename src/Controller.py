@@ -4,9 +4,9 @@
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
+from Units import Unit
 from View import View
 import sys
-from Model import Unit
 
 
 class Controller:
@@ -36,14 +36,14 @@ class Controller:
 
         self.model.update()
 
-        self.view.update(self.model.units)
+        self.view.update(self.model.units, self.model.buildings)
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
         """ Starts the controller
         """
-        self.network.startServer(port=47098)
-        self.network.connectClient(ipAddress="10.57.100.152", port=47098)
+        self.network.startServer()
+        self.network.connectClient()
 
         self.model.creerJoueur(self.network.getClientId())
         self.view.drawMinimap(self.model.carte.matrice)
@@ -61,6 +61,8 @@ class Controller:
         sys.exit(0)
 
 
+
+
 class EventListener:
     """ Écoute les évènement de la Vue (en pratique la vue appelle les méthodes de cette classe)
         Et
@@ -74,25 +76,26 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
+
     def onMapRClick(self, event):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
-        print("len", len(self.controller.view.selected))
-        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-        ledearUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
-        for unitSelected in self.controller.view.selected:
-            cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
-            cmd.addData('ID', unitSelected.id)
-            cmd.addData('X1', unitSelected.x)
-            cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', x2)
-            cmd.addData('Y2', y2)
-            if unitSelected == ledearUnit:
-                cmd.addData('LEADER', 1)
-            else:
-                cmd.addData('LEADER', 2)
-            self.controller.network.client.sendCommand(cmd)
+        if self.controller.view.modeConstruction == True:
+            currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            clientId = self.controller.network.getClientId()
+            self.controller.model.createBuilding(clientId,self.controller.view.lastConstructionType,currentX,currentY)
+            self.controller.view.modeConstruction = False
+            print("MODE SELECTION")
+        else:
+            for unitSelected in self.controller.view.selected:
+                cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+                cmd.addData('ID', unitSelected.id)
+                cmd.addData('X1', unitSelected.x)
+                cmd.addData('Y1', unitSelected.y)
+                cmd.addData('X2', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
+                cmd.addData('Y2', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+                self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):
         """ Appelée lorsque le joueur appuie sur le bouton gauche de sa souris dans la regions de la map
@@ -104,22 +107,27 @@ class EventListener:
     def onMapLRelease(self, event):
         """ Appelée lorsque le joueur lâche le bouton gauche de sa souris dans la regions de la map
         """
-        clientId = self.controller.network.getClientId()
-        x1, y1 = self.leftClickPos
-        x2, y2 = event.x, event.y
-        self.controller.view.deleteSelectionSquare()
-        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
+        if self.controller.view.modeConstruction == True:
+                self.controller.view.modeConstruction = False
+                print("MODE SELECTION")
+        else:
+            clientId = self.controller.network.getClientId()
+            x1, y1 = self.leftClickPos
+            x2, y2 = event.x, event.y
+            self.controller.view.deleteSelectionSquare()
+            self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, self.controller.model.buildings, clientId)
 
 
     def unitClick(self, event):
         """
-        Appelée lorsqu'on clique sur une unité
+        Appelée lorsqu'on clique sur une unité ou un batiment
         :param event:
         """
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, clientId)
+        self.controller.view.detectSelected(x1, y1, x2, y2, self.controller.model.units, self.controller.model.units, clientId)
+
 
 
     def onMapMouseMotion(self, event):
@@ -136,8 +144,10 @@ class EventListener:
 
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
+
+
     def onMapCenterClick(self, event):
-        """ Appelée lorsque le joueur fait un clique de la mollette """
+        """ Appelée lorsque le joueur fait un clique de la mollette """ 
         # CRÉATION D'UNITÉ
         clientId = self.controller.network.client.id
         cmd = Command(clientId, Command.CREATE_UNIT)
@@ -146,6 +156,9 @@ class EventListener:
         cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
         cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
+
+
+
 
     def onMinimapLPress(self, event):
         """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
@@ -164,16 +177,13 @@ class EventListener:
 
         # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
         # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
-        self.controller.view.carte.cameraX = int((miniCamX - miniMapX) / tailleMiniTuile)
-        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY) / tailleMiniTuile)
+        self.controller.view.carte.cameraX = int((miniCamX - miniMapX)/tailleMiniTuile)
+        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY)/tailleMiniTuile)
 
-
-        # print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
-
-
-        self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
+        self.controller.view.update(self.controller.model.units, self.controller.model.buildings, self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
 
+        
 
     def onMinimapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap
@@ -186,12 +196,34 @@ class EventListener:
 
 
     def createBuilding(self, param):
-        if param == 0:
+        if param == View.FERME:
             print("Create building ferme")
-        elif param == 1:
+            self.controller.view.lastConstructionType = View.FERME
+            self.controller.view.modeConstruction = True
+
+            if self.controller.view.modeConstruction != True:
+                print("oups")
+            else:
+                print("MODE CONSTRUCTION")
+
+
+        elif param == View.BARAQUE:
             print("Create building baraque")
-        elif param == 2:
+
+
+        elif param == View.HOPITAL:
             print("Create building hopital")
+
+
+        elif param == View.BASE:
+            print("Create building base")
+            self.controller.view.lastConstructionType = View.BASE
+            self.controller.view.modeConstruction = True
+
+            if self.controller.view.modeConstruction != True:
+                print("oups")
+            else:
+                print("MODE CONSTRUCTION")
 
 
 if __name__ == '__main__':
