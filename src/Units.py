@@ -3,7 +3,8 @@ import sys
 import time
 import math
 from Commands import Command
-from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation, GraphicsManager
+from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation, GraphicsManager, \
+    OneTimeAnimation
 from Joueurs import Joueur
 from Timer import Timer
 
@@ -61,7 +62,9 @@ class Unit():
         self.timerAttack = Timer(900)
         self.timerAttack.start()
 
-        self.animHurt = None
+        self.oneTimeAnimations = []
+
+
 
 
     def getClientId(self):
@@ -97,7 +100,18 @@ class Unit():
         if self.hp == 0:
             return
 
+
+        for anim in self.oneTimeAnimations:
+            anim.animate()
+            if anim.isFinished:
+                self.oneTimeAnimations.remove(anim)
+
+
         self.determineCombatBehaviour(model)
+
+
+
+
         try:
             self.deplacementTrace()
         except:
@@ -331,6 +345,9 @@ class Unit():
         """ Détermine le comportement de combat à adopter
         dépendemment du mode de combat (Actif ou Passif)
         """
+        if int(self.getClientId()) != model.joueur.civilisation:
+             return     # Ce n'est pas une unité du joueur en cours
+
         if self.ennemiCible:
             self.attaquer(model)
             return
@@ -339,8 +356,8 @@ class Unit():
         if self.modeAttack == Unit.ACTIF:
             # On se choisie une cible et on envoie une commande pour l'attaquer
             # vision range
-            units = model.controller.view.detectUnits(self.x + self.rayonVision, self.y,
-                                                      self.x - self.rayonVision, self.y - self.rayonVision,
+            units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
+                                                      self.x + self.rayonVision, self.y + self.rayonVision,
                                                       units=model.units)
             #units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
             units = [u for u in units if u.id != self.id]
@@ -398,14 +415,18 @@ class Unit():
         :param attack: Force d'attaque (int)
         """
         self.hp -= attack
+        anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
+        self.oneTimeAnimations.append(anim)
+
+
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
-            # TODO Envoyer la commande au serveur que je suis mort
             cmd = Command(self.getClientId(), Command.DESTROY_UNIT)
             cmd.addData('ID', self.id)
             model.controller.network.client.sendCommand(cmd)
 
-        # RIPOSTER
+        # RIPOSTER SEULEMENT SI ON EST LE PROPRIÉTAIRE DE L'UNITÉ
+        # TODO Compatibiliser avec l'AI
         if int(self.getClientId()) == model.joueur.civilisation:
             self.ennemiCible = attaquant
 

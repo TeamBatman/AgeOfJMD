@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from PIL import ImageDraw
+
 from GraphicsManagement import GraphicsManager
 from Units import Unit
+
 
 try:
     from tkinter import *  # Python 3
@@ -9,7 +12,6 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
-from itertools import product
 
 
 class FrameSide():
@@ -294,19 +296,23 @@ class CarteView():
                 if unit in selectedUnits:
                     img = unit.animation.activeOutline
 
-                    # BARRE DE VIE
-                    tailleBarre = unit.grandeur  # en pixels
-                    hp = int(unit.hp * tailleBarre / unit.hpMax)
-                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unitHP')
-                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unitHP')
-
                     # VISION
                     vx1 = unit.x - unit.rayonVision
                     vy1 = unit.y - unit.rayonVision
                     vx2 = unit.x + unit.rayonVision
                     vy2 = unit.y + unit.rayonVision
+
                     # TODO Mettre une couleur selon la civilisation
                     self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
+
+
+                # BARRE DE VIE
+                if unit.hp != unit.hpMax:
+                    tailleBarre = unit.grandeur  # en pixels
+                    hp = int(unit.hp * tailleBarre / unit.hpMax)
+                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unitHP')
+                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unitHP')
+
 
                 # ICÔNE MODE COMBAT
                 ico = GraphicsManager.getPhotoImage(
@@ -314,6 +320,14 @@ class CarteView():
                     'Icones/modePassif.png')
                 self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitAttackMode')
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
+
+                # ANIMATION
+                for anim in unit.oneTimeAnimations:
+                    img = anim.activeFrame
+                    self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
+
 
 
     def isUnitShown(self, unit):
@@ -533,7 +547,7 @@ class View(GWindow):
         self.eventListener.createBuilding(2)
 
 
-class UnitView():   # TODO Supprimer (C'est juste pour du test)
+class UnitView():  # TODO Supprimer (C'est juste pour du test)
     def __init__(self, canvas, unit, x, y, width, height):
         self.canvas = canvas
         self.x = x

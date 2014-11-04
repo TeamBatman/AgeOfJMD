@@ -40,6 +40,13 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
+
+
+
+
+
+
+
         self.network.startServer(port=47098)
         self.network.connectClient(ipAddress="10.57.100.152", port=47098)
 

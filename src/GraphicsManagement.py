@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""
+Module de gestion des graphiques
+- Gestion des Sprites sheets
+- Gestion des animations
+- Modification d'images
+"""
+
 from Timer import Timer
+
+
+
 
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
 
@@ -120,7 +131,6 @@ class Animation():
         self.frameIndex = 0
         self.activeFrame = None
 
-
         self.timer = Timer(frameDelay)
         self.timer.start()
 
@@ -133,6 +143,7 @@ class Animation():
             self.activeFrame = self.sheet.frames[self.frameIndex]
         except IndexError:  # On est allé trop loin
             self.activeFrame = 0
+
 
         self.timer.reset()
 
@@ -183,6 +194,28 @@ class SpriteAnimation():
 
 
 
+class OneTimeAnimation(Animation):
+    """ Animation ne pouvant s'exécuter qu'une seule fois
+    """
+    def __init__(self, animationSheet, frameDelay):
+        super(OneTimeAnimation, self). __init__(animationSheet, frameDelay)
+        self.isFinished = False   # Spécifie si l'animation est terminée
+
+    def animate(self):
+        if not self.timer.isDone():
+            return
+
+        self.frameIndex += 1
+        try:
+            self.activeFrame = self.sheet.frames[self.frameIndex]
+        except IndexError:  # On est allé trop loin
+            self.isFinished = True
+            return
+
+        self.timer.reset()
+
+
+
 class GraphicsManager():
     """ Objet à instance unique puisqu'il doit être disponible pour la totalité
         de du programme permettant de gérer les ressources et éviter d'avoir de nombreuses
@@ -200,10 +233,13 @@ class GraphicsManager():
 
 
     # VARIALBES D'INSTANCE
-    directories = []  # Une liste de dossiers dans lesquels chercher les ressources
-    graphics = {}  # Les ressources chargées
-    photoImages = {}   # Les ressources chargées en tant que photoImage
-    spritesheets = {}  # Les Spritesheets chargées
+    directories = []         # Une liste de dossiers dans lesquels chercher les ressources
+    graphics = {}           # Les ressources chargées
+    photoImages = {}        # Les ressources chargées en tant que photoImage
+    spritesheets = {}       # Les Spritesheets chargées
+    animationSheets = {}    # Les feuilles d'animaton
+
+
 
     isInitialized = False
     @classmethod
@@ -287,7 +323,7 @@ class GraphicsManager():
 
     @classmethod
     def getSpriteSheet(cls, filename):
-        """ Retourne une photo image de l'image en filename
+        """ Retourne une feuille de sprites de l'image en filename
         :param filename: le nom du fichier de la feuille de sprite
         :return:la ressource en tatn que ImageTk.PhotoImage
         """
@@ -303,10 +339,34 @@ class GraphicsManager():
         # Et on la retourne
         return spritesheet
 
+
+
+    @classmethod
+    def getAnimationSheet(cls, filename, nbCol, nbRow):
+        """ Retourne une feuille d'animation de l'image en filename
+        :param filename: le nom du fichier de la feuille de sprite
+        :return:la ressource en tatn que ImageTk.PhotoImage
+        """
+        try:
+            return cls.animationSheets[filename]
+        except KeyError:
+            pass
+
+        # La feuille de sprite n'était pas en mémoire, on va donc l'ajouter
+        animationSheet = AnimationSheet(filename, nbFrameCol=nbCol, nbFrameRow=nbRow)
+        cls.spritesheets[filename] = animationSheet
+
+        # Et on la retourne
+        return animationSheet
+
     @staticmethod
     def outputDebug(msg):
         if DEBUG_VERBOSE:
             print("Graphics Manager :: %s" % msg)
+
+
+
+
 
 
 GraphicsManager.addDirectory('Graphics/')
