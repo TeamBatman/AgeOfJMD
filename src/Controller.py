@@ -43,10 +43,6 @@ class Controller:
 
 
 
-
-
-
-
         self.network.startServer(port=47098)
         self.network.connectClient(ipAddress="10.57.100.152", port=47098)
 
@@ -84,18 +80,47 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-
     def onMapRClick(self, event):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
+        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2)) 
+        print(leaderUnit.x, leaderUnit.y)  
+        posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(self.controller.view.selected)-1, self.controller.view.selected[0].grandeur)
+        
+        groupeSansLeader = self.controller.view.selected[:]
+        groupeSansLeader.remove(leaderUnit)
+        
+        for unitSelected in groupeSansLeader:
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2)
 
-        for unitSelected in self.controller.view.selected:
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2 )#Faire le leader en dernier
+            
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2):
+            """Pour la fonction onMapRClick !!!"""
             cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
             cmd.addData('ID', unitSelected.id)
             cmd.addData('X1', unitSelected.x)
             cmd.addData('Y1', unitSelected.y)
-            cmd.addData('X2', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
-            cmd.addData('Y2', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+            cmd.addData('X2', x2)
+            cmd.addData('Y2', y2)
+            if leaderUnit:
+                print("LEADER !!!")
+                cmd.addData('LEADER', 1)
+                cmd.addData('FIN', None)
+                groupe = self.controller.view.selected[:]
+                groupeID = []
+                for unit in groupe:
+                    groupeID.append(unit.id)
+                    
+                groupeID.remove(unitSelected.id)
+                cmd.addData('GROUPE',groupeID)
+            else:
+                print("pas leader")
+                cmd.addData('LEADER', 2)
+                cmd.addData('FIN', posFin.pop(0))
+                cmd.addData('GROUPE',None)
             self.controller.network.client.sendCommand(cmd)
 
     def onMapLPress(self, event):
@@ -171,6 +196,11 @@ class EventListener:
 
         self.controller.view.carreSelection(x1, y1, x2, y2)
 
+#    def onMouseMotion(self, event):
+#        if self.controller.view.width - 233 <= event.x <= self.controller.view.width - 22:
+#            if 18 <= event.y <= 229:
+#                self.controller.view.deleteSelectionSquare()#selection de la carte
+
 
     def onMapCenterClick(self, event):
         """ Appelée lorsque le joueur fait un clique de la mollette """
@@ -183,8 +213,7 @@ class EventListener:
         cmd.addData('CIV', self.controller.model.joueur.civilisation)
         self.controller.network.client.sendCommand(cmd)
 
-
-    def onMinimapLPress(self, event):
+    def onMinimapLPress(self, event, redo = 0):
         """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
         dans la regions de la minimap
         """
@@ -210,7 +239,9 @@ class EventListener:
 
         self.controller.view.update(self.controller.model.units, self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
-
+        if redo == 0: #QUICK FIX
+            #print("cam",self.controller.view.carte.cameraX , self.controller.view.carte.cameraY)
+            self.onMinimapLPress(event, -1)
 
     def onMinimapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la minimap

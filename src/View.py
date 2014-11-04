@@ -105,8 +105,8 @@ class FrameMiniMap():
             for y in range(size):
                 posX1 = self.miniMapX + x * itemMini
                 posY1 = self.miniMapY + y * itemMini
-                posX2 = posX1 + itemMini
-                posY2 = posY1 + itemMini
+                posX2 = posX1 + itemMini 
+                posY2 = posY1 + itemMini 
                 couleur = couleurs[carte[x][y].type]
 
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.miniMapTag)
@@ -116,17 +116,33 @@ class FrameMiniMap():
         """ (Re)dessine les unités à l'écran
         :param units: les unités
         """
+
+        couleursCiv = {
+            0: "#D34343",  # rouge
+            1: "#3D99BB",  # bleu
+            2: "#26BE2E",  # vert
+            3: "#5637DD",  # mauve
+            4: "#F39621",  # orange
+            5: "#CF4592",  # rose
+            6: "#0F0F0F",  # noir
+            7: "#FFFFFF",  # blanc
+            8: "#F5F520",  # jaune
+        }
+        
         tagUnits = 'miniUnits'
         self.canvas.delete(tagUnits)
-        color = 'red'  # TODO METTRE LES COULEURS SELON LA CIVILISATION
+        
         item = 2
+        
         for unit in units.values():
+            color = couleursCiv[unit.civilisation]
+
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
             x2 = x1 + item
             y2 = y1 + item
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=tagUnits)
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
         """ (Re)dessine le rectangle de caméra de la minimap
@@ -154,7 +170,7 @@ class FrameMiniMap():
         if self.miniCameraX + width > self.miniMapX + self.miniMapWidth:
             self.miniCameraX = self.miniMapX + self.miniMapWidth - width
 
-            # Limite Haut
+        # Limite Haut
         if self.miniCameraY < self.miniMapY:
             self.miniCameraY = self.miniMapY
 
@@ -287,20 +303,15 @@ class CarteView():
                 posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
                 posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
 
-                try:
-                    self.canvas.create_image(posX, posY, anchor=NW, image=unit.animHurt.activeFrame,
-                                             tags=('unit', unit.id))
-                except AttributeError:
-                    pass
 
                 if unit in selectedUnits:
                     img = unit.animation.activeOutline
 
                     # VISION
-                    vx1 = unit.x - unit.rayonVision
-                    vy1 = unit.y - unit.rayonVision
-                    vx2 = unit.x + unit.rayonVision
-                    vy2 = unit.y + unit.rayonVision
+                    vx1 = posX - unit.rayonVision
+                    vy1 = posY - unit.rayonVision
+                    vx2 = posX + unit.rayonVision
+                    vy2 = posY + unit.rayonVision
 
                     # TODO Mettre une couleur selon la civilisation
                     self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
@@ -319,15 +330,22 @@ class CarteView():
                     'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
                     'Icones/modePassif.png')
                 self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitAttackMode')
+
                 self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
 
 
-                # ANIMATION
+                # ANIMATION BLESSURES ET AUTRES
                 for anim in unit.oneTimeAnimations:
-                    img = anim.activeFrame
-                    self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+                    imgAnim = anim.activeFrame
+                    self.canvas.create_image(posX, posY, anchor=NW, image=imgAnim, tags=('unit', unit.id))
 
-
+                #if unit.leader == 1:
+                #     self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
+                #elif unit.leader == 2:
+                #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='green', tags='unit')
+                #elif unit.leader == 0:
+                #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
+                
 
 
     def isUnitShown(self, unit):

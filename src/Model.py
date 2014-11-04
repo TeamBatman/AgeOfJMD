@@ -6,9 +6,7 @@ import time
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-
 from Units import Paysan
-
 
 class Model:
     def __init__(self, controller):
@@ -35,9 +33,10 @@ class Model:
     def updatePaysans(self):
         for paysan in self.enRessource:
             if paysan.mode == 1:
-                paysan.chercherRessources()
+                if not paysan.enDeplacement:
+                    paysan.chercherRessources()
             else:
-                del paysan
+                self.enRessource.remove(paysan)
 
 
     def getUnit(self, uId):
@@ -81,7 +80,7 @@ class Model:
 
     def executeMoveUnit(self, command):
         unit = self.units[command.data['ID']]
-        unit.changerCible(command.data['X2'], command.data['Y2'])
+        unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'], command.data['LEADER'])
 
     def executeAttackUnit(self, command):
         try:
@@ -99,7 +98,58 @@ class Model:
         except KeyError:    # L'unité n'existe déjà plus
             pass
 
+    def trouverPlusProche(self, listeElements, coordBut):
+        """On reçoit des x,y et non des cases ! """
+        if listeElements:
+            elementResultat = listeElements[0]
+            diff = abs(listeElements[0].x - coordBut[0]) + abs(listeElements[0].y - coordBut[1])
 
+            for element in listeElements:
+                diffCase = abs(element.x - coordBut[0]) + abs(element.y - coordBut[1])
+                if diff > diffCase:
+                    elementResultat = element
+
+            return elementResultat
+
+    def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact): #cible en x,y
+        posFin = []
+        liste = [0,-contact, contact]
+        #TODO TROUVER PAR CADRAN...
+        #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
+        #Marche si pas plus de 9 unités
+        for multi in range(1,self.grandeurMat):
+            for i in liste:
+                for j in liste:
+                    if not (i == 0 and j == 0 and multi == 1):
+                        #print(multi*i,multi*j)
+                        posX = cibleX + multi*i
+                        posY = cibleY + multi*j
+                        deplacementPossible =  True
+                        try:
+                            casesPossibles = [  self.trouverCaseMatrice(posX, posY),
+                                            self.trouverCaseMatrice(posX+contact/2, posY),
+                                            self.trouverCaseMatrice(posX, posY + contact/2),
+                                            self.trouverCaseMatrice(posX+contact/2, posY + contact/2),
+                                            self.trouverCaseMatrice(posX-contact/2, posY),
+                                            self.trouverCaseMatrice(posX, posY - contact/2),
+                                            self.trouverCaseMatrice(posX-contact/2, posY - contact/2)]
+
+                            #Gestion des obstacles
+                            for case in casesPossibles:
+                                if not self.carte.matrice[case[0]][case[1]].type == 0 or case[0] < 0 or case[1] < 0 or case[0] > self.grandeurMat or case[1] > self.grandeurMat:
+                                    deplacementPossible = False
+                                    break
+
+                            if deplacementPossible:
+                                posFin.append((posX, posY))
+                                if len(posFin) >= nbUnits:
+                                    return posFin
+                        except:
+                            print("hors de la matrice")
+                            pass #Hors de la matrice
+        print(len(posFin))
+        return -1#FAIL
+            
 
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?
