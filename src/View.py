@@ -35,20 +35,25 @@ class FrameSide():
         """ Dessine les boutons lier
         au menu de coter
         """
-        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.view.createBuildingFerme,
-                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.view.createBuildingBase,
+                                         iconPath="Graphics/Buildings/Age_I/Base.png")
         self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
 
-        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.view.createBuildingBaraque, GButton.GREY)
-        self.buttonBaraque.draw(x=self.x + self.width/2 + 5, y=self.y + 25)
+        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.view.createBuildingFerme,
+                                        iconPath="Graphics/Buildings/Age_I/Farm.png")
+        self.buttonBase.draw(x=self.x + self.width/2 + 5, y=self.y + 25)
+
         self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.view.createBuildingHopital, GButton.GREY)
         self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
-        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.view.createBuildingBase,
-                                        iconPath="Graphics/Buildings/Age_I/Base.png")
-        self.buttonBase.draw(x=self.x + self.width/2 + 5, y=self.y + 130)
+
+        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.view.createBuildingBaraque, GButton.GREY)
+        self.buttonBaraque.draw(x=self.x + self.width/2 + 5, y=self.y + 130)
 
 
     def destroyAllButton(self):
+        """ Détruit tous les boutons qui sont dans le
+        :return:
+        """
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
