@@ -57,9 +57,9 @@ class AI(Joueur):
         self.derniereBase = 0
         self.cooldownBatiment = 60
         self.derniereAction = 0
+        self.nombrePaysans = 0
 
     def penser(self):
-        print("bois : " + str(self.ressources["bois"]))
         #fais des test requis pour savoir quel mode prendre
         self.blackboard()
         #premier test pour savoir si on est en paix
@@ -70,24 +70,31 @@ class AI(Joueur):
                 print("manque ressource")
                 self.chercherRessource(self.ressourceManquante)
                 if self.ressourceManquante == "bois":
-                    if self.qteRessourceManquante <= self.ressources["bois"]:
+                    if self.qteRessourceManquante >= self.ressources["bois"]:
                         self.manqueRessource = False
-                        pass
+                    else:
+                        self.chercherRessource("bois")
+                        return
                 elif self.ressourceManquante == "minerais":
-                    if self.qteRessourceManquante <= self.ressources["minerai"]:
+                    if self.qteRessourceManquante >= self.ressources["minerai"]:
                         self.manqueRessource = False
-                        pass
+                    else:
+                        self.chercherRessource("minerais")
+                        return
                 elif self.ressourceManquante == "nourriture":
-                    if self.qteRessourceManquante <= self.nbNourriture:
+                    if self.qteRessourceManquante >= self.nbNourriture:
                         self.manqueRessource = False
-                        pass
+                    else:
+                        self.chercherRessource("nourriture")
+                        return
                 elif self.ressourceManquante == "charbon":
-                    if self.qteRessourceManquante <= self.ressources["charbon"]:
+                    if self.qteRessourceManquante >= self.ressources["charbon"]:
                         self.manqueRessource = False
-                        pass
-                else:
-                    return
-            print("manque aucune ressource")
+                    else:
+                        self.chercherRessource("charbon")
+                        return
+
+
             #si l'on peut changer d'époque, le faire
             if time.time() - self.departEpoque >= self.cooldownEpoque and self.epoque > 3:
                 print("changer époque")
@@ -96,7 +103,7 @@ class AI(Joueur):
                 return
             #print("peux pas changer d'époque")
             #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
-            if self.paysansOccupes and time.time() - self.dernierPaysan >= self.cooldownUnite:
+            if (self.paysansOccupes and time.time() - self.dernierPaysan >= self.cooldownUnite) or self.nombrePaysans < 10:
                 print("besoin Paysan")
                 self.creerPaysan()
                 self.dernierPaysan = time.time()
@@ -153,18 +160,22 @@ class AI(Joueur):
         for unit in self.units:
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
-                    if self.epoque >= 2:
-                        if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
+                    #if self.epoque >= 2:
+                        #if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
                             #TODO creer une scierie et y mettre le paysan
-                            return
-
+                            #return
                     if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
                         print("not cd")
-                        position = self.trouverRessourcePlusPres(unit, self.parent.parent.carte.FORET)
+                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.FORET)
                         unit.changerCible(position["x"], position["y"])
                         self.derniereRessourceBois = time.time()
                         return
-                    print("en cooldown bois")
+                    else:
+                        print("en cooldown bois")
+                        return
+                else:
+                    print("WTF")
+                    return
         self.creerPaysan()
 
     def chercherminerais(self):
@@ -247,6 +258,7 @@ class AI(Joueur):
                 self.manqueRessource = True
                 self.qteRessourceManquante = self.base.coutCreer1["bois"]
                 self.ressourceManquante = "bois"
+                print(str(self.qteRessourceManquante) + ":" + str(self.ressourceManquante))
                 return
 
         print("pas de base")
@@ -312,15 +324,17 @@ class AI(Joueur):
     def blackboard(self):
         #fais des test 1 fois au 30 sec pour éviter de trop répéter des taches
         if time.time() - self.lastCheck >= 30:
+
             self.units = []
             for unit in self.parent.units:
                 if self.parent.units[unit].civilisation == self.civilisation:
-                    self.units.append(unit)
+                    self.units.append(self.parent.units[unit])
 
-
+            self.nombrePaysans = 0
             #vérifie si tous les paysans sont occupés
             for unit in self.units:
                 if isinstance(unit, Paysan):
+                    self.nombrePaysans += 1
                     if unit.typeRessource == 0:
                         self.paysansOccupes = False
                         print("false")
@@ -371,34 +385,41 @@ class AI(Joueur):
     def trouverRessourcePlusPres(self, unit, typeRessource):
         ressource = {"x" : 0 , "y" : 0}
 
-        minX = unit.x - 5
-        minY = unit.y - 5
-        maxX = unit.x + 5
-        maxY = unit.y + 5
+        minX = unit.x
+        minY = unit.y
+        maxX = unit.x
+        maxY = unit.y
         found = False
 
         while not found:
-            if minX < self.parent.parent.carte.size:
-                minX = 0
+            minX = minX - 20
+            minY = minY - 20
+            maxX += 20
+            maxY += 20
 
-            if minY < self.parent.parent.carte.size:
-                minY = 0
+            if minX < self.parent.carte.size:
+                minX = minX + 20
 
-            if maxX > self.parent.parent.carte.size:
-                minX = self.parent.parent.carte.size
+            if minY < self.parent.carte.size:
+                minY = minY + 20
 
-            if maxY > self.parent.parent.carte.size:
-                maxY = self.parent.parent.carte.size
+            if maxX > self.parent.carte.size:
+                maxX = maxX - 20
+
+            if maxY > self.parent.carte.size:
+                maxY = maxY - 20
 
             for x in range (minX, maxX):
                 for y in range (minY, maxY):
-                    if self.parent.parent.carte.matrice[x][y].type == typeRessource:
+                    casesCible = self.parent.trouverCaseMatrice(x, y)
+                    caseCibleX = casesCible[0]
+                    caseCibleY = casesCible[1]
+                    print("next check")
+                    if self.parent.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
                         found = True
+                        print(found)
 
-            minX -= 5
-            minY -= 5
-            maxX += 5
-            maxY += 5
+
 
         ressource["x"] = x
         ressource["y"] = y
