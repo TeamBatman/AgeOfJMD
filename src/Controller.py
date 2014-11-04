@@ -88,6 +88,8 @@ class EventListener:
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             self.controller.view.frameSide.draw()
+            self.controller.view.frameSide.drawSideButton()
+            print("button")
         else:
             for unitSelected in self.controller.view.selected:
                 cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
@@ -112,6 +114,7 @@ class EventListener:
                 self.controller.view.modeConstruction = False
                 print("MODE SELECTION")
                 self.controller.view.frameSide.draw()
+                self.controller.view.frameSide.drawSideButton()
         else:
             clientId = self.controller.network.getClientId()
             x1, y1 = self.leftClickPos

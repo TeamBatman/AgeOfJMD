@@ -226,7 +226,7 @@ class Base(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = "base"
-        self.rawImage = GraphicsManager.get('Graphics/Buildings/Age_I/Base.png')
+        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
         self.resized = self.rawImage.resize((96,96),Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.vitesseDeCreation = 40

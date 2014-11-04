@@ -41,6 +41,9 @@ class Joueur:
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
 
+    PASSIF = 0
+    ACTIF  = 1
+
     def __init__(self, uid, x, y, parent, civilisation):
         """
         :param uid: l'id unique de l'unité
@@ -62,6 +65,10 @@ class Unit():
         self.cibleXTrace = x
         self.cibleXTrace = y
         self.mode = 0  # 1=ressource
+        self.hp = 100
+        self.hpMax = 100
+
+        self.modeAttack = Unit.PASSIF
 
 
         # ANIMATION

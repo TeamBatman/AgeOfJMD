@@ -7,12 +7,15 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
+from Model import *
+from GraphicsManagement import *
 from itertools import product
 
 
 class FrameSide():
-    def __init__(self, canvas, largeurMinimap, hauteurMinimap):
+    def __init__(self, canvas, view, largeurMinimap, hauteurMinimap):
         self.canvas = canvas
+        self.view = view
 
         self.width = largeurMinimap
         self.height = int(self.canvas.cget('height')) - hauteurMinimap
@@ -28,28 +31,78 @@ class FrameSide():
         """
         self.frame.draw(self.x, self.y)
 
+    def drawSideButton(self):
+        """ Dessine les boutons lier
+        au menu de coter
+        """
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.view.createBuildingFerme,
+                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
+        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
+
+        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.view.createBuildingBaraque, GButton.GREY)
+        self.buttonBaraque.draw(x=self.x + self.width/2 + 5, y=self.y + 25)
+        self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.view.createBuildingHopital, GButton.GREY)
+        self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
+        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.view.createBuildingBase,
+                                        iconPath="Graphics/Buildings/Age_I/Base.png")
+        self.buttonBase.draw(x=self.x + self.width/2 + 5, y=self.y + 130)
+
+
+    def destroyAllButton(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+
 
 class MenuUnit():
     def __init__(self,canvas, frameSide, unitSelected):
         self.canvas = canvas
-        self.parent = frameSide
+        self.backLayer = frameSide
 
-        self.width = frameSide.width
-        self.height = frameSide.height
+        self.width = self.backLayer.width
+        self.height = self.backLayer.height
 
-        self.x = frameSide.x
-        self.y = frameSide.y
+        self.x = self.backLayer.x
+        self.y = self.backLayer.y
 
         self.unit = unitSelected
 
-        self.panel = GPanel(self.canvas,width=self.width,height=self.height, color=1)
+        self.draw()
 
-        self.buttonAction = GMediumButton(self.canvas, text="Hello World")
-        self.buttonAction.draw(x=self.x + 5, y=self.y + 5)
+    def setActive(self):
+        self.unit.modeAttack = Unit.ACTIF
+
+    def setPassive(self):
+        self.unit.modeAttack = Unit.PASSIF
 
 
     def draw(self):
-        self.panel.draw(self.x,self.y)
+        self.backLayer.destroyAllButton()
+
+        self.btnActive = GMediumButton(self.canvas, command=self.setActive, iconPath='Graphics/Icones/ActiveModeBig.png')
+        self.btnPassive = GMediumButton(self.canvas, command=self.setPassive, iconPath='Graphics/Icones/PassiveModeBig.png')
+
+        posX = self.x + self.width / 2 - 32
+        posY = self.y + 50
+
+        # BARRE DE VIE
+        tailleBarre = self.unit.grandeur  # en pixels
+        hp = int(self.unit.hp * tailleBarre / self.unit.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - 4, fill='black', tags='unitView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - 4, fill='red', tags='unitView')
+
+
+        # ICÔNE MODE COMBAT
+        ico = GraphicsManager.getPhotoImage(
+            'Icones/modeActif.png') if self.unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+            'Icones/modePassif.png')
+        self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
+        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.activeFrame, tags=('unitView', self.unit.id))
+
+        self.btnActive.draw(self.x + 30, self.y + 150)
+        self.btnPassive.draw(self.x + 135, self.y + 150)
 
 
 class FrameMiniMap():
@@ -405,30 +458,13 @@ class View(GWindow):
         self.frameMinimap.draw()
 
         # LE CADRE DROIT
-        self.frameSide = FrameSide(self.canvas, self.frameMinimap.width, self.frameMinimap.height)
+        self.frameSide = FrameSide(self.canvas, self, self.frameMinimap.width, self.frameMinimap.height)
         self.frameSide.draw()
-        self.drawSideButton()
+        self.frameSide.drawSideButton()
 
         # LE CADRE DU BAS
         self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
         self.frameBottom.draw()
-
-
-    def drawSideButton(self):
-        """ Dessine les boutons lier
-        au menu de coter
-        """
-        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingFerme,
-                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
-        self.buttonFerme.draw(x=self.width - 222, y=280)
-
-        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.createBuildingBaraque, GButton.GREY)
-        self.buttonBaraque.draw(x=self.width - 123, y=280)
-        self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
-        self.buttonHopital.draw(x=self.width - 222, y=390)
-        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
-                                        iconPath="Graphics/Buildings/Age_I/Base.png")
-        self.buttonBase.draw(x=self.width - 123, y=390)
 
 
     def drawMap(self, carte):
@@ -474,6 +510,7 @@ class View(GWindow):
         """
         self.selected = []
         self.frameSide.draw()
+        self.frameSide.drawSideButton()
 
     # TODO ? mettre dans carte ?
     def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):
