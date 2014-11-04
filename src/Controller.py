@@ -80,11 +80,15 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-    def onMapRClick(self, event):
+    def onMapRClick(self, event, pos2=None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
-        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        if pos2:
+            x2 = pos2[0]
+            y2 = pos2[1]
+        else:
+            x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2)) 
         posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(self.controller.view.selected)-1, self.controller.view.selected[0].grandeur)
         

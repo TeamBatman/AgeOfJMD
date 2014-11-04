@@ -193,6 +193,7 @@ class Unit():
             return
         if self.x == self.cibleX and self.y == self.cibleY:
             print("fix", self.x, self.cibleX, self.y, self.cibleY)
+            #self.trouver = True
             return self.finDeplacementTraceVrai() #Quick Fix
 	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
         self.posX = self.x
@@ -735,13 +736,7 @@ class Unit():
         # Si je suis trop loin je me rapproche de l'ennemi
 
         if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur:
-            cmd = Command(model.controller.network.client.id, Command.MOVE_UNIT)
-            cmd.addData('ID', self.id)
-            cmd.addData('X1', self.x)
-            cmd.addData('Y1', self.y)
-            cmd.addData('X2', self.ennemiCible.x-self.grandeur)
-            cmd.addData('Y2', self.ennemiCible.y-self.grandeur)
-            model.controller.network.client.sendCommand(cmd)
+            model.controller.eventListener.onMapRClick(self, (self.ennemiCible.x-self.grandeur, self.ennemiCible.y-self.grandeur))
             return
 
 
