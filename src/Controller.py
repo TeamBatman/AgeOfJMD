@@ -87,6 +87,7 @@ class EventListener:
             self.controller.model.createBuilding(clientId,self.controller.view.lastConstructionType,currentX,currentY)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
+            self.controller.view.frameSide.draw()
         else:
             for unitSelected in self.controller.view.selected:
                 cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
@@ -110,6 +111,7 @@ class EventListener:
         if self.controller.view.modeConstruction == True:
                 self.controller.view.modeConstruction = False
                 print("MODE SELECTION")
+                self.controller.view.frameSide.draw()
         else:
             clientId = self.controller.network.getClientId()
             x1, y1 = self.leftClickPos

@@ -29,6 +29,29 @@ class FrameSide():
         self.frame.draw(self.x, self.y)
 
 
+class MenuUnit():
+    def __init__(self,canvas, frameSide, unitSelected):
+        self.canvas = canvas
+        self.parent = frameSide
+
+        self.width = frameSide.width
+        self.height = frameSide.height
+
+        self.x = frameSide.x
+        self.y = frameSide.y
+
+        self.unit = unitSelected
+
+        self.panel = GPanel(self.canvas,width=self.width,height=self.height, color=1)
+
+        self.buttonAction = GMediumButton(self.canvas, text="Hello World")
+        self.buttonAction.draw(x=self.x + 5, y=self.y + 5)
+
+
+    def draw(self):
+        self.panel.draw(self.x,self.y)
+
+
 class FrameMiniMap():
     def __init__(self, canvas, eventListener):
         self.canvas = canvas
@@ -186,6 +209,7 @@ class FrameBottom():
         """
         self.frame.draw(self.x, self.y)
         self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+
 
 
 class CarteView():
@@ -383,7 +407,17 @@ class View(GWindow):
         # LE CADRE DROIT
         self.frameSide = FrameSide(self.canvas, self.frameMinimap.width, self.frameMinimap.height)
         self.frameSide.draw()
+        self.drawSideButton()
 
+        # LE CADRE DU BAS
+        self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
+        self.frameBottom.draw()
+
+
+    def drawSideButton(self):
+        """ Dessine les boutons lier
+        au menu de coter
+        """
         self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingFerme,
                                          iconPath="Graphics/Buildings/Age_I/Farm.png")
         self.buttonFerme.draw(x=self.width - 222, y=280)
@@ -395,10 +429,6 @@ class View(GWindow):
         self.buttonBase = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
                                         iconPath="Graphics/Buildings/Age_I/Base.png")
         self.buttonBase.draw(x=self.width - 123, y=390)
-
-        # LE CADRE DU BAS
-        self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
-        self.frameBottom.draw()
 
 
     def drawMap(self, carte):
@@ -443,6 +473,7 @@ class View(GWindow):
         """ Met la sélection à 0 (désélection)
         """
         self.selected = []
+        self.frameSide.draw()
 
     # TODO ? mettre dans carte ?
     def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):
@@ -467,7 +498,6 @@ class View(GWindow):
                 if building.estUniteDe(self.eventListener.controller.network.getClientId()):
                     print("you just selected your base")
                     print(building.type + ": " + building.id)
-                    self.selected.append(building)
                     building.estSelectionne = True
                     return
 
@@ -484,6 +514,10 @@ class View(GWindow):
                 if unit.estUniteDe(self.eventListener.controller.network.getClientId()):
                     print("one unit and maybe more where selected")
                     self.selected.append(unit)
+
+        if len(self.selected) == 1:
+            self.menuUnit = MenuUnit(self.canvas,self.frameSide,self.selected[0])
+            self.menuUnit.draw()
 
     # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?
 
