@@ -106,6 +106,8 @@ class Model:
                         self.carte.matrice[+1][y].isWalkable = False
                         self.carte.matrice[x][y+1].isWalkable = False
                         self.carte.matrice[x+1][y+1].isWalkable = False
+                        return newID
+
 
     def executeCommand(self, command):
         """ Exécute une commande
@@ -149,3 +151,4 @@ class Model:
         """
         self.joueur = Joueur(clientId)
         self.ai = AI(6, self)
+        self.ai.base = self.buildings[self.createBuilding(6, self.controller.view.BASE, 80, 80)]

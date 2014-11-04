@@ -1,5 +1,3 @@
-__author__ = 'Liam'
-
 
 class Joueur:
     """docstring for Joueur"""

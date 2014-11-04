@@ -14,8 +14,7 @@ class AI(Joueur):
         super().__init__(civilisation)
         self.civilisation = civilisation
         self.parent = parent
-        self.base = Base(self, 6, 80, 80)
-        self.parent.createBuilding(6, self.parent.controller.view.BASE, 80, 80)
+        self.base = None
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
@@ -63,7 +62,6 @@ class AI(Joueur):
         print("bois : " + str(self.ressources["bois"]))
         #fais des test requis pour savoir quel mode prendre
         self.blackboard()
-
         #premier test pour savoir si on est en paix
         if self.paix:
             #print("paix")
@@ -243,6 +241,7 @@ class AI(Joueur):
             print("base trouvée")
             if self.ressources["bois"] >= self.base.coutCreer1["bois"]:
                 self.base.creer1()
+                print("départ création")
                 return
             else:
                 self.manqueRessource = True
