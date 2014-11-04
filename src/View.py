@@ -106,8 +106,8 @@ class MenuUnit():
         self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
         self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.activeFrame, tags=('unitView', self.unit.id))
 
-        self.btnActive.draw(self.x + 30, self.y + 150)
-        self.btnPassive.draw(self.x + 135, self.y + 150)
+        self.btnActive.draw(self.x + 25, self.y + 130)
+        self.btnPassive.draw(self.x + 130, self.y + 130)
 
 
 class FrameMiniMap():
@@ -538,7 +538,6 @@ class View(GWindow):
             if allTags[0] == "base":
                 building = buildings[allTags[1]]
                 if building.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("you just selected your base")
                     print(building.type + ": " + building.id)
                     building.estSelectionne = True
                     return
@@ -546,7 +545,6 @@ class View(GWindow):
             elif allTags[0] == "ferme":
                 building = buildings[allTags[1]]
                 if building.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("one of your building was selected")
                     print(building.type + ": " + building.id)
                     building.estSelectionne = True
                     return
@@ -554,7 +552,6 @@ class View(GWindow):
             elif allTags[0] == "unit":
                 unit = units[allTags[1]]
                 if unit.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("one unit and maybe more where selected")
                     self.selected.append(unit)
 
         if len(self.selected) == 1:
