@@ -130,7 +130,6 @@ class Unit():
                 else:
                     self.deplacementTrace(self.cheminAttente, 1)
                 if self.leader == 1:
-                    print("ouais")
                     self.choisirTraceFail()
             else:
                 self.deplacementTrace(self.cheminTrace,0)
@@ -142,7 +141,6 @@ class Unit():
 
     def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader):
         #print("unit:", cibleX, cibleY , leader)
-        print("changement", leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
         self.mode = 0
@@ -161,7 +159,6 @@ class Unit():
             self.groupeID = groupeID
             self.finMultiSelection = None
             self.cheminTrace = self.choisirTrace()
-            print("ON CHOISI", self.trouver)
             #self.afficherList("cheminTrace", self.cheminTrace)
             if self.trouver:
                 self.trouverCheminMultiSelection()
@@ -502,7 +499,6 @@ class Unit():
 
     def trouverFinPath(self, unit):
         #unit.afficherList("unit chemin AVANT", unit.cheminTrace)
-        print("leader",self.leader)
         unit.cibleX = unit.cheminTrace[0].x
         unit.cibleY = unit.cheminTrace[0].y
         xSave = unit.x

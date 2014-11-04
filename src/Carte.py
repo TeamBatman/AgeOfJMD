@@ -57,6 +57,7 @@ class Tuile(object):
         # Type de la ressource sur la case
         self.type = 0
         self.ressourceUnits = 0
+        self.revealed = 0
 
 
     def walkable(self):

@@ -93,13 +93,13 @@ class FrameMiniMap():
 
         size = 106  # TODO Explication de ce chiffre
         itemMini = self.tailleTuile  # La grandeur des cases pour la minimap en pixels
-        couleurs = {
-            0: "#0B610B",  # vert
-            1: "#BFBF00",  # jaune
-            2: "#1C1C1C",  # gris pale
-            3: "#BDBDBD",  # gris fonce
-            4: "#2E9AFE"  # bleu
-        }
+        #couleurs = {
+        #    0: "#0B610B",  # vert
+        #    1: "#BFBF00",  # jaune
+        #    2: "#1C1C1C",  # gris pale
+        #    3: "#BDBDBD",  # gris fonce
+        #    4: "#2E9AFE"  # bleu
+        #}
 
         for x in range(size):
             for y in range(size):
@@ -107,7 +107,8 @@ class FrameMiniMap():
                 posY1 = self.miniMapY + y * itemMini
                 posX2 = posX1 + itemMini 
                 posY2 = posY1 + itemMini 
-                couleur = couleurs[carte[x][y].type]
+                #couleur = couleurs[carte[x][y].type]
+                couleur = "#333"
 
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.miniMapTag)
 
@@ -137,12 +138,43 @@ class FrameMiniMap():
         for unit in units.values():
             color = couleursCiv[unit.civilisation]
 
+            self.updateFog(unit)
+
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
             x2 = x1 + item
             y2 = y1 + item
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
+
+
+    def updateFog(self, unit):
+        carte = self.eventListener.controller.model.carte.matrice
+
+        caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
+        radius = 5
+        couleurs = {
+        0: "#0B610B", # vert
+        1: "#BFBF00", # jaune
+        2: "#1C1C1C", # gris pale
+        3: "#BDBDBD", # gris fonce
+        4: "#2E9AFE" # bleu
+        }
+        for x in range(caseX-radius,caseX+radius):
+            if x > 0 and x < 106:
+                for y in range(caseY-radius,caseY+radius):
+                    if y > 0 and y < 106:
+                        if not carte[x][y].revealed:
+                            posX1 = self.miniMapX + x * self.tailleTuile
+                            posY1 = self.miniMapY + y * self.tailleTuile
+                            posX2 = posX1 + self.tailleTuile
+                            posY2 = posY1 + self.tailleTuile
+                            couleur = couleurs[carte[x][y].type]
+
+                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.miniMapTag)
+                            self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
+
+                            self.canvas.tag_raise('rectMiniMap')
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
         """ (Re)dessine le rectangle de caméra de la minimap
@@ -276,13 +308,19 @@ class CarteView():
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
 
-                couleur = couleurs[carte[x][y].type]
+                if 1:
+                #if carte[x][y].revealed:
+                    couleur = couleurs[carte[x][y].type]
+                    self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                    if carte[x][y].type == 0:  # Gazon
+                        self.canvas.create_image(posX1, posY1, anchor=NW,
+                                                 image=GraphicsManager.getPhotoImage('World/grass.png'),
+                                                 tags=self.tagName)
+                #else:
+                #    couleur = "#333"
+                #    self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
-                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
-                if carte[x][y].type == 0:  # Gazon
-                    self.canvas.create_image(posX1, posY1, anchor=NW,
-                                             image=GraphicsManager.getPhotoImage('World/grass.png'),
-                                             tags=self.tagName)
+                    
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 

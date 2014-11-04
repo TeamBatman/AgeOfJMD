@@ -86,7 +86,6 @@ class EventListener:
         x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2,y2)) 
-        print(leaderUnit.x, leaderUnit.y)  
         posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(self.controller.view.selected)-1, self.controller.view.selected[0].grandeur)
         
         groupeSansLeader = self.controller.view.selected[:]
@@ -106,7 +105,6 @@ class EventListener:
             cmd.addData('X2', x2)
             cmd.addData('Y2', y2)
             if leaderUnit:
-                print("LEADER !!!")
                 cmd.addData('LEADER', 1)
                 cmd.addData('FIN', None)
                 groupe = self.controller.view.selected[:]
@@ -117,7 +115,6 @@ class EventListener:
                 groupeID.remove(unitSelected.id)
                 cmd.addData('GROUPE',groupeID)
             else:
-                print("pas leader")
                 cmd.addData('LEADER', 2)
                 cmd.addData('FIN', posFin.pop(0))
                 cmd.addData('GROUPE',None)
