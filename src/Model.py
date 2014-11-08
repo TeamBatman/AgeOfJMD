@@ -2,17 +2,20 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
-import time
+from Batiments import Batiment
+import Batiments
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
 from Units import Paysan
+
 
 class Model:
     def __init__(self, controller):
         self.controller = controller
         self.joueur = None
         self.units = {}
+        self.buildings = {}
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
@@ -22,7 +25,6 @@ class Model:
         """
         self.updateUnits()
         self.updatePaysans()
-
 
     def updateUnits(self):
         """ Met à jour chacune des unités
@@ -45,6 +47,7 @@ class Model:
         """
         return self.units[uId]
 
+
     def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
         """ Supprime une unité à la liste d'unités
         """
@@ -60,6 +63,47 @@ class Model:
         """
         # self.units.append(Unit(x, y, self))
         self.units[uid] = Paysan(uid, x, y, self, civilisation)
+
+
+    def createBuilding(self, userId, type, posX, posY):
+        x, y = self.trouverCaseMatrice(posX, posY)
+        if not self.carte.matrice[x][y].isWalkable:
+            print("not walkable")
+        else:
+            if not self.carte.matrice[x + 1][y].isWalkable:
+                print("not walkable")
+            else:
+                if not self.carte.matrice[x][y + 1].isWalkable:
+                    print("not walkable")
+                else:
+                    if not self.carte.matrice[x + 1][y + 1].isWalkable:
+                        print("not walkable")
+                    else:
+                        print(posX, posY)
+                        print(x, y)
+                        if type == Batiment.FERME:
+                            newID = Batiment.generateId(userId)
+                            createdBuild = Batiments.Ferme(self, newID, x, y)
+                        elif type == Batiment.BARAQUE:
+                            pass
+                        elif type == Batiment.HOPITAL:
+                            pass
+                        elif type == Batiment.BASE:
+                            if not self.joueur.baseVivante:
+                                newID = Batiment.generateId(userId)
+                                createdBuild = Batiments.Base(self, newID, x, y)
+                                self.joueur.baseVivante = True
+                            else:
+                                print("base already exist")
+                                return
+                        self.buildings[newID] = createdBuild
+                        print(newID)
+                        self.controller.view.carte.drawSpecificBuilding(createdBuild)
+                        self.carte.matrice[x][y].isWalkable = False
+                        self.carte.matrice[+1][y].isWalkable = False
+                        self.carte.matrice[x][y + 1].isWalkable = False
+                        self.carte.matrice[x + 1][y + 1].isWalkable = False
+
 
     def executeCommand(self, command):
         """ Exécute une commande
@@ -79,15 +123,19 @@ class Model:
         self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIV'])
 
     def executeMoveUnit(self, command):
-        unit = self.units[command.data['ID']]
-        unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'], command.data['LEADER'])
+        try:
+            unit = self.units[command.data['ID']]
+            unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
+                              command.data['LEADER'])
+        except KeyError:  # On a essayé de déplacer une unité morte
+            pass
 
     def executeAttackUnit(self, command):
         try:
             attacker = self.units[command.data['SOURCE_ID']]
             target = self.units[command.data['TARGET_ID']]
             target.recevoirAttaque(self, attacker, command.data['DMG'])
-        except KeyError:    # On a essayer d'attaquer une unité morte
+        except KeyError:  # On a essayé d'attaquer une unité morte
             pass
 
 
@@ -95,7 +143,7 @@ class Model:
         try:
             uId = command.data['ID']
             self.units.pop(uId)
-        except KeyError:    # L'unité n'existe déjà plus
+        except KeyError:  # L'unité n'existe déjà plus
             pass
 
     def trouverPlusProche(self, listeElements, coordBut):
@@ -111,32 +159,33 @@ class Model:
 
             return elementResultat
 
-    def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact): #cible en x,y
+    def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact):  # cible en x,y
         posFin = []
-        liste = [0,-contact, contact]
+        liste = [0, -contact, contact]
         #TODO TROUVER PAR CADRAN...
         #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
         #Marche si pas plus de 9 unités
-        for multi in range(1,self.grandeurMat):
+        for multi in range(1, self.grandeurMat):
             for i in liste:
                 for j in liste:
                     if not (i == 0 and j == 0 and multi == 1):
                         #print(multi*i,multi*j)
-                        posX = cibleX + multi*i
-                        posY = cibleY + multi*j
-                        deplacementPossible =  True
+                        posX = cibleX + multi * i
+                        posY = cibleY + multi * j
+                        deplacementPossible = True
                         try:
-                            casesPossibles = [  self.trouverCaseMatrice(posX, posY),
-                                            self.trouverCaseMatrice(posX+contact/2, posY),
-                                            self.trouverCaseMatrice(posX, posY + contact/2),
-                                            self.trouverCaseMatrice(posX+contact/2, posY + contact/2),
-                                            self.trouverCaseMatrice(posX-contact/2, posY),
-                                            self.trouverCaseMatrice(posX, posY - contact/2),
-                                            self.trouverCaseMatrice(posX-contact/2, posY - contact/2)]
+                            casesPossibles = [self.trouverCaseMatrice(posX, posY),
+                                              self.trouverCaseMatrice(posX + contact / 2, posY),
+                                              self.trouverCaseMatrice(posX, posY + contact / 2),
+                                              self.trouverCaseMatrice(posX + contact / 2, posY + contact / 2),
+                                              self.trouverCaseMatrice(posX - contact / 2, posY),
+                                              self.trouverCaseMatrice(posX, posY - contact / 2),
+                                              self.trouverCaseMatrice(posX - contact / 2, posY - contact / 2)]
 
                             #Gestion des obstacles
                             for case in casesPossibles:
-                                if not self.carte.matrice[case[0]][case[1]].type == 0 or case[0] < 0 or case[1] < 0 or case[0] > self.grandeurMat or case[1] > self.grandeurMat:
+                                if not self.carte.matrice[case[0]][case[1]].type == 0 or case[0] < 0 or case[1] < 0 or \
+                                                case[0] > self.grandeurMat or case[1] > self.grandeurMat:
                                     deplacementPossible = False
                                     break
 
@@ -146,10 +195,10 @@ class Model:
                                     return posFin
                         except:
                             print("hors de la matrice")
-                            pass #Hors de la matrice
+                            pass  #Hors de la matrice
         print(len(posFin))
-        return -1#FAIL
-            
+        return -1  #FAIL
+
 
     def trouverCaseMatrice(self, x, y):
         # TODO ? Mettre dans la vue ?
@@ -176,3 +225,4 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueur = Joueur(clientId)
+

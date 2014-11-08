@@ -28,22 +28,26 @@ class Carte(object):
                     self.matrice[x][y].type = moyenne
 
         # Distribution de la ressource selon le pourcentage
-        for x in range(0, self.size):
-            for y in range(0, self.size):
+        for x in range(0,self.size):
+            for y in range(0,self.size):
                 if self.matrice[x][y].type < 62:
-                    self.matrice[x][y].type = 0
+                    self.matrice[x][y].type = Tuile.GAZON
 
                 elif self.matrice[x][y].type < 67:
-                    self.matrice[x][y].type = 1
+                    self.matrice[x][y].type = Tuile.FORET
+                    self.matrice[x][y].isWalkable = False
 
                 elif self.matrice[x][y].type < 72:
-                    self.matrice[x][y].type = 2
+                    self.matrice[x][y].type = Tuile.MINERAI
+                    self.matrice[x][y].isWalkable = False
 
                 elif self.matrice[x][y].type < 100:
-                    self.matrice[x][y].type = 3
+                    self.matrice[x][y].type = Tuile.CHARBON
+                    self.matrice[x][y].isWalkable = False
 
                 else:
-                    self.matrice[x][y].type = 4
+                    self.matrice[x][y].type = Tuile.EAU
+                    self.matrice[x][y].isWalkable = False
 
 
 class Tuile(object):
@@ -52,22 +56,23 @@ class Tuile(object):
     le parametre units est utilise par les ressources jusqu'a ce qu'elle s'epuise
     et devienne du sol standard
     """
+    GAZON    = 0
+    FORET    = 1
+    MINERAI  = 2
+    CHARBON  = 3
+    EAU      = 4
 
     def __init__(self):
         # Type de la ressource sur la case
-        self.type = 0
+        self.type = Tuile.GAZON
         self.ressourceUnits = 0
         self.revealed = 0
-
-
-    def walkable(self):
-        # Retource True si on peut marcher sur la tuile
-        return self.type == 0
+        self.isWalkable = True
 
 
 def test():
     carte = Carte(100)
 
-
 if __name__ == '__main__':
     test()
+
