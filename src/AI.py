@@ -20,7 +20,7 @@ class AI(Joueur):
         self.qteRessourceManquante = 0
         self.batiments = {}
         self.recherchesCompletes = []
-        self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
+        self.ressources = {"bois" : 100, "minerai" : 0, "charbon" : 0}
         self.nbNourriture = 0
         self.units = []
         self.paix = True
@@ -258,7 +258,7 @@ class AI(Joueur):
                 self.manqueRessource = True
                 self.qteRessourceManquante = self.base.coutCreer1["bois"]
                 self.ressourceManquante = "bois"
-                print(str(self.qteRessourceManquante) + ":" + str(self.ressourceManquante))
+                print("il manque" + " " + str(self.qteRessourceManquante) + ":" + str(self.ressourceManquante))
                 return
 
         print("pas de base")
@@ -385,46 +385,56 @@ class AI(Joueur):
     def trouverRessourcePlusPres(self, unit, typeRessource):
         ressource = {"x" : 0 , "y" : 0}
 
-        minX = unit.x
-        minY = unit.y
-        maxX = unit.x
-        maxY = unit.y
+        minX = int(unit.x)
+        minY = int(unit.y)
+        maxX = int(unit.x)
+        maxY = int(unit.y)
         found = False
 
         while not found:
-            minX = minX - 20
-            minY = minY - 20
-            maxX += 20
-            maxY += 20
+            print("start check")
+            minX = minX - 240
+            minY = minY - 240
+            maxX += 240
+            maxY += 240
 
-            if minX < self.parent.carte.size:
-                minX = minX + 20
+            #si le minimum des X à vérifier est va à moins de 0, mettre à 0
+            if minX < 0:
+                minX = 0
 
-            if minY < self.parent.carte.size:
-                minY = minY + 20
+            #si le minimum des Y à vérifier est va à moins de 0, mettre à 0
+            if minY < 0:
+                minY = 0
 
-            if maxX > self.parent.carte.size:
-                maxX = maxX - 20
+            #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxX > self.parent.carte.size * 48:
+                maxX = self.parent.carte.size * 48
 
-            if maxY > self.parent.carte.size:
-                maxY = maxY - 20
+            #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxY > self.parent.carte.size * 48:
+                maxY = self.parent.carte.size * 48
 
-            for x in range (minX, maxX):
-                for y in range (minY, maxY):
+            print(maxX)
+            print(maxY)
+            print(minX)
+            print(minY)
+
+            for x in range (minX, maxX, 48):
+                for y in range (minY, maxY, 48):
                     casesCible = self.parent.trouverCaseMatrice(x, y)
                     caseCibleX = casesCible[0]
                     caseCibleY = casesCible[1]
-                    print("next check")
                     if self.parent.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
-                        found = True
-                        print(found)
+                        ressource["x"] = x
+                        ressource["y"] = y
+                        print(str(x) + " " + str(y))
+                        return ressource
 
 
 
-        ressource["x"] = x
-        ressource["y"] = y
-        print(str(x) + " " + str(y))
-        return ressource
+
 
     def delaiPenser(self):
         if time.time() - self.derniereAction >= 5:
