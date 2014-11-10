@@ -4,10 +4,33 @@
 class Command():
     """ La classe commande n'est en réalité qu'un wrapper pour dictionnaire """
     # LES TYPES DE COMMANDES POSSIBLES
-    CREATE_UNIT = 0         # Utilisée lorsqu'on veut créer une unité
-    DESTROY_UNIT = 1        # Utilisée lorsqu'on veut "détruire" une unité
-    MOVE_UNIT = 2           # Utilisée lorsqu'on veut déplacer une unité
-    ATTACK_UNIT = 3         # Utilisée lorsqu'on veut attaquer une unité
+
+    # COMMANDES GÉNÉRALES
+    START_GAME = 'sg'                   # Utilisée par l'hôte lorsqu'on désire lancer la partie
+
+    # COMMANDES POUR CIVILISATIONS
+    CREATE_CIVILISATION = 'cp'          # Utilisée lorsqu'un joueur se joint à la partie
+    PROMOTE_CIVILISATION = 'pc'         # Utilisée lorsqu'une unité change d'âge (évolue)
+    ANNIHILATE_CIVILISATION = 'ac'      # Utilisée lorsque civilisation quitte partie pour tuer détruire ses effectifs
+
+
+
+    # COMMANDES POUR UNITÉS
+    CREATE_UNIT = 'cu'         # Utilisée lorsqu'on veut créer une unité
+    KILL_UNIT = 'ku'           # Utilisée lorsqu'on veut tuer une unité
+    MOVE_UNIT = 'mu'           # Utilisée lorsqu'on veut déplacer une unité
+    ATTACK_UNIT = 'au'         # Utilisée lorsqu'on veut attaquer une unité
+    ATTACK_BUILDING = 'ab'     # Utilisée lorsqu'une unité attaque un bâtiment  # TODO Vérfier pertinence de la commande
+
+    #  COMMANDE POUR BÂTIMENTS
+    CREATE_BUILDING = 'cb'     # Utilisée lorsqu'on désire créer un bâtiment
+    DESTROY_BUILDING = 'db'    # Utilisée lorsqu'on désire détruire un bâtiment
+
+
+
+
+
+
 
     def __init__(self, clientId=-1, cmdType=-1):
         self.clientId = clientId
@@ -37,3 +60,6 @@ class Command():
         cmd = Command(d['clientId'], d['data']['TYPE'])
         cmd.data = d['data']
         return cmd
+
+    def __getitem__(self, item):
+        return self.data[item]

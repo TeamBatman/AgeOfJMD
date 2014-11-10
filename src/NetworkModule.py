@@ -9,6 +9,7 @@ import socket
 import threading
 
 import Pyro4
+from Civilisations import Civilisation
 
 from Commands import Command
 from Joueurs import Joueur
@@ -51,17 +52,17 @@ class ServerController:
 
         # Les civilisations possibles
         self.civilisations = [
-            Joueur.ROUGE,
-            Joueur.BLEU,
-            Joueur.VERT,
+            Civilisation.ROUGE,
+            Civilisation.BLEU,
+            Civilisation.VERT,
 
-            Joueur.MAUVE,
-            Joueur.ORANGE,
-            Joueur.ROSE,
+            Civilisation.MAUVE,
+            Civilisation.ORANGE,
+            Civilisation.ROSE,
 
-            Joueur.NOIR,
-            Joueur.BLANC,
-            Joueur.JAUNE
+            Civilisation.NOIR,
+            Civilisation.BLANC,
+            Civilisation.JAUNE
         ]
 
 

@@ -38,7 +38,7 @@ class Controller:
 
         self.model.update()
 
-        self.view.update(self.model.units, self.model.buildings)
+        self.view.update(self.model.getUnits(), self.model.getBuildings())
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
@@ -49,6 +49,8 @@ class Controller:
         self.network.connectClient(ipAddress='127.0.0.1', port=33333)
 
         self.model.creerJoueur(self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
+
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
@@ -131,12 +133,19 @@ class EventListener:
         """
         self.leftClickPos = (event.x, event.y)
         self.controller.view.resetSelection()
+
         if self.controller.view.modeConstruction:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
-            self.controller.model.createBuilding(clientId, self.controller.view.lastConstructionType, currentX,
-                                                 currentY)
+
+            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd.addData('ID', Batiment.generateId(clientId))
+            cmd.addData('X', currentX)
+            cmd.addData('Y', currentY)
+            cmd.addData('CIV', self.model.joueur.civilisation)
+            cmd.addData('BTYPE', self.controller.view.lastConstructionType)
+            self.controller.network.client.sendCommand(cmd)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
 
@@ -150,13 +159,13 @@ class EventListener:
         self.controller.view.deleteSelectionSquare()
 
         # SÉLECTION UNITÉS
-        units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.units)
+        units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.getUnits())
         if units:
             self.controller.view.selected = [u for u in units if u.estUniteDe(clientId)]
             return
 
         # SÉLECTION BUILDINGS
-        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.buildings)
+        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
             print("OK")
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
@@ -170,7 +179,7 @@ class EventListener:
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
+        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
         # if not targetUnit.estUniteDe(clientId):
         for unitSelected in self.controller.view.selected:
             unitSelected.ennemiCible = targetUnit
@@ -185,7 +194,7 @@ class EventListener:
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
+        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
         self.controller.view.selected.append(unit)
         # TODO REMOVE C'EST JUSTE POUR DES TEST
 
@@ -255,7 +264,7 @@ class EventListener:
         # print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
 
 
-        self.controller.view.update(self.controller.model.units, self.controller.model.buildings,
+        self.controller.view.update(self.controller.model.getUnits(), self.controller.model.getBuildings(),
                                     self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
         if redo == 0:  #QUICK FIX

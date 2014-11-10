@@ -1,40 +1,38 @@
 import random
-import sys
 import time
 import math
+from Civilisations import Civilisation
+
 from Commands import Command
-from GraphicsManagement import SpriteSheet, AnimationSheet, SpriteAnimation, Animation, GraphicsManager, \
+from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
-from Joueurs import Joueur
 from Timer import Timer
 
-import time
-import math
 
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
 
 
-    # COMBAT
+    # MODE DE COMBAT
     ACTIF = 0
     PASSIF = 1
 
 
-    def __init__(self, uid, x, y, parent, civilisation):
+    def __init__(self, uid, x, y, model, civilisation):
         """
         :param uid: l'id unique de l'unité
         :param x: sa position initiale en x
         :param y: sa position initiale en y
-        :param parent: le modèle
+        :param model: le modèle
         :param civilisation: la civilisation de l'unité
         """
         self.id = uid
-        self.civilisation = civilisation
+        self.civilisation = int(civilisation)
         self.x = x
         self.y = y
-        self.parent = parent
+        self.parent = model
         self.vitesse = 5
-        self.grandeur = 41 #32 donc grandeur/2 - 16
+        self.grandeur = 41  # 32 donc grandeur/2 - 16
         self.cibleX = x
         self.cibleY = y
         self.cheminTrace = []
@@ -43,14 +41,14 @@ class Unit():
         self.cibleXDeplacement = x
         self.cibleYDeplacement = y
         self.mode = 0  # 1=ressource
-        self.trouver = True #pour le pathfinding
+        self.trouver = True  # pour le pathfinding
         self.enDeplacement = False
         self.ancienX = self.x
         self.ancienY = self.y
         self.positionDejaVue = []
         self.casesDejaVue = []
         self.cheminAttente = []
-        self.groupeID = [] #Pour le leader
+        self.groupeID = []  # Pour le leader
         self.leader = 0
         self.finMultiSelection = None
 
@@ -82,7 +80,7 @@ class Unit():
         """ Retourne l'ID du propriétaire de l'unité
         :return: l'id du propriétaire (str)
         """
-        return self.id.split('_')[0]
+        return int(self.id.split('_')[0])
 
     def estUniteDe(self, clientId):
         """ Vérifie si l'unité appartient au client ou non
@@ -111,18 +109,16 @@ class Unit():
         if self.hp == 0:
             return
 
-
         for anim in self.oneTimeAnimations:
             anim.animate()
             if anim.isFinished:
                 self.oneTimeAnimations.remove(anim)
 
-
         self.determineCombatBehaviour(model)
 
-        #print(len(self.groupeID))
+        # print(len(self.groupeID))
         if self.enDeplacement:
-            #print("---", self.leader, self.enDeplacement, self.trouver)
+            # print("---", self.leader, self.enDeplacement, self.trouver)
             #self.afficherList("cheminTrace", self.cheminTrace)
             if not self.trouver:
                 if not self.cheminAttente:
@@ -132,17 +128,13 @@ class Unit():
                 if self.leader == 1:
                     self.choisirTraceFail()
             else:
-                self.deplacementTrace(self.cheminTrace,0)
-
-
-
-
+                self.deplacementTrace(self.cheminTrace, 0)
 
 
     def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader):
-        #print("unit:", cibleX, cibleY , leader)
-        self.leader = leader #Pour sélection multiple
-        #print("leader", self.leader)
+        # print("unit:", cibleX, cibleY , leader)
+        self.leader = leader  # Pour sélection multiple
+        # print("leader", self.leader)
         self.mode = 0
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -150,7 +142,7 @@ class Unit():
         self.cibleYDeplacement = cibleY
         self.trouver = False
         self.enDeplacement = True
-        
+
         self.positionDejaVue = []
         self.cheminAttente = []
         self.time1 = 0
@@ -193,9 +185,9 @@ class Unit():
             return
         if self.x == self.cibleX and self.y == self.cibleY:
             print("fix", self.x, self.cibleX, self.y, self.cibleY)
-            #self.trouver = True
-            return self.finDeplacementTraceVrai() #Quick Fix
-	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
+            # self.trouver = True
+            return self.finDeplacementTraceVrai()  # Quick Fix
+        # ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!!
         self.posX = self.x
         self.posY = self.y
         if abs(self.cibleX - self.x) <= self.vitesse:
@@ -206,8 +198,8 @@ class Unit():
         self.deplacer(self.cibleX, self.cibleY, self.vitesse)
 
         self.eviterObstacles()
-        
-        #Garder en souvenir
+
+        # Garder en souvenir
         self.ancienX = self.posX
         self.ancienY = self.posY
         # Puisqu'il y a eu un déplacement
@@ -216,13 +208,13 @@ class Unit():
 
     def eviterObstacles(self):
         contact = False
-        casesPossibles = [  self.parent.trouverCaseMatrice(self.x, self.y),
-                            self.parent.trouverCaseMatrice(self.x+self.grandeur/2, self.y),
-                            self.parent.trouverCaseMatrice(self.x, self.y + self.grandeur/2),
-                            self.parent.trouverCaseMatrice(self.x+self.grandeur/2, self.y+self.grandeur/2),
-                            self.parent.trouverCaseMatrice(self.x-self.grandeur/2, self.y),
-                            self.parent.trouverCaseMatrice(self.x, self.y - self.grandeur/2),
-                            self.parent.trouverCaseMatrice(self.x-self.grandeur/2, self.y-self.grandeur/2)]
+        casesPossibles = [self.parent.trouverCaseMatrice(self.x, self.y),
+                          self.parent.trouverCaseMatrice(self.x + self.grandeur / 2, self.y),
+                          self.parent.trouverCaseMatrice(self.x, self.y + self.grandeur / 2),
+                          self.parent.trouverCaseMatrice(self.x + self.grandeur / 2, self.y + self.grandeur / 2),
+                          self.parent.trouverCaseMatrice(self.x - self.grandeur / 2, self.y),
+                          self.parent.trouverCaseMatrice(self.x, self.y - self.grandeur / 2),
+                          self.parent.trouverCaseMatrice(self.x - self.grandeur / 2, self.y - self.grandeur / 2)]
 
         for case in casesPossibles:
             if not self.parent.carte.matrice[case[0]][case[1]].type == 0 or case in self.casesDejaVue:
@@ -234,37 +226,44 @@ class Unit():
             self.x = self.posX
             self.y = self.posY
             self.choixPossible = []
-            liste = [-1,0,1]
+            liste = [-1, 0, 1]
             for i in liste:
                 for j in liste:
-                    if not(i==0 and j==0):
+                    if not (i == 0 and j == 0):
                         deplacementPossible = True
-                        casesPossibles = [  self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse)),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur/2, self.y+(j*self.vitesse)),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse) + self.grandeur/2),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)+self.grandeur/2, self.y+(j*self.vitesse)+self.grandeur/2),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)-self.grandeur/2, self.y+(j*self.vitesse)),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse), self.y+(j*self.vitesse) - self.grandeur/2),
-                                            self.parent.trouverCaseMatrice(self.x+(i*self.vitesse)-self.grandeur/2, self.y+(j*self.vitesse)-self.grandeur/2)]
+                        casesPossibles = [
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse), self.y + (j * self.vitesse)),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse) + self.grandeur / 2,
+                                                           self.y + (j * self.vitesse)),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse),
+                                                           self.y + (j * self.vitesse) + self.grandeur / 2),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse) + self.grandeur / 2,
+                                                           self.y + (j * self.vitesse) + self.grandeur / 2),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse) - self.grandeur / 2,
+                                                           self.y + (j * self.vitesse)),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse),
+                                                           self.y + (j * self.vitesse) - self.grandeur / 2),
+                            self.parent.trouverCaseMatrice(self.x + (i * self.vitesse) - self.grandeur / 2,
+                                                           self.y + (j * self.vitesse) - self.grandeur / 2)]
 
-                        #Gestion des obstacles
+                        # Gestion des obstacles
                         for case in casesPossibles:
                             if not self.parent.carte.matrice[case[0]][case[1]].type == 0 or case in self.casesDejaVue:
                                 deplacementPossible = False
                                 break
-                            
+
                         if deplacementPossible:
-                            #print("deplacement possible !")
-                            if (self.x+(i*self.vitesse), self.y+(j*self.vitesse)) not in self.positionDejaVue:
+                            # print("deplacement possible !")
+                            if (self.x + (i * self.vitesse), self.y + (j * self.vitesse)) not in self.positionDejaVue:
                                 self.x = self.posX
                                 self.y = self.posY
-                                self.x += (i*self.vitesse)
-                                self.y += (j*self.vitesse)
-                                self.choixPossible.append([self.x,self.y])
+                                self.x += (i * self.vitesse)
+                                self.y += (j * self.vitesse)
+                                self.choixPossible.append([self.x, self.y])
 
                                 trouve = True
 
-            if self.choixPossible: #Choisir le meilleur point sur les points possibles
+            if self.choixPossible:  # Choisir le meilleur point sur les points possibles
                 self.x = self.choixPossible[0][0]
                 self.y = self.choixPossible[0][1]
                 diff = abs(self.x - self.cibleX) + abs(self.y - self.cibleY)
@@ -275,53 +274,53 @@ class Unit():
                         self.y = coord[1]
                         diffX = self.x - self.posX
                         diffY = self.y - self.posY
-                        
+
                         if diffX > 0 and diffY == 0:
                             self.animation.direction = SpriteSheet.Direction.RIGHT
                         elif diffX < 0 and diffY == 0:
                             self.animation.direction = SpriteSheet.Direction.LEFT
-                        #elif diffX > 0 and diffY < 0:
+                        # elif diffX > 0 and diffY < 0:
                         #    self.animDirection = 'DOWN'
                         #elif diffX > 0 and diffY > 0:
                         #    self.animDirection = 'UP'
                         else:
                             self.animation.direction = SpriteSheet.Direction.DOWN
-                            
-                        #print(diffX,diffY)
+
+                        # print(diffX,diffY)
                         diff = diffCoord
 
             if trouve == False:
                 self.animation.direction = SpriteSheet.Direction.DOWN
-                #print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
+                # print("rate !", self.x,self.posX,self.ancienX,"y;", self.y,self.posY,self.ancienY)
 
             if (self.x, self.y) in self.positionDejaVue:
                 self.casesDejaVue.append(self.parent.trouverCaseMatrice(self.x, self.y))
-                nouvelleCase = self.trouverNouvelleCase(self.parent.trouverCaseMatrice(self.x,self.y))
-                destination = self.parent.trouverCentreCase(nouvelleCase[0],nouvelleCase[1])
-                self.cheminAttente.append((destination[0],destination[1]))
+                nouvelleCase = self.trouverNouvelleCase(self.parent.trouverCaseMatrice(self.x, self.y))
+                destination = self.parent.trouverCentreCase(nouvelleCase[0], nouvelleCase[1])
+                self.cheminAttente.append((destination[0], destination[1]))
                 self.cibleXDeplacement = destination[0]
                 self.cibleYDeplacement = destination[1]
-                #print("YOU FAILED !!!")
-                
+                # print("YOU FAILED !!!")
+
             self.positionDejaVue.append((self.x, self.y))
 
 
     def trouverNouvelleCase(self, case):
         casesPossibles = []
-        liste = [-1,0,1]
+        liste = [-1, 0, 1]
         for i in liste:
             for j in liste:
-                if not(i==0 and j==0):
+                if not (i == 0 and j == 0):
                     try:
-                        if self.parent.carte.matrice[case[0]+i][case[1]+j].type == 0:
-                            if i==0 or j==0: # Pas de diagonale
-                                if (case[0]+i,case[1]+j) not in self.casesDejaVue:
-                                    casesPossibles.append((case[0]+i,case[1]+j))
+                        if self.parent.carte.matrice[case[0] + i][case[1] + j].type == 0:
+                            if i == 0 or j == 0:  # Pas de diagonale
+                                if (case[0] + i, case[1] + j) not in self.casesDejaVue:
+                                    casesPossibles.append((case[0] + i, case[1] + j))
                     except:
                         print("fail nouvelle case")
-                        pass #Dépasse la matrice
+                        pass  # Dépasse la matrice
 
-        if casesPossibles: #Trouver la case la plus proche du but !
+        if casesPossibles:  # Trouver la case la plus proche du but !
             caseBut = self.parent.trouverCaseMatrice(self.cibleX, self.cibleY)
             caseResultat = casesPossibles[0]
             diff = abs(casesPossibles[0][0] - caseBut[0]) + abs(casesPossibles[0][1] - caseBut[1])
@@ -330,21 +329,21 @@ class Unit():
                 if diff > diffCase:
                     caseResultat = case
             return caseResultat
-            
+
         print("nouvelle case no return !")
-        return case #FAIL !
+        return case  # FAIL !
 
     def deplacementTrace(self, chemin, mode):
-        #TODO: Mettre les obstacles !
+        # TODO: Mettre les obstacles !
         if len(chemin) > 0:
             if self.x == self.cibleXDeplacement and self.y == self.cibleYDeplacement:
                 del chemin[-1]
                 self.nbTour += 1
-                #chemin = chemin[:len(chemin)-self.nbTour]
-                if len(chemin) <= 0: #FIN
-                    if mode == 0: #vrai pathfinding
+                # chemin = chemin[:len(chemin)-self.nbTour]
+                if len(chemin) <= 0:  #FIN
+                    if mode == 0:  #vrai pathfinding
                         return self.finDeplacementTraceVrai()
-                    else: # mode attente
+                    else:  # mode attente
                         chemin = []
                         return -1
 
@@ -355,27 +354,27 @@ class Unit():
                 return
 
             if not abs(self.cibleXDeplacement - self.x) == 0 and not abs(self.cibleYDeplacement - self.y) == 0:
-                diaganoleVit = math.sqrt(math.pow(self.vitesse,2) + math.pow(self.vitesse,2))
+                diaganoleVit = math.sqrt(math.pow(self.vitesse, 2) + math.pow(self.vitesse, 2))
                 diaganoleVit /= 2
             else:
-                diaganoleVit = self.vitesse #vitesse normal
+                diaganoleVit = self.vitesse  # vitesse normal
 
             if abs(self.cibleXDeplacement - self.x) <= diaganoleVit:
                 self.x = self.cibleXDeplacement
             if abs(self.cibleYDeplacement - self.y) <= diaganoleVit:
                 self.y = self.cibleYDeplacement
 
-            self.deplacer(self.cibleXDeplacement,self.cibleYDeplacement,diaganoleVit)
+            self.deplacer(self.cibleXDeplacement, self.cibleYDeplacement, diaganoleVit)
 
-            #self.eviterObstacles()
+            # self.eviterObstacles()
             # Puisqu'il y a eu un déplacement
             self.animation.animate()
             self.timerDeplacement.reset()
 
-    def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
+    def finDeplacementTraceVrai(self):  # la fin du vrai pathfinding
         self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
         self.enDeplacement = False
-        
+
         return -1
 
     def choisirTrace(self):
@@ -401,7 +400,7 @@ class Unit():
         self.open.append(noeudInit)
         self.time1 = time.time()
         chemin = self.aEtoile(0.3)
-        #print("Temps a*: ", time.time() - self.time1)
+        # print("Temps a*: ", time.time() - self.time1)
         n = chemin
         if not n == -1:
             cheminTrace = []
@@ -413,23 +412,23 @@ class Unit():
                 n = n.parent
             # print(cheminTrace,"len", len(cheminTrace))
             if cheminTrace:
-                #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+                # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
                 if not self.mode == 1:  #pas en mode ressource
                     cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
             else:
-                if not self.mode == 1:  #pas en mode ressource
+                if not self.mode == 1:  # pas en mode ressource
                     cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
                 else:
                     cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
             self.cibleXDeplacement = cheminTrace[-1].x
             self.cibleYDeplacement = cheminTrace[-1].y
-            
+
         return cheminTrace
-    
+
     def choisirTraceFail(self):
-        #print("traceFail", self.cibleX,self.cibleY)
-        #print("avant", n.x,n.y)
+        # print("traceFail", self.cibleX,self.cibleY)
+        # print("avant", n.x,n.y)
         self.open = []
         self.closed = []
 
@@ -439,30 +438,30 @@ class Unit():
         #self.afficherList("closed",self.ancienClosed)
         #noeudInit = self.ancienN
         n = self.cheminTrace[0]
-        cases = self.parent.trouverCaseMatrice(n.x,n.y)
+        cases = self.parent.trouverCaseMatrice(n.x, n.y)
         n.x = cases[0]
         n.y = cases[1]
         noeudInit = n
-        
+
         #print("x,y",n.x,n.y)
         #print("cibleself", self.cibleX,self.cibleY)
         #print("debut a*")
-        self.time1= time.time()
+        self.time1 = time.time()
         chemin = self.aEtoile(0.01)
-       # print("Temps a*: ", time.time()-self.time1)
+        # print("Temps a*: ", time.time()-self.time1)
         n = chemin
         if not n == -1:
             self.cheminTrace = []
-            while(not n.parent== None):
+            while (not n.parent == None):
                 self.cheminTrace.append(n)
                 #print("boucle", n.x, n.y)
                 if isinstance(n.x, int):
-                    centreCase = self.parent.trouverCentreCase(int(n.x),int(n.y))
+                    centreCase = self.parent.trouverCentreCase(int(n.x), int(n.y))
                     n.x = centreCase[0]
                     n.y = centreCase[1]
                 else:
                     pass
-                
+
                 n = n.parent
             #print(self.cheminTrace,"len", len(self.cheminTrace))
             if self.trouver == True:
@@ -470,36 +469,37 @@ class Unit():
 
     def finTrace(self):
         if self.cheminTrace:
-            print("DUDE !",self.cibleX,self.cibleY)
-            #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-            self.cheminTrace[0] = Noeud(None,self.cibleX,self.cibleY,None ,None)                    
+            print("DUDE !", self.cibleX, self.cibleY)
+            # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
+            self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
         else:
-            print("DUDE !",self.cibleX,self.cibleY)
-            self.cheminTrace.append(Noeud(None,self.cibleX,self.cibleY,None ,None))
-           
-        self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
-        while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
+            print("DUDE !", self.cibleX, self.cibleY)
+            self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
+
+        self.cheminTrace = self.cheminTrace[:len(self.cheminTrace) - self.nbTour]
+        while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(
+                        self.cheminTrace[-1].y - self.cibleY):
             del self.cheminTrace[-1]
-                
+
         self.trouverDebutPath(self)
         self.trouverCheminMultiSelection()
 
     def trouverDebutPath(self, unit):
-        #Trouver le chemin entre le début du pathfinding et la position actuelle
+        # Trouver le chemin entre le début du pathfinding et la position actuelle
         unit.cibleX = self.cheminTrace[-1].x
         unit.cibleY = self.cheminTrace[-1].y
         unit.cibleXDeplacement = self.cheminTrace[-1].x
         unit.cibleYDeplacement = self.cheminTrace[-1].y
         cheminDebutTrace = unit.choisirTrace()
-        
+
         for case in cheminDebutTrace:
             unit.cheminTrace.append(case)
-            
+
         unit.cibleXDeplacement = unit.cheminTrace[-1].x
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
     def trouverFinPath(self, unit):
-        #unit.afficherList("unit chemin AVANT", unit.cheminTrace)
+        # unit.afficherList("unit chemin AVANT", unit.cheminTrace)
         unit.cibleX = unit.cheminTrace[0].x
         unit.cibleY = unit.cheminTrace[0].y
         xSave = unit.x
@@ -512,9 +512,9 @@ class Unit():
             pass
         unit.cibleXDeplacement = unit.cheminTrace[0].x
         unit.cibleYDeplacement = unit.cheminTrace[0].y
-        #print("toruev FIn path x", unit.x, unit.y, unit.cibleX, unit.cibleY)
+        # print("toruev FIn path x", unit.x, unit.y, unit.cibleX, unit.cibleY)
         cheminFinTrace = unit.choisirTrace()
-        
+
         unit.cheminTrace.reverse()
         unit.cheminTrace.pop()
 
@@ -539,7 +539,7 @@ class Unit():
                 if not unit.leader == 1:
                     unit.cheminTrace = self.cheminTrace[:]
                     self.trouverDebutPath(unit)
-                    #print("tourver", unit.leader, unit.finMultiSelection, len(self.groupeID), self.leader)
+                    # print("tourver", unit.leader, unit.finMultiSelection, len(self.groupeID), self.leader)
                     unit.cheminTrace[0] = unit.finMultiSelection
                     try:
                         self.trouverFinPath(unit)
@@ -547,10 +547,10 @@ class Unit():
                         print("none.. mais bon !")
                     unit.cibleX = unit.finMultiSelection.x
                     unit.cibleY = unit.finMultiSelection.y
-                    #print(unit.cibleX, unit.cibleY, unit.finMultiSelection.x, unit.finMultiSelection.y)
+                    # print(unit.cibleX, unit.cibleY, unit.finMultiSelection.x, unit.finMultiSelection.y)
                     unit.trouver = True
 
-        self.leader = 0 #defaut
+        self.leader = 0  # defaut
         self.groupeID = []
 
     def aEtoile(self, tempsMax):
@@ -559,7 +559,7 @@ class Unit():
             n = self.open[0]
             if self.goal(n):
                 self.trouver = True
-                #print("changeent true trouver !")
+                # print("changeent true trouver !")
                 self.ancienOpen = []
                 self.ancienClosed = []
                 return n
@@ -581,24 +581,24 @@ class Unit():
                         break
                 if aAjouter:
                     self.open.append(nPrime)
-                    
+
                     # Mettre dans le if aAjouter ?
-                    #  time1= time.time()
+                    # time1= time.time()
 
             self.open.sort(key=lambda x: x.cout)
-                # tempsTotal += time.time()-time1
-                # print("Temps sort: ", tempsTotal)
+            # tempsTotal += time.time()-time1
+            # print("Temps sort: ", tempsTotal)
 
             if len(self.open) > nbNoeud:
-                #self.afficherList("open", self.open)
-                #return -1
+                # self.afficherList("open", self.open)
+                # return -1
                 self.open = self.open[:nbNoeud]
                 #print(len(self.open))
                 #self.parent.parent.v.afficherCourantPath(self.open)
             if time.time() - self.time1 > tempsMax:
                 self.trouver = False
-                #print("changeent false", n.x, n.y)
-                #self.ancienClosed = self.closed
+                # print("changeent false", n.x, n.y)
+                # self.ancienClosed = self.closed
                 self.ancienClosed = []
                 #self.ancienOpen = self.open[:int((nbNoeud/2))]
                 self.ancienOpen = self.open
@@ -692,7 +692,7 @@ class Unit():
         dépendemment du mode de combat (Actif ou Passif)
         """
         if int(self.getClientId()) != model.joueur.civilisation:
-             return     # Ce n'est pas une unité du joueur en cours
+            return  # Ce n'est pas une unité du joueur en cours
 
         if self.ennemiCible:
             self.attaquer(model)
@@ -705,12 +705,12 @@ class Unit():
             units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
                                                       self.x + self.rayonVision, self.y + self.rayonVision,
                                                       units=model.units)
-            #units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
+            # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
             units = [u for u in units if u.id != self.id]
             if not units:
                 return
 
-            #Prendre la plus proche
+            # Prendre la plus proche
             closestDistance = 2000
             closestUnit = units[0]
             for unit in units:
@@ -726,8 +726,8 @@ class Unit():
         """ Permet d'attaquer une unité
         """
         # try:
-        #    self.animHurt.animate()
-        #except AttributeError:
+        # self.animHurt.animate()
+        # except AttributeError:
         #    pass
         if self.ennemiCible.hp == 0:
             self.ennemiCible = None
@@ -736,9 +736,9 @@ class Unit():
         # Si je suis trop loin je me rapproche de l'ennemi
 
         if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur:
-            model.controller.eventListener.onMapRClick(self, (self.ennemiCible.x-self.grandeur, self.ennemiCible.y-self.grandeur))
+            model.controller.eventListener.onMapRClick(self, (
+                self.ennemiCible.x - self.grandeur, self.ennemiCible.y - self.grandeur))
             return
-
 
         if self.timerAttack.isDone():
             attack = random.randint(self.attackMin, self.attackMax)
@@ -758,10 +758,9 @@ class Unit():
         anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
         self.oneTimeAnimations.append(anim)
 
-
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
-            cmd = Command(self.getClientId(), Command.DESTROY_UNIT)
+            cmd = Command(self.getClientId(), Command.KILL_UNIT)
             cmd.addData('ID', self.id)
             model.controller.network.client.sendCommand(cmd)
 
@@ -772,8 +771,8 @@ class Unit():
 
 
 class Paysan(Unit):
-    def __init__(self, clientId, x, y, parent, civilisation):
-        super(Paysan, self).__init__(clientId, x, y, parent, civilisation)
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(Paysan, self).__init__(clientId, x, y, model, civilisation)
         self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 10
         self.nbRessources = 0
@@ -781,17 +780,17 @@ class Paysan(Unit):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Joueur.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Joueur.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Joueur.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
-            Joueur.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Joueur.NOIR: 'Units/Age_I/paysan_noir.png',
-            Joueur.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
 
-            Joueur.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Joueur.VERT: 'Units/Age_I/paysan_vert.png',
-            Joueur.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
         return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
