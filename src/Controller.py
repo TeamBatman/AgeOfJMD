@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import time
 from Batiments import Batiment
 
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
 
+
 from Units import Unit
 from View import View, UnitView, FrameSide
+
+from Timer import Timer
+
+
 
 import sys
 
@@ -24,21 +31,32 @@ class Controller:
         self.view = View(self.eventListener)
         self.refreshRate = 64  # Nombre de fois par seconde
 
-    def mainLoop(self):
+        self.networkTimer = Timer(200)
+        self.networkTimer.start()
 
+
+    def mainLoop(self):
         try:
-            cmds = self.network.synchronizeClient()
-            if cmds:
-                for cmd in cmds:
-                    self.model.executeCommand(cmd)
+            cmd = self.network.synchronizeClient()
+            if cmd['TYPE'] != Command.WAIT and cmd['TYPE'] != Command.LAG:
+                self.model.executeCommand(cmd)
+
+            if cmd['TYPE'] != Command.LAG and cmd['TYPE'] != Command.EMPTY:
+                self.model.update()
+                if self.networkTimer.isDone():  # On force une synchro sur le serveur
+                    self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
+                    self.networkTimer.reset()
+            else:   # LAG
+                pass
+
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
 
-        self.model.update()
 
-        self.view.update(self.model.units, self.model.buildings)
+        self.view.update(self.model.getUnits(), self.model.getBuildings())
+
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
@@ -46,13 +64,24 @@ class Controller:
         """
 
         self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='127.0.0.1', port=33333)
 
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
+
+
+        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
+        cmd.addData('ID', self.network.getClientId())
         self.model.creerJoueur(self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
+        self.network.client.sendCommand(cmd)
+
+
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
         self.mainLoop()
+
+
+
         self.view.show()
 
     def shutdown(self):
@@ -98,6 +127,7 @@ class EventListener:
             groupeSansLeader.remove(leaderUnit)
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index !")
+            groupeSansLeader = None
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
@@ -114,6 +144,7 @@ class EventListener:
         cmd.addData('Y1', unitSelected.y)
         cmd.addData('X2', x2)
         cmd.addData('Y2', y2)
+
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -141,6 +172,7 @@ class EventListener:
                 print("changement leader")
             else:
                 print("else",unitSelected.id, unitSelected.leader)
+
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
             cmd.addData('GROUPE', None)
@@ -166,21 +198,29 @@ class EventListener:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
-            self.controller.model.createBuilding(clientId, self.controller.view.lastConstructionType, currentX,
-                                                 currentY)
+
+            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd.addData('ID', Batiment.generateId(clientId))
+            cmd.addData('X', currentX)
+            cmd.addData('Y', currentY)
+            cmd.addData('CIV', self.model.joueur.civilisation)
+            cmd.addData('BTYPE', self.controller.view.lastConstructionType)
+            self.controller.network.client.sendCommand(cmd)
+
+
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             return
 
         # SÉLECTION UNITÉS
-        units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.units)
+        units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.getUnits())
         if units:
             self.controller.view.selected = [u for u in units if u.estUniteDe(clientId)]
             self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
             return
 
         # SÉLECTION BUILDINGS
-        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.buildings)
+        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
             #for b in buildings:
                 #print(b.id)
@@ -200,9 +240,9 @@ class EventListener:
         x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
        # print("dude!", x2, y2)
-        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
+        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
         #TODO: Merge avec onMapRClick !!!
-        if True:
+        try:
             groupe = groupeSansLeader
             if not groupeSansLeader:
                 groupeSansLeader = self.controller.view.selected[:]
@@ -218,8 +258,9 @@ class EventListener:
                 
             #groupeSansLeader = self.controller.view.selected[:]
             
-        #except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
-        #    print("index !")
+        except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
+            print("index 2 !")
+            groupeSansLeader = None
         #    pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
@@ -256,11 +297,13 @@ class EventListener:
         clientId = self.controller.network.getClientId()
         x1, y1 = event.x, event.y
         x2, y2 = event.x, event.y
-        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.units)[0]
-        self.controller.view.selected.append(unit)
+        unit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
+        if unit.estUniteDe(clientId):
+            self.controller.view.selected.append(unit)
+            self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
         # TODO REMOVE C'EST JUSTE POUR DES TEST
 
-        self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
+
 
 
     def onMapMouseMotion(self, event):
@@ -311,6 +354,61 @@ class EventListener:
         miniCamY = self.controller.view.frameMinimap.miniCameraY
         tailleMiniTuile = self.controller.view.frameMinimap.tailleTuile
 
+        if self.controller.view.modeConstruction:
+            currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            clientId = self.controller.network.getClientId()
+
+            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd.addData('ID', Batiment.generateId(clientId))
+            cmd.addData('X', currentX)
+            cmd.addData('Y', currentY)
+            cmd.addData('CIV', self.model.joueur.civilisation)
+            cmd.addData('BTYPE', self.controller.view.lastConstructionType)
+            self.controller.network.client.sendCommand(cmd)
+            self.controller.view.modeConstruction = False
+            print("MODE SELECTION")
+
+
+
+        # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
+        # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
+        self.controller.view.carte.cameraX = int((miniCamX - miniMapX) / tailleMiniTuile)
+        self.controller.view.carte.cameraY = int((miniCamY - MiniMapY) / tailleMiniTuile)
+
+    def onMapCenterClick(self, event):
+        """ Appelée lorsque le joueur fait un clique de la mollette """
+
+        if self.controller.view.modeConstruction:
+            self.controller.view.modeConstruction = False
+            print("MODE SELECTION")
+            self.controller.view.frameSide.draw()
+            # self.controller.view.frameSide.drawSideButton()
+        else:
+            # CRÉATION D'UNITÉ
+            clientId = self.controller.network.client.id
+            cmd = Command(clientId, Command.CREATE_UNIT)
+            cmd.addData('ID', Unit.generateId(clientId))
+            cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
+            cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
+            cmd.addData('CIV', self.controller.model.joueur.civilisation)
+            self.controller.network.client.sendCommand(cmd)
+
+
+    def onMinimapLPress(self, event, redo=0):
+        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
+        dans la regions de la minimap
+        """
+        self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
+
+        # BOUGER LA CAMÉRA
+
+        miniMapX = self.controller.view.frameMinimap.miniMapX
+        MiniMapY = self.controller.view.frameMinimap.miniMapY
+        miniCamX = self.controller.view.frameMinimap.miniCameraX
+        miniCamY = self.controller.view.frameMinimap.miniCameraY
+        tailleMiniTuile = self.controller.view.frameMinimap.tailleTuile
+
         # CONVERTIR POSITION DE LA MINI CAMÉRA EN COORDONNÉES TUILES ET L'ATTRIBUER À CAMÉRA CARTE
         # Numéro de tuile à afficher dans coin haut gauche de carte en X et Y
         self.controller.view.carte.cameraX = int((miniCamX - miniMapX) / tailleMiniTuile)
@@ -320,7 +418,7 @@ class EventListener:
         # print(self.controller.view.carte.cameraX, self.controller.view.carte.cameraY)
 
 
-        self.controller.view.update(self.controller.model.units, self.controller.model.buildings,
+        self.controller.view.update(self.controller.model.getUnits(), self.controller.model.getBuildings(),
                                     self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
         if redo == 0:  #QUICK FIX

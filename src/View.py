@@ -6,7 +6,7 @@ from Carte import Tuile
 
 from GraphicsManagement import GraphicsManager
 from Units import Unit
-
+from Civilisations import Civilisation
 
 try:
     from tkinter import *  # Python 3
@@ -14,6 +14,18 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
+
+
+class Color:
+    ROUGE = "#D34343"
+    BLEU = "#3D99BB"
+    VERT = "#26BE2E"
+    MAUVE = "#5637DD"
+    ORANGE = "#F39621"
+    ROSE = "#CF4592"
+    NOIR = "#0F0F0F"
+    BLANC = "#FFFFFF"
+    JAUNE = "#F5F520"
 
 
 class FrameSide():
@@ -265,15 +277,15 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         """
         # TODO METTRE CONSTANTE JOUEUR
         couleursCiv = {
-            0: "#D34343",  # rouge
-            1: "#3D99BB",  # bleu
-            2: "#26BE2E",  # vert
-            3: "#5637DD",  # mauve
-            4: "#F39621",  # orange
-            5: "#CF4592",  # rose
-            6: "#0F0F0F",  # noir
-            7: "#FFFFFF",  # blanc
-            8: "#F5F520",  # jaune
+            Civilisation.ROUGE: Color.ROUGE,
+            Civilisation.BLEU: Color.BLEU,
+            Civilisation.VERT: Color.VERT,
+            Civilisation.MAUVE: Color.MAUVE,
+            Civilisation.ORANGE: Color.ORANGE,
+            Civilisation.ROSE: Color.ROSE,
+            Civilisation.NOIR: Color.NOIR,
+            Civilisation.BLANC: Color.BLANC,
+            Civilisation.JAUNE: Color.JAUNE 
         }
 
         tagUnits = 'miniUnits'
