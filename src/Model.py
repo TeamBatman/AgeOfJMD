@@ -40,12 +40,16 @@ class Model:
             Command.CREATE_BUILDING: self.executeCreateBuilding,
 
 
-            Command.CREATE_CIVILISATION: self.executeCreateCivilisation
+            Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
+
+
+
+            Command.EMPTY: lambda info: None
         }
 
         try:
             exe = commands[command.data['TYPE']]
-            print("EXECUTE: %s" % datetime.now())
+            #print("EXECUTE: %s" % datetime.now())      # DEBUG
             exe(command)
         except KeyError:
             raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")

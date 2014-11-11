@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
 from Batiments import Batiment
 
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
+from Timer import Timer
 
 from Units import Unit
 from View import View, MenuUnit
@@ -22,22 +24,35 @@ class Controller:
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
-        self.refreshRate = 64  # Nombre de fois par seconde
+        self.refreshRate = 999  # Nombre de fois par seconde
+
+        self.networkTimer = Timer(200)
+        self.networkTimer.start()
+
 
     def mainLoop(self):
-
         try:
             cmd = self.network.synchronizeClient()
-            if cmd:
+            if cmd['TYPE'] != Command.WAIT and cmd['TYPE'] != Command.LAG:
+
                 self.model.executeCommand(cmd)
+            if cmd['TYPE'] != Command.LAG:
+                self.model.update()
+            else:
+                print(cmd['TYPE'])
+
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
+        if self.networkTimer.isDone():  # On force une synchro sur le serveur
+            self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
+            self.networkTimer.reset()
 
-        self.model.update()
 
         self.view.update(self.model.getUnits(), self.model.getBuildings())
+
+
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
     def start(self):
@@ -45,7 +60,7 @@ class Controller:
         """
 
         self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='127.0.0.1', port=33333)
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
 
         cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
         cmd.addData('ID', self.network.getClientId())
@@ -174,7 +189,6 @@ class EventListener:
         # SÉLECTION BUILDINGS
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
-            print("OK")
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 
 

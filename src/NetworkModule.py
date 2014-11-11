@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ NetworkModule.py: Ce module contient toutes les classes et fonctions nécessaires au bon fonctionnement du réseau """
+from datetime import datetime
 
 import json as pickle
 import random
@@ -88,8 +89,9 @@ class ServerController:
         self.commands[self._generateId()] = command
 
 
-    def getNextCommand(self, clientId):
+    def getNextCommand(self, clientId):  # TODO Simplifier
         """ Permet à un client de se renseigner sur sa prochaine commande à exécuter
+        afin de se synchroniser
         :param clientId: le numéro d'identification du client
         :return: La prochaine commande à exécuter par le client
         """
@@ -101,21 +103,23 @@ class ServerController:
 
             # Y a til une commande après celle qu'on vient de terminer?
             if clientIndex == self.idIndex:
-                return []  # Rien de nouveau
+                return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
+                # Rien de nouveau on est totalement synchro donc le client devra attendre
 
             # On le met donc en Stand By
             self.clients[clientId] += 1
-            return []
+            return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
 
 
         # Le client est donc en STAND BY
 
         # Y a t-il quelqu'un plus en retard que nous?
         if self.isSomeoneMoreLate(clientId):
-            return []  # On Attend que tout le monde ait terminé leur choses
+            return [pickle.dumps(Command(-1, Command.LAG).convertToDict())]
+            # On Attend que tout le monde ait terminé leur choses
 
         # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
-        # Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
+        #Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
         self.clients[clientId] += 1
 
         command = self.commands[self.clients[clientId]]

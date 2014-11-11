@@ -8,7 +8,7 @@ class Joueur:
         self.model = model
         self.civilisation = civilisation    # Couleur de la civilisation
         self.base = None            # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
-        self.baseVivante = False # À modifier, doit être true quand on commence une vraie partie
+        self.baseVivante = False    # À modifier, doit être true quand on commence une vraie partie
         self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.morale = 0
         self.nbNourriture = 0

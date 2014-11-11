@@ -6,7 +6,12 @@ class Command():
     # LES TYPES DE COMMANDES POSSIBLES
 
     # COMMANDES GÉNÉRALES
-    START_GAME = 'sg'                   # Utilisée par l'hôte lorsqu'on désire lancer la partie
+    START_GAME = 'sg'      # Utilisée par l'hôte lorsqu'on désire lancer la partie
+
+    EMPTY = 'e'            # Utilisé pour forcer une synchronisation
+    WAIT = 'w'
+    LAG = 'la'
+
 
     # COMMANDES POUR CIVILISATIONS
     CREATE_CIVILISATION = 'cp'          # Utilisée lorsqu'un joueur se joint à la partie
