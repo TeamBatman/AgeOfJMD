@@ -1,3 +1,4 @@
+import Batiments
 from Units import Paysan
 
 
@@ -71,14 +72,50 @@ class Joueur:
                 self.enRessource.remove(paysan)
 
     ### BUILDINGS ###
-    def createBuilding(self, bId, x, y, btype):
+    def createBuilding(self, bId, posX, posY, btype):  # TODO CLEAN UP
         """ Crée et ajoute un nouveaue bâtiment à la liste des bâtiments
         :param bId: ID que l'on souhaite attribuer au bâtiment
-        :param x: position x du bâtiment
-        :param y: position y du bâtiment
+        :param posX: position X du bâtiment
+        :param posY: position Y du bâtiment
+        :param btype: Type de bâtiment à construire
         """
-        print("NETWORK BUILDING")
-        pass   # TODO Avec commande réseau
+        posX, posY = self.model.trouverCaseMatrice(posX, posY)
+        if not self.model.carte.matrice[posX][posY].isWalkable:
+            print("not walkable")
+        else:
+            if not self.model.carte.matrice[posX + 1][posY].isWalkable:
+                print("not walkable")
+            else:
+                if not self.model.carte.matrice[posX][posY + 1].isWalkable:
+                    print("not walkable")
+                else:
+                    if not self.model.carte.matrice[posX + 1][posY + 1].isWalkable:
+                        print("not walkable")
+                    else:
+                        print(posX, posY)
+                        print(posX, posY)
+                        if btype == Batiments.Batiment.FERME:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Ferme(self, newID, posX, posY)
+                        elif btype == Batiments.Batiment.BARAQUE:
+                            pass
+                        elif btype == Batiments.Batiment.HOPITAL:
+                            pass
+                        elif btype == Batiments.Batiment.BASE:
+                            if not self.baseVivante:
+                                newID = Batiments.Batiment.generateId(self.civilisation)
+                                createdBuild = Batiments.Base(self, newID, posX, posY)
+                                self.baseVivante = True
+                            else:
+                                print("base already exist")
+                                return
+                        self.buildings[newID] = createdBuild
+                        print(newID)
+                        #self.controller.view.carte.drawSpecificBuilding(createdBuild)
+                        self.model.carte.matrice[posX][posY].isWalkable = False
+                        self.model.carte.matrice[+1][posY].isWalkable = False
+                        self.model.carte.matrice[posX][posY + 1].isWalkable = False
+                        self.model.carte.matrice[posX + 1][posY + 1].isWalkable = False
 
     def destroyBuilding(self, bId):
         """ Détruit un bâtiment 
@@ -91,7 +128,9 @@ class Joueur:
     def updateBuildings(self):
         """ Met à jour les bâtiments 
         """
-        [b.update(self.model) for b in self.buildings.values()]
+        # TODO Ajouter Méthode Update dans les bâtiments
+        #[b.update(self.model) for b in self.buildings.values()]
+        pass
 
 
 

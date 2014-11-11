@@ -27,10 +27,9 @@ class Controller:
     def mainLoop(self):
 
         try:
-            cmds = self.network.synchronizeClient()
-            if cmds:
-                for cmd in cmds:
-                    self.model.executeCommand(cmd)
+            cmd = self.network.synchronizeClient()
+            if cmd:
+                self.model.executeCommand(cmd)
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
@@ -48,13 +47,21 @@ class Controller:
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='127.0.0.1', port=33333)
 
+        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
+        cmd.addData('ID', self.network.getClientId())
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
 
+
+
+        self.network.client.sendCommand(cmd)
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
         self.mainLoop()
+
+
+
         self.view.show()
 
     def shutdown(self):

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+from datetime import datetime
 from Batiments import Batiment
 import Batiments
 from Commands import Command
@@ -24,45 +25,6 @@ class Model:
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
 
-    def createBuilding(self, userId, type, posX, posY):  # TODO CLEAN UP
-        x, y = self.trouverCaseMatrice(posX, posY)
-        if not self.carte.matrice[x][y].isWalkable:
-            print("not walkable")
-        else:
-            if not self.carte.matrice[x + 1][y].isWalkable:
-                print("not walkable")
-            else:
-                if not self.carte.matrice[x][y + 1].isWalkable:
-                    print("not walkable")
-                else:
-                    if not self.carte.matrice[x + 1][y + 1].isWalkable:
-                        print("not walkable")
-                    else:
-                        print(posX, posY)
-                        print(x, y)
-                        if type == Batiment.FERME:
-                            newID = Batiment.generateId(userId)
-                            createdBuild = Batiments.Ferme(self, newID, x, y)
-                        elif type == Batiment.BARAQUE:
-                            pass
-                        elif type == Batiment.HOPITAL:
-                            pass
-                        elif type == Batiment.BASE:
-                            if not self.joueur.baseVivante:
-                                newID = Batiment.generateId(userId)
-                                createdBuild = Batiments.Base(self, newID, x, y)
-                                self.joueur.baseVivante = True
-                            else:
-                                print("base already exist")
-                                return
-                        self.buildings[newID] = createdBuild
-                        print(newID)
-                        self.controller.view.carte.drawSpecificBuilding(createdBuild)
-                        self.carte.matrice[x][y].isWalkable = False
-                        self.carte.matrice[+1][y].isWalkable = False
-                        self.carte.matrice[x][y + 1].isWalkable = False
-                        self.carte.matrice[x + 1][y + 1].isWalkable = False
-
     # ## EXECUTION COMMANDES ###
     def executeCommand(self, command):
         """ Exécute une commande
@@ -73,11 +35,17 @@ class Model:
             Command.MOVE_UNIT: self.executeMoveUnit,
             Command.ATTACK_UNIT: self.executeAttackUnit,
             Command.KILL_UNIT: self.executeKillUnit,
-            Command.CREATE_BUILDING: self.executeCreateBuilding
+
+
+            Command.CREATE_BUILDING: self.executeCreateBuilding,
+
+
+            Command.CREATE_CIVILISATION: self.executeCreateCivilisation
         }
 
         try:
             exe = commands[command.data['TYPE']]
+            print("EXECUTE: %s" % datetime.now())
             exe(command)
         except KeyError:
             raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")
@@ -117,13 +85,12 @@ class Model:
         self.joueurs[civId].killUnit(command['ID'])
 
     def executeCreateBuilding(self, command):
-
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
-
-
-
+    def executeCreateCivilisation(self, command):
+        self.creerJoueur(command['ID'])
+        # TODO CRÉER BASE
 
 
 
@@ -145,7 +112,7 @@ class Model:
     def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact):  # cible en x,y
         posFin = []
         liste = [0, -contact, contact]
-        #TODO TROUVER PAR CADRAN...
+        # TODO TROUVER PAR CADRAN...
         #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
         #Marche si pas plus de 9 unités
         for multi in range(1, self.grandeurMat):
@@ -203,13 +170,28 @@ class Model:
         return centreX, centreY
 
 
-    ### JOUEURS ###
+    # ## JOUEURS ###
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
         :param uId: l'ID de l'unité à trouver
+        :returns L'unité si elle est trouvée sinon None
+        :rtype : Unit
         """
-        civilisationId = int(uId.split('_')[0])
-        return self.joueurs[civilisationId].units[uId]
+        try:
+            civilisationId = int(uId.split('_')[0])
+            return self.joueurs[civilisationId].units[uId]
+        except KeyError:
+            return None
+
+    def getBuilding(self, bId):
+        """ Retourne un bâtiment selon son ID
+        :param bId: l'ID du bâtiment à trouver
+        """
+        try:
+            civilisationId = int(bId.split('_')[0])
+            return self.joueurs[civilisationId].buildings[bId]
+        except KeyError:
+            return None
 
     def creerJoueur(self, clientId):
         """  Permet de crééer un joueur et de l'ajouter à la liste des joueurs

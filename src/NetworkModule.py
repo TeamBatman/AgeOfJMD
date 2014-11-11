@@ -30,10 +30,8 @@ CLIENT_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du client
 LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fonctionne mieux pour les tests..
 
 
-
 def detectIP():
     return socket.gethostbyname(socket.gethostname())
-
 
 
 class ServerController:
@@ -99,11 +97,11 @@ class ServerController:
         clientIndex = self.clients[clientId]
 
         # Le client vient-il de terminer une commande?
-        if clientIndex % 2 == 0:    # Le client vient de terminer une commande
+        if clientIndex % 2 == 0:  # Le client vient de terminer une commande
 
             # Y a til une commande après celle qu'on vient de terminer?
             if clientIndex == self.idIndex:
-                return []    # Rien de nouveau
+                return []  # Rien de nouveau
 
             # On le met donc en Stand By
             self.clients[clientId] += 1
@@ -114,14 +112,15 @@ class ServerController:
 
         # Y a t-il quelqu'un plus en retard que nous?
         if self.isSomeoneMoreLate(clientId):
-            return []     # On Attend que tout le monde ait terminé leur choses
+            return []  # On Attend que tout le monde ait terminé leur choses
 
         # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
-        #Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
+        # Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
         self.clients[clientId] += 1
-        return [self.commands[self.clients[clientId]]]
 
-
+        command = self.commands[self.clients[clientId]]
+        #command['data']['EXEC_TIME'] = '5'
+        return [self.commands[self.clients[clientId]], 'BONJOUR']
 
 
     def isSomeoneMoreLate(self, clientId):
@@ -135,9 +134,6 @@ class ServerController:
                 return True
 
         return False
-
-
-
 
 
     def leave(self, clientId):
@@ -238,10 +234,8 @@ class Client:
         try:
             response = self.host.getNextCommand(self.id)
             if response:
-                commands = []
-                for chunk in response:
-                    commands.append(Command.buildFromDict(pickle.loads(chunk)))
-                return commands
+                command = Command.buildFromDict(pickle.loads(response[0]))
+                return command
             else:
                 return []
         except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError:
