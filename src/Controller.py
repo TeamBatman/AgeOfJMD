@@ -65,7 +65,11 @@ class Controller:
 
         self.network.startServer(port=33333)
 
+<<<<<<< HEAD
         self.network.connectClient(ipAddress='127.0.0.1', port=33333)
+=======
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
+>>>>>>> origin/dev
 
 
         cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
@@ -74,11 +78,14 @@ class Controller:
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.network.client.sendCommand(cmd)
 
+<<<<<<< HEAD
         cmd = Command(9, Command.CREATE_CIVILISATION)
         cmd.addData('ID', 9)
         self.model.creerAi(9)
         self.network.client.sendCommand(cmd)
 
+=======
+>>>>>>> origin/dev
 
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()

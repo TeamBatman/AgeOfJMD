@@ -71,12 +71,15 @@ class Joueur:
         """
         [u.update(self.model) for u in self.units.values()]
 
+<<<<<<< HEAD
     def updateBatiments(self):
         """ Met à jour chacune des unités
             Et supprime les unités mortes de la liste
         """
         [u.update(self.model) for u in self.buildings.values()]
 
+=======
+>>>>>>> origin/dev
     def updatePaysans(self):
         #print(self.enRessource)
         for paysan in self.enRessource:

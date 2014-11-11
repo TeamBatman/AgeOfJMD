@@ -210,8 +210,8 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         self.miniMapHeight = 211  # en pixels
 
         # # Taille de la marge entre la cadre et la minimap en pixels
-        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2)
-        self.minimapMargeY = int((self.height - self.miniMapHeight) / 2)
+        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2) -2
+        self.minimapMargeY = int((self.height - self.miniMapHeight) / 2) -1
 
         # Position de la minimap en pixel par rapport au caneva
         self.miniMapX = self.x + self.minimapMargeX
