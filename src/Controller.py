@@ -176,6 +176,7 @@ class EventListener:
         units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.units)
         if units:
             self.controller.view.selected = [u for u in units if u.estUniteDe(clientId)]
+            self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
             return
 
         # SÉLECTION BUILDINGS

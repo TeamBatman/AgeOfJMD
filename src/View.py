@@ -18,7 +18,7 @@ from GuiAwesomeness import *
 
 class FrameSide():
     UNITVIEW      = 0
-    BUILDINGVIEW  = 1
+    CONSTRUCTIONVIEW  = 1
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
         self.canvas = canvas
@@ -35,7 +35,7 @@ class FrameSide():
 
         self.childView = None  # La vue à afficher sur ce menu
         self.unitView = None
-        self.buildingView = None
+        self.constructionView = None
 
 
     def draw(self):
@@ -57,10 +57,10 @@ class FrameSide():
             self.unitView = UnitView(self.canvas, unit, self, self.eventListener)
             self.unitView.draw()
             self.childView = self.unitView
-        elif selectedView == FrameSide.BUILDINGVIEW:
-            self.buildingView = BuildingView(self.canvas, self, self.eventListener)
-            self.buildingView.draw()
-            self.childView = self.buildingView
+        elif selectedView == FrameSide.CONSTRUCTIONVIEW:
+            self.constructionView = ConstructionView(self.canvas, self, self.eventListener)
+            self.constructionView.draw()
+            self.childView = self.constructionView
 
 
 class UnitView():
@@ -90,7 +90,7 @@ class UnitView():
         self.unit.modeAttack = Unit.PASSIF
 
     def onConstruction(self):
-        self.frameSide.changeView(FrameSide.BUILDINGVIEW)
+        self.frameSide.changeView(FrameSide.CONSTRUCTIONVIEW)
 
     def draw(self):
         posX = self.x + self.width / 2 - 32
@@ -124,7 +124,7 @@ class UnitView():
                 value.destroy()
 
 
-class BuildingView():
+class ConstructionView():
     def __init__(self, canvas, parent, evListener):
         self.canvas = canvas
         self.parent = parent
