@@ -3,15 +3,25 @@
 import time
 from PIL import Image, ImageTk
 from GraphicsManagement import GraphicsManager
-from Model import *
 
-#TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
+
+# TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
 #TODO L'hopital ne fait rien avec le healing
 #TODO le FOW pour la tour de guet
+from Units import Unit
+from Units import Noeud
 
 
 class Batiment:
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque batiment
+
+    BASE = 0
+    FERME = 1
+    BARAQUE = 2
+    HOPITAL = 3
+    TOUR_GUET = 4
+    LIEU_CULTE = 5
+
 
     def __init__(self, parent, bid, posX, posY):
         self.posX = posX
@@ -21,12 +31,14 @@ class Batiment:
         self.estOccupe = False
         self.pointsDeVie = 100
         self.estSelectionne = False
+        self.tailleX = 128  # Taille en pixels
+        self.tailleY = 128  # Taille en pixels
         self.type = ""
         self.image = None
         self.parent = parent
         self.rechercheCompletee = False
-        self.enRecherche = False  #booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche
-        self.enCreation = False  #booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
+        self.enRecherche = False  # booléen pour empecher de recommencer la fonction de recherche si l'on est déjà en recherche
+        self.enCreation = False  # booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
         self.coutRecherche1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
@@ -41,7 +53,7 @@ class Batiment:
         """
         return self.id.split('_')[0]
 
-    def estUniteDe(self, clientId):
+    def estBatimentDe(self, clientId):
         """ Vérifie si le batiment appartient au client ou non
         :param clientId: le client à tester
         :return: True si elle lui appartient Sinon False
@@ -226,14 +238,17 @@ class Base(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = "base"
-        self.rawImage = GraphicsManager.get('Graphics/Buildings/Age_I/Base.png')
-        self.resized = self.rawImage.resize((96,96),Image.ANTIALIAS)
+        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.vitesseDeCreation = 40
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
         self.coutCreer1['bois'] = 50
+        print(posX,posY)
+        cases = self.parent.trouverCentreCase(posX,posY)
+        self.parent.joueur.base = Noeud(None, cases[0], cases[1], None, None)
 
 
     def creer1(self):  #création des paysans
@@ -244,7 +259,8 @@ class Base(Batiment):
                 self.tempsDepartCreation = time.time()
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.parent.createUnit(Model.generateId(self.parent.getId()),self.posX+1, self.posY+1, self.parent.civilisation)
+            self.parent.createUnit(Unit.generateId(self.parent.getId()), self.posX + 1, self.posY + 1,
+                                   self.parent.civilisation)
             self.enCreation = False
 
 
@@ -298,7 +314,7 @@ class Base(Batiment):
                     self.vitesseDeCreation = self.vitesseDeCreation * 0.9
                     self.parent.recherche.append("Paysan Vitesse 3")
 
-    def recherche2(self):   #changer d'époque
+    def recherche2(self):  #changer d'époque
         self.rechercheCompletee = False
         if self.parent.epoque == 1:
             for recherche in self.parent.recherche:
@@ -320,7 +336,7 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.parent.ressources>= self.coutRecherche2:
+                    if self.parent.ressources >= self.coutRecherche2:
                         self.parent.ressources['bois'] -= self.coutRecherche2['bois']
                         self.parent.ressources['minerai'] -= self.coutRecherche2['minerai']
                         self.enRecherche = True
@@ -487,13 +503,15 @@ def miseAJour(self):
 
 class Ferme(Batiment):
     def __init__(self, parent, bid, posX, posY):
-        super().__init__(parent,bid,posX,posY)
+        super().__init__(parent, bid, posX, posY)
+        self.tailleX = 128
+        self.tailleY = 128
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10
         self.type = "ferme"
-        self.rawImage = GraphicsManager.get('Graphics/Buildings/Age_I/Farm.png')
-        self.resized = self.rawImage.resize((96,96),Image.ANTIALIAS)
+        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.coutRecherche1['bois'] = 50
 

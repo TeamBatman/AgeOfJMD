@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from PIL import ImageDraw
+from Batiments import Batiment
+from Carte import Tuile
+
+from GraphicsManagement import GraphicsManager
+from Units import Unit
+
 
 try:
     from tkinter import *  # Python 3
@@ -7,7 +14,6 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
-from itertools import product
 
 
 class FrameSide():
@@ -22,14 +28,18 @@ class FrameSide():
 
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
+        self.childView = None  # La vue à afficher sur ce menu
+
 
     def draw(self):
-        """ Affiche le CADRE
+        """ Affiche le CADRE 
         """
+        if self.childView:
+            self.childView.draw()
         self.frame.draw(self.x, self.y)
 
 
-class FrameMiniMap():
+class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
     def __init__(self, canvas, eventListener):
         self.canvas = canvas
         self.eventListener = eventListener
@@ -59,7 +69,7 @@ class FrameMiniMap():
         self.miniCameraX = self.miniMapX
         self.miniCameraY = self.miniMapY
 
-        self.tailleTuile = 2  # Taille d'une tuile en pixels
+        self.tailleTuile = 2  # Taille d'une tuile en pixels 
 
 
     def bindEvents(self):
@@ -84,18 +94,18 @@ class FrameMiniMap():
         self.canvas.delete(self.miniMapTag)
         # x1 = self.miniMapX
         # y1 = self.miniMapY
-        #x2 = x1 + self.miniMapWidth
-        #y2 = y1 + self.miniMapHeight
+        # x2 = x1 + self.miniMapWidth
+        # y2 = y1 + self.miniMapHeight
 
         size = 106  # TODO Explication de ce chiffre
         itemMini = self.tailleTuile  # La grandeur des cases pour la minimap en pixels
-        couleurs = {
-            View.GAZON: "#0B610B",  # vert
-            View.FORET: "#BFBF00",  # jaune
-            View.MINERAI: "#1C1C1C",  # gris pale
-            View.CHARBON: "#BDBDBD",  # gris fonce
-            View.EAU: "#2E9AFE"  # bleu
-        }
+        # couleurs = {
+        # 0: "#0B610B",  # vert
+        # 1: "#BFBF00",  # jaune
+        # 2: "#1C1C1C",  # gris pale
+        #    3: "#BDBDBD",  # gris fonce
+        #    4: "#2E9AFE"  # bleu
+        #}
 
         for x in range(size):
             for y in range(size):
@@ -103,7 +113,8 @@ class FrameMiniMap():
                 posY1 = self.miniMapY + y * itemMini
                 posX2 = posX1 + itemMini
                 posY2 = posY1 + itemMini
-                couleur = couleurs[carte[x][y].type]
+                #couleur = couleurs[carte[x][y].type]
+                couleur = "#333"
 
                 self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.miniMapTag)
 
@@ -112,17 +123,70 @@ class FrameMiniMap():
         """ (Re)dessine les unités à l'écran
         :param units: les unités
         """
+        # TODO METTRE CONSTANTE JOUEUR
+        couleursCiv = {
+            0: "#D34343",  # rouge
+            1: "#3D99BB",  # bleu
+            2: "#26BE2E",  # vert
+            3: "#5637DD",  # mauve
+            4: "#F39621",  # orange
+            5: "#CF4592",  # rose
+            6: "#0F0F0F",  # noir
+            7: "#FFFFFF",  # blanc
+            8: "#F5F520",  # jaune
+        }
+
         tagUnits = 'miniUnits'
         self.canvas.delete(tagUnits)
-        color = 'red'  # TODO METTRE LES COULEURS SELON LA CIVILISATION
+
         item = 2
+
         for unit in units.values():
+            color = couleursCiv[unit.civilisation]
+
+            self.updateFog(unit)
+
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
             x1 = self.miniMapX + (caseX * item)
             y1 = self.minimapMargeY + (caseY * item)
             x2 = x1 + item
             y2 = y1 + item
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=tagUnits)
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
+
+
+    def updateFog(self, unit):
+        carte = self.eventListener.controller.model.carte.matrice
+
+        caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
+        radius = 5
+        couleurs = {
+            Tuile.GAZON: "#0B610B",  # vert
+            Tuile.FORET: "#BFBF00",  # jaune
+            Tuile.MINERAI: "#1C1C1C",  # gris pale
+            Tuile.CHARBON: "#BDBDBD",  # gris fonce
+            Tuile.EAU: "#2E9AFE"  # bleu
+        }
+
+        for x in range(caseX - radius, caseX + radius):
+            if 0 < x < 106:
+                for y in range(caseY - radius, caseY + radius):
+                    if 0 < y < 106:
+                        if not carte[x][y].revealed:
+                            posX1 = self.miniMapX + x * self.tailleTuile
+                            posY1 = self.miniMapY + y * self.tailleTuile
+                            posX2 = posX1 + self.tailleTuile
+                            posY2 = posY1 + self.tailleTuile
+
+                            if not carte[x][y].type == 5: #bâtiment
+                                couleur = couleurs[carte[x][y].type]
+                            else:
+                                couleur = couleurs[0]
+
+                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,tags=self.miniMapTag)
+                            self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
+                                    
+                            self.canvas.tag_raise('rectMiniMap')
+
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
         """ (Re)dessine le rectangle de caméra de la minimap
@@ -150,7 +214,7 @@ class FrameMiniMap():
         if self.miniCameraX + width > self.miniMapX + self.miniMapWidth:
             self.miniCameraX = self.miniMapX + self.miniMapWidth - width
 
-            # Limite Haut
+        # Limite Haut
         if self.miniCameraY < self.miniMapY:
             self.miniCameraY = self.miniMapY
 
@@ -198,7 +262,8 @@ class CarteView():
 
 
         # CASES
-        self.sizeUnit = 32  # Taille des unités en pixels
+        # self.sizeUnit = 32  # Taille des unités en pixels
+
         self.item = 48  # Grandeur d'un bloc (Carte) en pixel
         # Nombre de cases Visibles en X et En Y
         self.nbCasesX = 16  # Nombre de case (de taille item) en X à afficher
@@ -209,7 +274,6 @@ class CarteView():
         self.cameraY = 0
 
         self.tagName = 'carte'
-
 
 
     def bindEvents(self):
@@ -224,10 +288,11 @@ class CarteView():
         self.canvas.tag_bind('carte', '<B1-Motion>', self.eventListener.onMapMouseMotion)
         self.canvas.tag_bind('carte', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
 
-        self.canvas.tag_bind('unit', '<Button-1>', self.eventListener.unitClick)
+        self.canvas.tag_bind('unit', '<Button-1>', self.eventListener.onUnitLClick)
+        self.canvas.tag_bind('unit', '<Button-3>', self.eventListener.onUnitRClick)
 
-        self.canvas.tag_bind('ferme', '<ButtonPress-1>', self.eventListener.onMapLPress)
-        self.canvas.tag_bind('ferme', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
+        self.canvas.tag_bind('building', '<ButtonPress-1>', self.eventListener.onMapLRelease)
+        self.canvas.tag_bind('building', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
 
 
     def draw(self, carte):
@@ -242,13 +307,13 @@ class CarteView():
         y2 = self.height
 
         couleurs = {
-            View.GAZON: "#0B610B",  # vert
-            View.FORET: "#BFBF00",  # jaune
-            View.MINERAI: "#1C1C1C",  # gris pale
-            View.CHARBON: "#BDBDBD",  # gris fonce
-            View.EAU: "#2E9AFE"  # bleu
+            Tuile.GAZON: "#0B610B",  # vert
+            Tuile.FORET: "#BFBF00",  # jaune
+            Tuile.MINERAI: "#1C1C1C",  # gris pale
+            Tuile.CHARBON: "#BDBDBD",  # gris fonce
+            Tuile.EAU: "#2E9AFE"  # bleu
         }
-
+        print("draw")
         for x in range(x1, x1 + self.nbCasesX):
             for y in range(y1, y1 + self.nbCasesY):
                 posX1 = 0 + (x - x1) * self.item
@@ -256,9 +321,21 @@ class CarteView():
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
 
-                couleur = couleurs[carte[x][y].type]
+                if 1:
+                    # if carte[x][y].revealed:
+                    if not carte[x][y].type == 5:#bâtiment
+                        couleur = couleurs[carte[x][y].type]
+                    else:
+                        couleur = couleurs[0]
+                    self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                    if carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT:
+                        self.canvas.create_image(posX1, posY1, anchor=NW,
+                                                image=GraphicsManager.getPhotoImage('World/grass.png'),
+                                                tags=self.tagName)
+                        # else:
+                        # couleur = "#333"
+                        #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
-                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
 
@@ -268,37 +345,86 @@ class CarteView():
         :param units: une liste d'unités
         """
         self.canvas.delete('unit')
+        self.canvas.delete('unitHP')
+        self.canvas.delete('unitVision')
+        self.canvas.delete('unitAttackMode')
+
         for unit in units.values():
             if self.isUnitShown(unit):
-                img = unit.activeOutline if unit in selectedUnits else unit.activeFrame
-                posX = (unit.x - self.sizeUnit / 2) - (self.cameraX * self.item)
-                posY = (unit.y - self.sizeUnit / 2) - (self.cameraY * self.item)
-                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit',unit.id))
+                img = unit.animation.activeFrame
+                posX = (unit.x - unit.grandeur / 2) - (self.cameraX * self.item)
+                posY = (unit.y - unit.grandeur / 2) - (self.cameraY * self.item)
+
+                if unit in selectedUnits:
+                    img = unit.animation.activeOutline
+
+                    # VISION
+                    vx1 = posX - unit.rayonVision
+                    vy1 = posY - unit.rayonVision
+                    vx2 = posX + unit.rayonVision
+                    vy2 = posY + unit.rayonVision
+
+                    # TODO Mettre une couleur selon la civilisation
+                    self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
 
 
-    def drawBuildings(self,buildings):
+                # BARRE DE VIE
+                if unit.hp != unit.hpMax or unit in selectedUnits:
+                    tailleBarre = unit.grandeur  # en pixels
+                    hp = int(unit.hp * tailleBarre / unit.hpMax)
+                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unitHP')
+                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unitHP')
+
+
+                # ICÔNE MODE COMBAT
+                ico = GraphicsManager.getPhotoImage(
+                    'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+                    'Icones/modePassif.png')
+                self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitAttackMode')
+
+                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+
+
+                # ANIMATION BLESSURES ET AUTRES
+                for anim in unit.oneTimeAnimations:
+                    imgAnim = anim.activeFrame
+                    self.canvas.create_image(posX, posY, anchor=NW, image=imgAnim, tags=('unit', unit.id))
+
+                    # if unit.leader == 1:
+                    # self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
+                    # elif unit.leader == 2:
+                    # self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='green', tags='unit')
+                    #elif unit.leader == 0:
+                    #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
+
+    def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
         self.canvas.delete("base")
         for building in buildings.values():
-            img = building.image
-            posX = (building.posX*48) - (self.cameraX * self.item)
-            posY = (building.posY*48) - (self.cameraY * self.item)
-            self.canvas.create_image(posX,
-                                     posY,
-                                     anchor=NW,
-                                     image=img,
-                                     tags=(building.type, building.id))
-        self.lowerAllItemsOnMap()
+            print("buildings" ,building)
+            if self.isBuildingShown(building):
+                print("creat")
+                img = building.image
+                posX = (building.posX * 48) - (self.cameraX * self.item)
+                posY = (building.posY * 48) - (self.cameraY * self.item)
+                self.canvas.create_image(posX,
+                                         posY,
+                                         anchor=NW,
+                                         image=img,
+                                         tags=(building.type, building.id))
+                # self.lowerAllItemsOnMap()
 
-    def drawSpecificBuilding(self,building):
+
+    def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING
         img = building.image
-        posX = (building.posX*48) - (self.cameraX * self.item)
-        posY = (building.posY*48) - (self.cameraY * self.item)
+        posX = (building.posX * 48) - (self.cameraX * self.item)
+        posY = (building.posY * 48) - (self.cameraY * self.item)
         self.canvas.create_image(posX,
                                  posY,
                                  anchor=NW,
                                  image=img,
                                  tags=(building.type, building.id))
+
 
     def isUnitShown(self, unit):
         """ Renvoie si une unité est visible par la caméra ou non
@@ -311,35 +437,37 @@ class CarteView():
         y2 = y1 + (self.nbCasesY * self.item)
 
         # minimap
-        unitX1 = unit.x - self.sizeUnit / 2
-        unitY1 = unit.y - self.sizeUnit / 2
-        unitX2 = unit.x + self.sizeUnit / 2
-        unitY2 = unit.y + self.sizeUnit / 2
+        unitX1 = unit.x - unit.grandeur / 2
+        unitY1 = unit.y - unit.grandeur / 2
+        unitX2 = unit.x + unit.grandeur / 2
+        unitY2 = unit.y + unit.grandeur / 2
 
         if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2:
             return True
 
         return False
 
-    def lowerAllItemsOnMap(self):
-        self.canvas.tag_lower("ferme")
-        self.canvas.tag_lower("base")
-        self.canvas.tag_lower(self.tagName)
+    def isBuildingShown(self, building):
+        x1 = self.cameraX * self.item
+        y1 = self.cameraY * self.item
+        x2 = x1 + (self.nbCasesX * self.item)
+        y2 = y1 + (self.nbCasesY * self.item)
+
+        cases = self.eventListener.model.trouverCentreCase(building.posX, building.posY)
+        
+        batimentX1 = cases[0] - building.tailleX / 2
+        batimentY1 = cases[1] - building.tailleY / 2
+        batimentX2 = cases[0] + building.tailleX / 2
+        batimentY2 = cases[1] + building.tailleY / 2
+        
+        if batimentX1 > x1 and batimentX2 < x2 and batimentY1 > y1 and batimentY2 < y2:
+            return True
+
+        return False
 
 
 class View(GWindow):
     """ Responsable de l'affichage graphique et de captuer les entrées de l'usager"""
-
-    GAZON    = 0
-    FORET    = 1
-    MINERAI  = 2
-    CHARBON  = 3
-    EAU      = 4
-
-    FERME    = 0
-    BARAQUE  = 1
-    HOPITAL  = 2
-    BASE     = 9
 
     def __init__(self, evListener):
         GWindow.__init__(self)
@@ -349,8 +477,6 @@ class View(GWindow):
         self.width = 1024
         self.height = 768
         self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
-        self.modeConstruction = False
-        self.lastConstructionType = None
 
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#2B2B2B')
@@ -372,6 +498,8 @@ class View(GWindow):
         # LIAISON DES ÉVÉNEMENTS
         self.bindEvents()
 
+        self.modeConstruction = False
+
 
     def drawHUD(self):
         """ Dessine la base du HUD
@@ -383,18 +511,6 @@ class View(GWindow):
         # LE CADRE DROIT
         self.frameSide = FrameSide(self.canvas, self.frameMinimap.width, self.frameMinimap.height)
         self.frameSide.draw()
-
-        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingFerme,
-                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
-        self.buttonFerme.draw(x=self.width - 222, y=280)
-
-        self.buttonBaraque = GMediumButton(self.canvas, "Baraque", self.createBuildingBaraque, GButton.GREY)
-        self.buttonBaraque.draw(x=self.width - 123, y=280)
-        self.buttonHopital = GMediumButton(self.canvas, "Hopital", self.createBuildingHopital, GButton.GREY)
-        self.buttonHopital.draw(x=self.width - 222, y=390)
-        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
-                                        iconPath="Graphics/Buildings/Age_I/Base.png")
-        self.buttonBase.draw(x=self.width - 123, y=390)
 
         # LE CADRE DU BAS
         self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
@@ -409,10 +525,9 @@ class View(GWindow):
         self.carte.draw(carte)
 
     def drawUnits(self, units):
-        """ Affiche les unités sur la carte
+        """ Affiche les unités sur la carte 
         """
         self.carte.drawUnits(units, self.selected)
-
 
     def drawMinimap(self, carte):
         """ Permet de dessiner la carte
@@ -426,18 +541,19 @@ class View(GWindow):
         """
         self.frameMinimap.updateMiniUnits(units)
 
+    def drawBuildings(self, buildings):
+        self.carte.drawBuildings(buildings)
+
+    def addBuildingToCursor(self, posX, posY):
+        # self.buildingSprite =
+        pass
+
 
     def drawRectMiniMap(self, clicX=0, clicY=0):
         """ Permet de dessiner la caméra de la MINIMAP
         """
         self.frameMinimap.drawRectMiniMap(clicX, clicY)
 
-    def drawBuildings(self,buildings):
-        self.carte.drawBuildings(buildings)
-
-    def addBuildingToCursor(self,posX,posY):
-        #self.buildingSprite =
-        pass
 
     def resetSelection(self):
         """ Met la sélection à 0 (désélection)
@@ -445,7 +561,52 @@ class View(GWindow):
         self.selected = []
 
     # TODO ? mettre dans carte ?
-    def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):
+
+
+
+
+    def detectUnits(self, x1, y1, x2, y2, units):
+        """ Retourne une liste d'unités faisant partie de la region passé en paramètre
+        :param x1: coord x du point haut gauche
+        :param y1: coord y du point haut gauche
+        :param x2: coord x du point bas droite
+        :param y2: coord y du point bas droite
+        :return: une liste d'unités
+        """
+        items = [item for item in self.canvas.find_overlapping(x1, y1, x2, y2) if 'unit' in self.canvas.gettags(item)]
+        units = [units[self.canvas.gettags(i)[1]] for i in items]  # Le duexième tag est toujours l'id de l'unité
+        return units
+
+    def detectClosestUnitID(self, x, y, rayon=None):
+        """ Permet de retourner l'unité la plus proche du point spécifié dans un certain rayon
+        :param x: point x
+        :param y: point y
+        :param rayon: rayon dans lequel on veut chercher le plus proche
+        :param units: une listes d'unités potentielles
+        :return: l'ID de l'unité la plus proche sinon None
+        """
+        item = self.canvas.find_closest(x, y, halo=rayon)
+        if 'unit' in self.canvas.gettags(item):
+            a = self.canvas.gettags(item)
+
+        return None
+
+    def detectBuildings(self, x1, y1, x2, y2, buildings):
+        """ Retourne une liste de buildings faisant partie de la region passé en paramètre
+        :param x1: coord x du point haut gauche
+        :param y1: coord y du point haut gauche
+        :param x2: coord x du point bas droite
+        :param y2: coord y du point bas droite
+        :return: une liste de buildings
+        """
+        items = [item for item in self.canvas.find_overlapping(x1, y1, x2, y2) if
+                 'building' in self.canvas.gettags(item)]
+        buildings = [buildings[self.canvas.gettags(i)[0]] for i in
+                     items]  # Le premier tag est toujours l'id du buildings
+        return buildings
+
+
+    def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):  # TODO CLEAN UP
         """ Ajoute toutes les unités sélectionné dans le rectangle spécifié
         à la liste d'unité sélectionnées
         :param units: All the possible units
@@ -455,35 +616,29 @@ class View(GWindow):
         :param x2: coord x du point bas droite
         :param y2: coord y du point bas droite
         """
-
         items = self.canvas.find_overlapping(x1, y1, x2, y2)
 
         for item in items:
             # :param allTags: devrait avoir l'air de ('type_de_item', 'id_unique')
             allTags = self.canvas.gettags(item)
-
             if allTags[0] == "base":
                 building = buildings[allTags[1]]
-                if building.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("you just selected your base")
+                if building.estBatimentDe(self.eventListener.controller.network.getClientId()):
                     print(building.type + ": " + building.id)
-                    self.selected.append(building)
                     building.estSelectionne = True
                     return
 
             elif allTags[0] == "ferme":
                 building = buildings[allTags[1]]
-                if building.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("one of your building was selected")
+                if building.estBatimentDe(self.eventListener.controller.network.getClientId()):
                     print(building.type + ": " + building.id)
                     building.estSelectionne = True
                     return
-
             elif allTags[0] == "unit":
                 unit = units[allTags[1]]
                 if unit.estUniteDe(self.eventListener.controller.network.getClientId()):
-                    print("one unit and maybe more where selected")
                     self.selected.append(unit)
+
 
     # TODO ? Mettre fonctions du rectangle de sélection dans la classe map ?
 
@@ -512,29 +667,18 @@ class View(GWindow):
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.onCloseWindow)
 
 
-    def update(self, units, buildings, carte=None):
+    def update(self, units, buildings, carte=None):  # CLEAN UP
         """ Met à jours la carte et la minimap (et leurs unités) (au besoin)"""
 
-        # Draw Units
         if carte:
             # self.drawMinimap(units, carte)
             self.drawRectMiniMap()
             self.drawMap(carte)
-            self.drawBuildings(buildings)
+            self.drawBuildings(buildings)  # TODO isBuilding Shown
 
         self.drawMiniUnits(units)
         self.drawUnits(units)
-
-
-    def show(self):
-        """ Affiche la fenêtre de jeu à l'écran
-        """
-        self.root.mainloop()
-
-    def after(self, ms, func):
-        """ Raccourci vers la méthode de root after
-        """
-        self.root.after(ms, func)
+        # self.drawBuildings
 
     def destroy(self):
         """ Détruit la fenêtre de jeu
@@ -542,14 +686,120 @@ class View(GWindow):
         self.root.destroy()
 
 
-    def createBuildingFerme(self):
-        self.eventListener.createBuilding(View.FERME)
+class MenuUnit():
+    def __init__(self, canvas, unitSelected, frameSide, evListener):
+        self.canvas = canvas
+        self.eventListener = evListener
+        self.frameSide = frameSide
+        self.btnPassive = GMediumButton(self.canvas, command=self.onPassive,
+                                        iconPath='Graphics/Icones/PassiveModeBig.png')
+        self.btnActive = GMediumButton(self.canvas, command=self.onActive,
+                                       iconPath='Graphics/Icones/ActiveModeBig.png')
 
-    def createBuildingBaraque(self):
-        self.eventListener.createBuilding(View.BARAQUE)
+        self.btnConstruction = GMediumButton(self.canvas, command=self.onConstruction,
+                                             iconPath='Graphics/Icones/constructionBig.png')
+        self.width = frameSide.width
+        self.height = frameSide.height
 
-    def createBuildingHopital(self):
-        self.eventListener.createBuilding(View.HOPITAL)
+        self.x = frameSide.x
+        self.y = frameSide.y
+
+        self.unit = unitSelected
+
+    def onActive(self):
+        self.unit.modeAttack = Unit.ACTIF
+
+    def onPassive(self):
+        self.unit.modeAttack = Unit.PASSIF
+
+    def onConstruction(self):
+        c = CreateBuildingView(self.canvas, self, self.eventListener)
+        c.draw()
+        self.destroy()
+        pass  # TODO afficher Vue Construction
+
+    def draw(self):
+        posX = self.x + self.width / 2 - 32
+        posY = self.y + 50
+
+        # BARRE DE VIE
+        largeurBarre = self.unit.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.unit.hp * largeurBarre / self.unit.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='unitView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='unitView')
+
+
+        # ICÔNE MODE COMBAT
+        ico = GraphicsManager.getPhotoImage('Icones/modeActif.png') if self.unit.modeAttack == Unit.ACTIF \
+            else GraphicsManager.getPhotoImage('Icones/modePassif.png')
+        self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
+        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.animation.activeFrame,
+                                 tags=('unitView', self.unit.id))
+
+        # BOUTONS
+        self.btnActive.draw(self.x + 25, self.y + 130)
+        self.btnPassive.draw(self.x + 130, self.y + 130)
+        self.btnConstruction.draw(self.x + 25, self.y + 235)
+
+    def destroy(self):
+        self.canvas.delete('unitView')
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+
+class CreateBuildingView():
+    def __init__(self, canvas, unitMenu, evListener):
+        self.canvas = canvas
+        self.unitMenu = unitMenu
+        self.eventListener = evListener
+
+        self.width = unitMenu.width
+        self.height = unitMenu.width
+        self.x = unitMenu.x
+        self.y = unitMenu.y
+
+        self.buttonBaraque = GMediumButton(self.canvas, 'Baraque', self.onCreateBuildingBaraque, GButton.GREY)
+        self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
+        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFerme,
+                                        iconPath="Graphics/Buildings/Age_I/Farm.png")
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
+                                         iconPath="Graphics/Buildings/Age_I/Base.png")
+
+        self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
+                                       iconPath='Graphics/Icones/arrowBack.png')
+
+
+    def onRetour(self):
+        self.destroy()
+        self.unitMenu.draw()
+
+    def onCreateBuildingBaraque(self):
+        self.eventListener.createBuilding(Batiment.BARAQUE)
+
+    def onCreateBuildingHopital(self):
+        self.eventListener.createBuilding(Batiment.HOPITAL)
+
+    def onCreateBuildingFerme(self):
+        self.eventListener.createBuilding(Batiment.FERME)
 
     def createBuildingBase(self):
-        self.eventListener.createBuilding(View.BASE)
+        self.eventListener.createBuilding(Batiment.BASE)
+
+    def draw(self):
+        # BTN CONSTRUCTION
+        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
+        self.buttonBase.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
+        self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
+        self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
+
+        self.btnRetour.draw(x=self.x + 25, y=(self.y + self.height - 10))
+
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
