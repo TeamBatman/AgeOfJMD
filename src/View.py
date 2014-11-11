@@ -474,13 +474,14 @@ class CarteView():
                 posY2 = posY1 + self.item
 
                 if 1:
-                    # if carte[x][y].revealed:
-                    if not carte[x][y].type == 5:#bâtiment
+                    if not carte[x][y].revealed:
+                        couleur = "#333"
+                    elif not carte[x][y].type == 5:#bâtiment
                         couleur = couleurs[carte[x][y].type]
                     else:
                         couleur = couleurs[0]
                     self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
-                    if carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT:
+                    if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
                         self.canvas.create_image(posX1, posY1, anchor=NW,
                                                 image=GraphicsManager.getPhotoImage('World/grass.png'),
                                                 tags=self.tagName)
