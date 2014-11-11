@@ -7,7 +7,7 @@ from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
 
 from Units import Unit
-from View import View, MenuUnit
+from View import View, UnitView, FrameSide
 
 import sys
 
@@ -152,14 +152,6 @@ class EventListener:
         """
         self.leftClickPos = (event.x, event.y)
         self.controller.view.resetSelection()
-        if self.controller.view.modeConstruction:
-            currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-            currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-            clientId = self.controller.network.getClientId()
-            self.controller.model.createBuilding(clientId, self.controller.view.lastConstructionType, currentX,
-                                                 currentY)
-            self.controller.view.modeConstruction = False
-            print("MODE SELECTION")
 
 
     def onMapLRelease(self, event):
@@ -170,6 +162,16 @@ class EventListener:
         x2, y2 = event.x, event.y
         self.controller.view.deleteSelectionSquare()
 
+        if self.controller.view.modeConstruction:
+            currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            clientId = self.controller.network.getClientId()
+            self.controller.model.createBuilding(clientId, self.controller.view.lastConstructionType, currentX,
+                                                 currentY)
+            self.controller.view.modeConstruction = False
+            print("MODE SELECTION")
+            return
+
         # SÉLECTION UNITÉS
         units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.units)
         if units:
@@ -179,7 +181,8 @@ class EventListener:
         # SÉLECTION BUILDINGS
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.buildings)
         if buildings:
-            print("OK")
+            #for b in buildings:
+                #print(b.id)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 
 
@@ -256,13 +259,7 @@ class EventListener:
         self.controller.view.selected.append(unit)
         # TODO REMOVE C'EST JUSTE POUR DES TEST
 
-        try:
-            can = self.controller.view.canvas
-            unit = self.controller.view.selected[0]
-            v = MenuUnit(can, unit, self.controller.view.frameSide, self)
-            v.draw()
-        except IndexError:
-            pass
+        self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
 
 
     def onMapMouseMotion(self, event):

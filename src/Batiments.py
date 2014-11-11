@@ -121,7 +121,7 @@ class Batiment:
 class Eglise(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
-        self.type = "Eglise"
+        self.type = "eglise"
         self.tempsDerniereFete = 0
         self.coutRecherche1['bois'] = 50
 
@@ -158,7 +158,7 @@ class Eglise(Batiment):
 class TourDeGuet(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
-        self.type = "Tour de guet"
+        self.type = "tour"
         self.coutRecherche1['bois'] = 50
 
     def recherche1(self):  #Meilleure vue du Fog of war
@@ -203,7 +203,7 @@ class TourDeGuet(Batiment):
 class Hopital(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
-        self.type = "Hopital"
+        self.type = "hopital"
         self.peutEtreOccupe = True
         self.vitesseDeCreation = 30
         self.coutRecherche1['bois'] = 50
@@ -356,7 +356,7 @@ class Base(Batiment):
 class Baraque(Batiment):
     def __init__(self, parent, posX, posY):
         super().__init__(parent, posX, posY)
-        self.type = "Baraque"
+        self.type = "baraque"
         self.vitesseDeCreation = 40
         self.typeCreation = ""
         self.typeRecherche = ""
