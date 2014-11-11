@@ -98,6 +98,13 @@ class ServerController:
 
         clientIndex = self.clients[clientId]
 
+
+        # Y a t-il quelqu'un plus en retard que nous?
+        if self.isSomeoneMoreLate(clientId):
+            return [pickle.dumps(Command(-1, Command.LAG).convertToDict())]
+            # On Attend que tout le monde ait terminé leur choses
+
+
         # Le client vient-il de terminer une commande?
         if clientIndex % 2 == 0:  # Le client vient de terminer une commande
 
@@ -112,14 +119,8 @@ class ServerController:
 
 
         # Le client est donc en STAND BY
-
-        # Y a t-il quelqu'un plus en retard que nous?
-        if self.isSomeoneMoreLate(clientId):
-            return [pickle.dumps(Command(-1, Command.LAG).convertToDict())]
-            # On Attend que tout le monde ait terminé leur choses
-
         # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
-        #Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
+        Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
         self.clients[clientId] += 1
 
         command = self.commands[self.clients[clientId]]

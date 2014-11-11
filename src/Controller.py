@@ -24,7 +24,7 @@ class Controller:
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
-        self.refreshRate = 999  # Nombre de fois par seconde
+        self.refreshRate = 64  # Nombre de fois par seconde
 
         self.networkTimer = Timer(200)
         self.networkTimer.start()
@@ -34,20 +34,21 @@ class Controller:
         try:
             cmd = self.network.synchronizeClient()
             if cmd['TYPE'] != Command.WAIT and cmd['TYPE'] != Command.LAG:
-
                 self.model.executeCommand(cmd)
-            if cmd['TYPE'] != Command.LAG:
+
+            if cmd['TYPE'] != Command.LAG and cmd['TYPE'] != Command.EMPTY:
                 self.model.update()
-            else:
+                if self.networkTimer.isDone():  # On force une synchro sur le serveur
+                    self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
+                    self.networkTimer.reset()
+            else:   # LAG
                 print(cmd['TYPE'])
 
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
-        if self.networkTimer.isDone():  # On force une synchro sur le serveur
-            self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
-            self.networkTimer.reset()
+
 
 
         self.view.update(self.model.getUnits(), self.model.getBuildings())

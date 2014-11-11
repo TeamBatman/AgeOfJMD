@@ -179,6 +179,10 @@ class Unit():
             self.y -= self.vitesse
             self.animation.direction = SpriteSheet.Direction.UP
 
+        #if self.getClientId() == self.parent.joueur.civilisation:      # DEBUG
+            #self.parent.controller.network.client.sendCommand(Command(self.getClientId(), Command.EMPTY))
+
+        self.timerDeplacement.reset()
 
     def deplacement(self):
         if not self.timerDeplacement.isDone():
