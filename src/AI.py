@@ -20,7 +20,7 @@ class AI(Joueur):
         self.qteRessourceManquante = 0
         self.batiments = {}
         self.recherchesCompletes = []
-        self.ressources = {"bois" : 1000, "minerai" : 0, "charbon" : 0}
+        self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
         self.nbNourriture = 0
         self.units = []
         self.paix = True
@@ -250,14 +250,19 @@ class AI(Joueur):
             return
 
         print("pas de base")
-        for unit in self.units:
-            if isinstance(unit, Paysan):
-                if unit.typeRessource == 0:
-                        if time.time() - self.derniereBase >= self.cooldownBatiment:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.BASE, position["x"], position["y"])
-                            print("Base créée")
-                            return
+        if time.time() - self.derniereBase >= self.cooldownBatiment:
+            for unit in self.units:
+                if isinstance(unit, Paysan):
+                    if unit.typeRessource == 0:
+                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
+                        self.parent.createBuilding(self.civilisation, self.parent.controller.view.BASE, position["x"], position["y"])
+                        for building in self.parent.buildings.values():
+                            if building.type == "base":
+                                print("bob")
+                                if building.parent.ai.civilisation == self.civilisation:
+                                    self.base = building
+                                    print("ok")
+                        print("base créée poel")
 
     def creerPaysan(self):
         print("creer Paysan")
@@ -278,9 +283,15 @@ class AI(Joueur):
             for unit in self.units:
                 if isinstance(unit, Paysan):
                     if unit.typeRessource == 0:
-                        position = self.trouverRessourcePlusPres(unit, self.parent.parent.carte.Gazon)
-                        self.parent.createBuilding(self, self.parent.controller.view.BASE, position["x"], position["y"])
-                        print("base créée")
+                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
+                        self.parent.createBuilding(self.civilisation, self.parent.controller.view.BASE, position["x"], position["y"])
+                        for building in self.parent.buildings.values():
+                            if building.type == "base":
+                                print("bob")
+                                if building.parent.ai.civilisation == self.civilisation:
+                                    self.base = building
+                                    print("ok")
+                        print("base créée poel")
 
                         
 
