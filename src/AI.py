@@ -11,7 +11,7 @@ from Batiments import *
 
 class AI(Joueur):
     def __init__(self, civilisation, parent):
-        super().__init__(civilisation)
+        super().__init__(civilisation, parent)
         self.civilisation = civilisation
         self.parent = parent
         self.base = None
@@ -22,7 +22,7 @@ class AI(Joueur):
         self.recherchesCompletes = []
         self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
         self.nbNourriture = 0
-        self.units = []
+        self.units = {}
         self.paix = True
         self.paysansOccupes = True
         self.moral = 100

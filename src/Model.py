@@ -3,6 +3,9 @@
 
 from __future__ import division
 
+from datetime import datetime
+
+from Batiments import Batiment
 import Batiments
 from Commands import Command
 from Carte import Carte
@@ -14,114 +17,143 @@ from AI import *
 class Model:
     def __init__(self, controller):
         self.controller = controller
-        self.joueur = None
-        self.units = {}
-        self.buildings = {}
+        self.joueur = None  # Le joueur du client actif
+        self.joueurs = {}  # La totalité des joueurs et de leurs unités
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
         self.ai = None
 
-
     def update(self):
-        self.updateUnits()
-        self.updateBuildings()
-        self.updatePaysans()
-        self.ai.delaiPenser()
-
-
-    def updateBuildings(self):
-        [build.miseAJour() for build in self.buildings.values()]
-
-    def updateUnits(self):
-        [u.update() for u in self.units.values()]
-
-
-    def updatePaysans(self):
-        for paysan in self.enRessource:
-            if paysan.mode == 1:
-                paysan.chercherRessources()
-            else:
-                del paysan
-
-
-    def getUnit(self, uId):
-        """ Returns a unit according to its ID
-        :param uId: the id of the unit to find
+        """ Permet de lancer les commande updates importantes
         """
+        # On UPDATE Chacune des civilisations
+        [civ.update() for civ in self.joueurs.values()]
 
-        return next((u for u in self.units.values() if u.id == uId), None)
-
-    def deleteUnit(self, uId):  # TODO utiliser un tag ou un identifiant à la place des positions x et y (plus rapide)
-        """ Supprime une unité à la liste d'unités
-        """
-        try:
-            self.units.remove(self.units[uId])
-        except Exception:
-            pass   # N'existait pas
-
-    def createUnit(self, uid, x, y, civilisation):
-        """ Crée et ajoute une nouvelle unité à la liste des unités
-        :param x: position x de l'unité
-        :param y: position y de l'unité
-        """
-        # self.units.append(Unit(x, y, self))
-        self.units[uid] = Paysan(uid, x, y, self, civilisation)
-
-    def createBuilding(self, userId, type, posX, posY):
-        x,y = self.trouverCaseMatrice(posX,posY)
-        if not self.carte.matrice[x][y].isWalkable:
-            print("not walkable")
-        else:
-            if not self.carte.matrice[x+1][y].isWalkable:
-                print("not walkable")
-            else:
-                if not self.carte.matrice[x][y+1].isWalkable:
-                    print("not walkable")
-                else:
-                    if not self.carte.matrice[x+1][y+1].isWalkable:
-                        print("not walkable")
-                    else:
-                        print(posX,posY)
-                        print(x,y)
-                        if type == self.controller.view.FERME:
-                            newID = Batiments.Batiment.generateId(userId)
-                            createdBuild = Batiments.Ferme(self, newID, x, y)
-                        elif type == self.controller.view.BARAQUE:
-                            pass
-                        elif type == self.controller.view.HOPITAL:
-                            pass
-                        elif type == self.controller.view.BASE:
-                            if self.joueur.baseVivante == False:
-                                newID = Batiments.Batiment.generateId(userId)
-                                createdBuild = Batiments.Base(self,newID,x,y)
-                                self.joueur.baseVivante = True
-                            else:
-                                print("base already exist")
-                                return
-                        self.buildings[newID] = createdBuild
-                        print(newID)
-                        self.controller.view.carte.drawSpecificBuilding(createdBuild)
-                        self.carte.matrice[x][y].isWalkable = False
-                        self.carte.matrice[+1][y].isWalkable = False
-                        self.carte.matrice[x][y+1].isWalkable = False
-                        self.carte.matrice[x+1][y+1].isWalkable = False
-                        return newID
-
-
+    # ## EXECUTION COMMANDES ###
     def executeCommand(self, command):
         """ Exécute une commande
-        :param command: la commande à exécuter
+        :param command: la commande à exécuter [Objet Command]
         """
-        if command.data['TYPE'] == Command.CREATE_UNIT:
-            self.createUnit(command.data['ID'], command.data['X'], command.data['Y'], command.data['CIV'])
+        commands = {
+            Command.CREATE_UNIT: self.executeCreateUnit,
+            Command.MOVE_UNIT: self.executeMoveUnit,
+            Command.ATTACK_UNIT: self.executeAttackUnit,
+            Command.KILL_UNIT: self.executeKillUnit,
 
-        elif command.data['TYPE'] == Command.DELETE_UNIT:
-            self.deleteUnit(command.data['X'], command.data['Y'])
+            Command.CREATE_BUILDING: self.executeCreateBuilding,
 
-        elif command.data['TYPE'] == Command.MOVE_UNIT:
-            self.units[command.data['ID']].changerCible(command.data['X2'], command.data['Y2'])
+            Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
 
+            Command.EMPTY: lambda info: None
+        }
+
+        try:
+            exe = commands[command.data['TYPE']]
+            #print("EXECUTE: %s" % datetime.now())      # DEBUG
+            exe(command)
+        except KeyError:
+            raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")
+
+    def executeCreateUnit(self, command):
+        """ Execute la commande crééer unité  selon ses paramètres 
+        :param command: la commande à exécuter [Objet Command]
+        """
+
+        self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+    def executeMoveUnit(self, command):
+        """ Execute la commande pour DÉPLACER UNE UNITÉ selon ses paramètres 
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        try:
+            unit = self.getUnit(command['ID'])
+            unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
+                              command.data['LEADER'], command.data['ENNEMI'])
+        except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
+            pass
+
+    def executeAttackUnit(self, command):
+        """ Execute la commande ATTAQUER UNE UNITÉ  selon ses paramètres 
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        attacker = self.getUnit(command['SOURCE_ID'])
+        target = self.getUnit(command['TARGET_ID'])
+        target.recevoirAttaque(self, attacker, command['DMG'])
+
+    def executeKillUnit(self, command):
+        """ Execute la commande TUER UNE UNITÉ
+          selon ses paramètres 
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        civId = self.getUnit(command['ID']).getClientId()
+        self.joueurs[civId].killUnit(command['ID'])
+
+    def executeCreateBuilding(self, command):
+        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
+                                                         command['BTYPE'])
+
+    def executeCreateCivilisation(self, command):
+        self.creerJoueur(command['ID'])
+        # TODO CRÉER BASE
+
+
+    # ## HELPERS ###
+
+    def trouverPlusProche(self, listeElements, coordBut):
+        """On reçoit des x,y et non des cases ! """
+        if listeElements:
+            elementResultat = listeElements[0]
+            diff = abs(listeElements[0].x - coordBut[0]) + abs(listeElements[0].y - coordBut[1])
+
+            for element in listeElements:
+                diffCase = abs(element.x - coordBut[0]) + abs(element.y - coordBut[1])
+                if diff > diffCase:
+                    elementResultat = element
+
+            return elementResultat
+
+    def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact):  # cible en x,y
+        posFin = []
+        liste = [0, -contact, contact]
+        #TODO TROUVER PAR CADRAN...
+        #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
+        #Marche si pas plus de 9 unités
+        for multi in range(1, self.grandeurMat):
+            for i in liste:
+                for j in liste:
+                    if not (i == 0 and j == 0 and multi == 1):
+                        #print(multi*i,multi*j)
+                        posX = cibleX + multi * i
+                        posY = cibleY + multi * j
+                        if(posX == cibleX and posY == cibleY):
+                            break #Même position que le leader
+                        deplacementPossible = True
+                        try:
+                            casesPossibles = [self.trouverCaseMatrice(posX, posY),
+                                              self.trouverCaseMatrice(posX + contact / 2, posY),
+                                              self.trouverCaseMatrice(posX, posY + contact / 2),
+                                              self.trouverCaseMatrice(posX + contact / 2, posY + contact / 2),
+                                              self.trouverCaseMatrice(posX - contact / 2, posY),
+                                              self.trouverCaseMatrice(posX, posY - contact / 2),
+                                              self.trouverCaseMatrice(posX - contact / 2, posY - contact / 2)]
+                            #Gestion des obstacles
+                            for case in casesPossibles:
+                                if not self.carte.matrice[case[0]][case[1]].isWalkable or case[0] < 0 or case[1] < 0 or \
+                                   case[0] > self.grandeurMat or case[1] > self.grandeurMat:
+                                    deplacementPossible = False
+                                    break
+
+                            if deplacementPossible:
+                                posFin.append((posX, posY))
+                                if len(posFin) >= nbUnits:
+                                    return posFin
+                        except:
+                            print("hors de la matrice")
+                            pass  #Hors de la matrice
+        print(len(posFin))
+        return -1  #FAIL
 
 
 
@@ -145,10 +177,53 @@ class Model:
 
         return centreX, centreY
 
+
+    def getUnit(self, uId):
+        """ Retourne une unite selon son ID
+        :param uId: l'ID de l'unité à trouver
+        :returns L'unité si elle est trouvée sinon None
+        :rtype : Unit
+        """
+        try:
+            civilisationId = int(uId.split('_')[0])
+            return self.joueurs[civilisationId].units[uId]
+        except KeyError:
+            return None
+
+    def getBuilding(self, bId):
+        """ Retourne un bâtiment selon son ID
+        :param bId: l'ID du bâtiment à trouver
+        """
+        try:
+            civilisationId = int(bId.split('_')[0])
+            return self.joueurs[civilisationId].buildings[bId]
+        except KeyError:
+            return None
+
     def creerJoueur(self, clientId):
-        """  Permet de crééer l'entité joueur
+        """  Permet de crééer un joueur et de l'ajouter à la liste des joueurs
         :param clientId: L'id du client
         """
-        self.joueur = Joueur(clientId)
-        self.ai = AI(6, self)
-        self.ai.base = self.buildings[self.createBuilding(6, self.controller.view.BASE, 80, 80)]
+        self.joueurs[clientId] = Joueur(clientId, self)
+
+    def creerAi(self, clientId):
+        self.joueurs[clientId] = AI(clientId, self)
+        cmd = Command(clientId,Command.CREATE_BUILDING )
+        cmd.addData('ID', Batiment.generateId(clientId))
+        cmd.addData('X', 200)
+        cmd.addData('Y', 200)
+        cmd.addData('CIV', clientId)
+        cmd.addData('BTYPE', Batiment.BASE)
+
+        self.controller.network.client.sendCommand(cmd)
+
+
+    def getUnits(self):
+        """ Retoune la totalité des unités de toutes les civilisations
+        """
+        return {uId: u for civ in self.joueurs.values() for uId, u in civ.units.items()}
+
+    def getBuildings(self):
+        """ Retoune la totalité des bâtiments de toutes les civilisations
+        """
+        return {bId: b for civ in self.joueurs.values() for bId, b in civ.buildings.items()}
