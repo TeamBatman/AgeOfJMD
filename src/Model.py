@@ -176,13 +176,6 @@ class Model:
 
         return centreX, centreY
 
-    def creerJoueur(self, clientId):
-        """  Permet de crééer l'entité joueur
-        :param clientId: L'id du client
-        """
-        self.joueur = Joueur(clientId)
-
-
     # ## JOUEURS ###
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
