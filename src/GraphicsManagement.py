@@ -8,7 +8,7 @@ Module de gestion des graphiques
 - Modification d'images
 """
 
-from Timer import Timer
+from SimpleTimer import Timer
 
 
 

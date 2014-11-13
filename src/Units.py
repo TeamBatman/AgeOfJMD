@@ -5,7 +5,7 @@ import math
 from Commands import Command
 from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
-from Timer import Timer
+from SimpleTimer import Timer
 from Civilisations import Civilisation
 
 

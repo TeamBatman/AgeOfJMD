@@ -12,7 +12,7 @@ from NetworkModule import NetworkController, ClientConnectionError
 from Units import Unit
 from View import View, UnitView, FrameSide
 
-from Timer import Timer
+from SimpleTimer import Timer
 
 
 
