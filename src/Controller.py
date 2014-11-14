@@ -29,10 +29,10 @@ class Controller:
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
-        self.refreshRate = 64  # Nombre de fois par seconde
+        self.refreshRate = 1000  # Nombre de fois par seconde
 
-        self.networkTimer = Timer(200)
-        self.networkTimer.start()
+        self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
+
 
 
     def mainLoop(self):
@@ -43,19 +43,15 @@ class Controller:
 
             if cmd['TYPE'] != Command.LAG and cmd['TYPE'] != Command.EMPTY:
                 self.model.update()
-                if self.networkTimer.isDone():  # On force une synchro sur le serveur
-                    self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
-                    self.networkTimer.reset()
-            else:   # LAG
-                pass
 
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
 
-
-        self.view.update(self.model.getUnits(), self.model.getBuildings())
+        if self.displayTimer.isDone():
+            self.view.update(self.model.getUnits(), self.model.getBuildings())
+            self.displayTimer.reset()
 
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
@@ -63,25 +59,29 @@ class Controller:
         """ Starts the controller
         """
 
+        # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
-
         self.network.connectClient(ipAddress='10.57.100.193', port=33333)
 
-
+        # INITIALISATION MODEL
         cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
         cmd.addData('ID', self.network.getClientId())
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.network.client.sendCommand(cmd)
 
-
+        # INITIALISATION AFFICHAGE
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
+
+
+        #TIMERS
+        self.displayTimer.start()
+
+
+
         self.mainLoop()
-
-
-
         self.view.show()
 
     def shutdown(self):

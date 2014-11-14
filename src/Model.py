@@ -51,7 +51,7 @@ class Model:
             #print("EXECUTE: %s" % datetime.now())      # DEBUG
             exe(command)
         except KeyError:
-            raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")
+            raise KeyError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
 
     def executeCreateUnit(self, command):
         """ Execute la commande crééer unité  selon ses paramètres 
