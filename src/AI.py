@@ -496,7 +496,7 @@ class AI(Joueur):
 
         else:
             for building in self.buildings.values():
-                if self.buildings[building].type == type:
+                if building.type == type:
                     return building
 
         return None
