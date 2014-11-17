@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 import time
 from Batiments import Batiment
@@ -24,36 +25,74 @@ class Controller:
         de sorte à ce qu'ils n'aient pas accès entre eux directement.
     """
 
+    SINGLE_PLAYER = 0
+    MULTIPLAYER = 1
+
     def __init__(self):
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
-        self.refreshRate = 1000  # Nombre de fois par seconde
+
+
+        self.refreshRate = int(1000/1)  # Nombre de fois par seconde (1000x)
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
+
+        self.nbFramesPerSecond = 60
+        self.currentFrame = -1
+        self.nextFrame = 0
+
+        self.gameMode = Controller.MULTIPLAYER
+
 
 
 
     def mainLoop(self):
         try:
-            cmd = self.network.synchronizeClient()
-            if cmd['TYPE'] != Command.WAIT and cmd['TYPE'] != Command.LAG:
-                self.model.executeCommand(cmd)
-
-            if cmd['TYPE'] != Command.LAG and cmd['TYPE'] != Command.EMPTY:
-                self.model.update()
-
+            cmd = self.network.synchronizeClient(self.currentFrame)
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
 
+
+        self.doLogic(cmd)
+
+        self.renderGraphics()
+
+        self.view.after(int(1000 / self.refreshRate), self.mainLoop)
+
+
+    def doLogic(self, commands):
+        """ Une itération sur cette fonction constitue une FRAME
+        :return:
+        """
+        skipUpdate = False
+        for command in commands:
+            if command == Command.WAIT:
+                skipUpdate = True
+            else:
+                self.model.executeCommand(command)
+
+        if not skipUpdate:
+            self.model.update()
+            print("Finnished %s" % self.currentFrame)
+            self.currentFrame += 1
+
+
+    def renderGraphics(self):
+        """ Méthode principale d'affichage des Graphics
+        :return:
+        """
         if self.displayTimer.isDone():
             self.view.update(self.model.getUnits(), self.model.getBuildings())
             self.displayTimer.reset()
 
-        self.view.after(int(1000 / self.refreshRate), self.mainLoop)
+
+
+
+
 
     def start(self):
         """ Starts the controller
@@ -68,18 +107,18 @@ class Controller:
         cmd.addData('ID', self.network.getClientId())
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
-        self.network.client.sendCommand(cmd)
+
 
         # INITIALISATION AFFICHAGE
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
 
-
         #TIMERS
         self.displayTimer.start()
 
-
+        # FRAMES
+        self.currentFrame = 0
 
         self.mainLoop()
         self.view.show()
@@ -91,6 +130,21 @@ class Controller:
         if self.network.server:
             self.network.stopServer()
         sys.exit(0)
+
+
+
+    def sendCommand(self, command):
+        """ Raccourci permettant d'envoyer une commande au serveur
+        en passant par le network module
+        """
+        if command.clientId == -1:
+            command.clientId = self.network.client.id
+        self.network.client.sendCommand(command, self.currentFrame)
+
+
+
+
+
 
 
 class EventListener:
@@ -176,7 +230,7 @@ class EventListener:
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
             cmd.addData('GROUPE', None)
-        self.controller.network.client.sendCommand(cmd)
+        self.controller.sendCommand(cmd)
 
 
     def onMapLPress(self, event):
@@ -205,7 +259,7 @@ class EventListener:
             cmd.addData('Y', currentY)
             cmd.addData('CIV', self.model.joueur.civilisation)
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
             self.controller.view.modeConstruction = False
@@ -337,7 +391,7 @@ class EventListener:
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
             cmd.addData('CIV', self.controller.model.joueur.civilisation)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
     def onMinimapLPress(self, event, redo=0):
@@ -365,7 +419,7 @@ class EventListener:
             cmd.addData('Y', currentY)
             cmd.addData('CIV', self.model.joueur.civilisation)
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
 
@@ -392,7 +446,7 @@ class EventListener:
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
             cmd.addData('CIV', self.controller.model.joueur.civilisation)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
     def onMinimapLPress(self, event, redo=0):

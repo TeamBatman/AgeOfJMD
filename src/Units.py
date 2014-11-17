@@ -900,7 +900,7 @@ class Unit():
             cmd.addData('SOURCE_ID', self.id)
             cmd.addData('TARGET_ID', self.ennemiCible.id)
             cmd.addData('DMG', attack)
-            model.controller.network.client.sendCommand(cmd)
+            model.controller.sendCommand(cmd)
             self.timerAttack.reset()
 
     def recevoirAttaque(self, model, attaquant, attack):
@@ -917,7 +917,7 @@ class Unit():
             cmd = Command(self.getClientId(), Command.KILL_UNIT)
 
             cmd.addData('ID', self.id)
-            model.controller.network.client.sendCommand(cmd)
+            model.controller.sendCommand(cmd)
 
         # RIPOSTER SEULEMENT SI ON EST LE PROPRIÉTAIRE DE L'UNITÉ
         # TODO Compatibiliser avec l'AI

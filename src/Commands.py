@@ -7,10 +7,9 @@ class Command():
 
     # COMMANDES GÉNÉRALES
     START_GAME = 'sg'      # Utilisée par l'hôte lorsqu'on désire lancer la partie
+    NEXT_FRAME = 'nf'      # Utilisée pour indiquer au client de changer de frame
+    WAIT = 'w'             # Utilisée par le serveur pour indiquer à un client qu'il doit attendre
 
-    EMPTY = 'e'            # Utilisé pour forcer une synchronisation
-    WAIT = 'w'
-    LAG = 'la'
 
 
     # COMMANDES POUR CIVILISATIONS
@@ -18,14 +17,24 @@ class Command():
     PROMOTE_CIVILISATION = 'pc'         # Utilisée lorsqu'une unité change d'âge (évolue)
     ANNIHILATE_CIVILISATION = 'ac'      # Utilisée lorsque civilisation quitte partie pour tuer détruire ses effectifs
 
-
+    INVOKE_GOD = 'ig'
 
     # COMMANDES POUR UNITÉS
     CREATE_UNIT = 'cu'         # Utilisée lorsqu'on veut créer une unité
     KILL_UNIT = 'ku'           # Utilisée lorsqu'on veut tuer une unité
     MOVE_UNIT = 'mu'           # Utilisée lorsqu'on veut déplacer une unité
     ATTACK_UNIT = 'au'         # Utilisée lorsqu'on veut attaquer une unité
-    ATTACK_BUILDING = 'ab'     # Utilisée lorsqu'une unité attaque un bâtiment  # TODO Vérfier pertinence de la commande
+
+    # TODO Vérfier pertinence de la commande
+    ATTACK_BUILDING = 'ab'     # Utilisée lorsqu'une unité attaque un bâtiment
+
+    UNIT_ENTER_BUILDING = 'ueb'
+    UNIT_HEAL = 'uh'
+    UNIT_CANCEL_CREATION = 'ucc'
+
+
+
+
 
     #  COMMANDE POUR BÂTIMENTS
     CREATE_BUILDING = 'cb'     # Utilisée lorsqu'on désire créer un bâtiment

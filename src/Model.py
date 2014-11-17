@@ -42,22 +42,19 @@ class Model:
             Command.CREATE_BUILDING: self.executeCreateBuilding,
 
             Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
-
-            Command.EMPTY: lambda info: None
         }
 
         try:
             exe = commands[command.data['TYPE']]
-            #print("EXECUTE: %s" % datetime.now())      # DEBUG
-            exe(command)
         except KeyError:
-            raise KeyError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
+            raise NotImplementedError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
+        exe(command)
 
     def executeCreateUnit(self, command):
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
         """
-
+        print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
