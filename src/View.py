@@ -5,6 +5,7 @@ from Batiments import Batiment
 from Carte import Tuile
 
 from GraphicsManagement import GraphicsManager
+import GraphicsManagement
 from Units import Unit
 from Civilisations import Civilisation
 
@@ -29,8 +30,8 @@ class Color:
 
 
 class FrameSide():
-    UNITVIEW      = 0
-    CONSTRUCTIONVIEW  = 1
+    UNITVIEW = 0
+    CONSTRUCTIONVIEW = 1
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
         self.canvas = canvas
@@ -57,7 +58,7 @@ class FrameSide():
             self.childView.draw()
         self.frame.draw(self.x, self.y)
 
-    def changeView(self,selectedView):
+    def changeView(self, selectedView):
         if self.childView:
             self.childView.destroy()
 
@@ -190,7 +191,6 @@ class ConstructionView():
                 value.destroy()
 
 
-
 class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
     def __init__(self, canvas, eventListener):
         self.canvas = canvas
@@ -210,8 +210,8 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         self.miniMapHeight = 211  # en pixels
 
         # # Taille de la marge entre la cadre et la minimap en pixels
-        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2) -2
-        self.minimapMargeY = int((self.height - self.miniMapHeight) / 2) -1
+        self.minimapMargeX = int((self.width - self.miniMapWidth) / 2) - 2
+        self.minimapMargeY = int((self.height - self.miniMapHeight) / 2) - 1
 
         # Position de la minimap en pixel par rapport au caneva
         self.miniMapX = self.x + self.minimapMargeX
@@ -255,7 +255,7 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         # 0: "#0B610B",  # vert
         # 1: "#BFBF00",  # jaune
         # 2: "#1C1C1C",  # gris pale
-        #    3: "#BDBDBD",  # gris fonce
+        # 3: "#BDBDBD",  # gris fonce
         #    4: "#2E9AFE"  # bleu
         #}
 
@@ -285,7 +285,7 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
             Civilisation.ROSE: Color.ROSE,
             Civilisation.NOIR: Color.NOIR,
             Civilisation.BLANC: Color.BLANC,
-            Civilisation.JAUNE: Color.JAUNE 
+            Civilisation.JAUNE: Color.JAUNE
         }
 
         tagUnits = 'miniUnits'
@@ -329,14 +329,15 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
                             posX2 = posX1 + self.tailleTuile
                             posY2 = posY1 + self.tailleTuile
 
-                            if not carte[x][y].type == 5: #bâtiment
+                            if not carte[x][y].type == 5:  # bâtiment
                                 couleur = couleurs[carte[x][y].type]
                             else:
                                 couleur = couleurs[0]
 
-                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,tags=self.miniMapTag)
+                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
+                                                         tags=self.miniMapTag)
                             self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
-                                    
+
                             self.canvas.tag_raise('rectMiniMap')
 
 
@@ -475,18 +476,18 @@ class CarteView():
 
                 if 1:
                     # if carte[x][y].revealed:
-                    if not carte[x][y].type == 5:#bâtiment
+                    if not carte[x][y].type == 5:  # bâtiment
                         couleur = couleurs[carte[x][y].type]
                     else:
                         couleur = couleurs[0]
                     self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
                     if carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT:
                         self.canvas.create_image(posX1, posY1, anchor=NW,
-                                                image=GraphicsManager.getPhotoImage('World/grass.png'),
-                                                tags=self.tagName)
+                                                 image=GraphicsManager.getPhotoImage('World/grass.png'),
+                                                 tags=self.tagName)
                         # else:
                         # couleur = "#333"
-                        #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                        # self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
@@ -501,14 +502,27 @@ class CarteView():
         self.canvas.delete('unitVision')
         self.canvas.delete('unitAttackMode')
 
+
+        couleursCiv = {
+            Civilisation.ROUGE: Color.ROUGE,
+            Civilisation.BLEU: Color.BLEU,
+            Civilisation.VERT: Color.VERT,
+            Civilisation.MAUVE: Color.MAUVE,
+            Civilisation.ORANGE: Color.ORANGE,
+            Civilisation.ROSE: Color.ROSE,
+            Civilisation.NOIR: Color.NOIR,
+            Civilisation.BLANC: Color.BLANC,
+            Civilisation.JAUNE: Color.JAUNE
+        }
+
         for unit in units.values():
             if self.isUnitShown(unit):
-                img = unit.animation.activeFrame
-                posX = (unit.x - unit.grandeur / 2) - (self.cameraX * self.item)
-                posY = (unit.y - unit.grandeur / 2) - (self.cameraY * self.item)
+                unitImage = unit.animation.activeFrame
+                posX = (unit.x ) - (self.cameraX * self.item)
+                posY = (unit.y ) - (self.cameraY * self.item)
 
                 if unit in selectedUnits:
-                    img = unit.animation.activeOutline
+                    unitImage = unit.animation.activeOutline
 
                     # VISION
                     vx1 = posX - unit.rayonVision
@@ -517,7 +531,17 @@ class CarteView():
                     vy2 = posY + unit.rayonVision
 
                     # TODO Mettre une couleur selon la civilisation
-                    self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='red', tags='unitVision')
+                    #self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='blue', tags='unitVision')
+                    selColor = GraphicsManagement.hex_to_rgba(couleursCiv[unit.civilisation])
+
+                    try:
+                        vision = GraphicsManager.photoImages['unitVision']
+                    except KeyError:
+                        vision = GraphicsManagement.generateCircle(unit.rayonVision, selColor)
+                        GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
+                        vision = GraphicsManager.getPhotoImage('unitVision')
+                    self.canvas.create_image(posX, posY, anchor=CENTER, image=vision, tags='unitVision')
+
 
 
                 # BARRE DE VIE
@@ -532,28 +556,38 @@ class CarteView():
                 ico = GraphicsManager.getPhotoImage(
                     'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
                     'Icones/modePassif.png')
-                self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitAttackMode')
+                self.canvas.create_image(posX - 16, posY, anchor=CENTER, image=ico, tags='unitAttackMode')
 
-                self.canvas.create_image(posX, posY, anchor=NW, image=img, tags=('unit', unit.id))
+                self.canvas.create_image(posX, posY, anchor=CENTER, image=unitImage, tags=('unit', unit.id))
 
 
                 # ANIMATION BLESSURES ET AUTRES
                 for anim in unit.oneTimeAnimations:
                     imgAnim = anim.activeFrame
-                    self.canvas.create_image(posX, posY, anchor=NW, image=imgAnim, tags=('unit', unit.id))
+                    self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('unit', unit.id))
 
-                    # if unit.leader == 1:
-                    # self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
-                    # elif unit.leader == 2:
-                    # self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='green', tags='unit')
-                    #elif unit.leader == 0:
-                    #    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
+                """if unit.leader == 1:
+                    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
+                elif unit.leader == 2:
+                    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='green', tags='unit')
+                elif unit.leader == 0:
+                    self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
+                """
+
+                self.canvas.tag_raise('unit')
+
+
+
+
+
+
+
 
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
         self.canvas.delete("base")
         for building in buildings.values():
-            print("buildings" ,building)
+            print("buildings", building)
             if self.isBuildingShown(building):
                 print("create")
                 img = building.image
@@ -606,12 +640,12 @@ class CarteView():
         y2 = y1 + (self.nbCasesY * self.item)
 
         cases = self.eventListener.model.trouverCentreCase(building.posX, building.posY)
-        
+
         batimentX1 = cases[0] - building.tailleX / 2
         batimentY1 = cases[1] - building.tailleY / 2
         batimentX2 = cases[0] + building.tailleX / 2
         batimentY2 = cases[1] + building.tailleY / 2
-        
+
         if batimentX1 > x1 and batimentX2 < x2 and batimentY1 > y1 and batimentY2 < y2:
             return True
 
@@ -661,7 +695,8 @@ class View(GWindow):
         self.frameMinimap.draw()
 
         # LE CADRE DROIT
-        self.frameSide = FrameSide(self.canvas, self, self.frameMinimap.width, self.frameMinimap.height, self.eventListener)
+        self.frameSide = FrameSide(self.canvas, self, self.frameMinimap.width, self.frameMinimap.height,
+                                   self.eventListener)
         self.frameSide.draw()
 
         # LE CADRE DU BAS
@@ -758,8 +793,7 @@ class View(GWindow):
                  'building' in self.canvas.gettags(item)]
         buildings = [buildings[self.canvas.gettags(i)[2]] for i in
                      items]  # Le premier tag est toujours l'id du buildings
-        return  buildings
-
+        return buildings
 
 
     def detectSelected(self, x1, y1, x2, y2, units, buildings, clientId):  # TODO CLEAN UP

@@ -29,7 +29,7 @@ class Controller:
 
 
         self.gameMode = Controller.MULTIPLAYER
-        
+
         self.currentFrame = -1
         self.nbFramesPerSecond = 10
         self.refreshRate = int(1000/self.nbFramesPerSecond)
