@@ -10,26 +10,18 @@ from Batiments import *
 
 
 class AI(Joueur):
-    def __init__(self, civilisation, parent):
-        super().__init__(civilisation, parent)
-        self.civilisation = civilisation
-        self.parent = parent
-        self.base = None
+    def __init__(self, civilisation, model):
+        super().__init__(civilisation, model)
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.batiments = {}
-        self.recherchesCompletes = []
         self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
-        self.nbNourriture = 0
-        self.units = {}
         self.paix = True
         self.paysansOccupes = True
-        self.moral = 100
         self.nombreSoldatsAllies = 0
         self.nombreSoldatsEnnemis = 0
         self.hpMoyen = 0
-        self.epoque = 1
+
         #valeurs pour empêcher de rappeler des fonctions trop souvent
         self.derniereFerme = 0
         self.derniereScierie = 0
@@ -162,14 +154,14 @@ class AI(Joueur):
                 if unit.typeRessource == 0:
                     if self.epoque >= 2:
                         if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.SCIERIE, position["x"], position["y"])
+                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            self.batirBatiment(position["x"], position["y"], Batiment.SCIERIE, unit)
                             print("scierie créée?")
                             return
                     if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
                         print("not cd")
-                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.FORET)
-                        unit.changerCible(position["x"], position["y"])
+                        position = self.trouverRessourcePlusPres(unit, self.model.carte.FORET)
+                        self.deplacerUnite(position["x"], position["y"], unit)
                         self.derniereRessourceBois = time.time()
                         return
                     else:
@@ -186,13 +178,13 @@ class AI(Joueur):
                 if unit.typeRessource == 0:
                     if self.epoque >= 3:
                         if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.FONDERIE, position["x"], position["y"])
+                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            self.batirBatiment(position["x"], position["y"], Batiment.FONDERIE, unit)
                             print("fonderie créée?")
                             return
                     if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
-                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.MINERAI)
-                        unit.changerCible(position["x"], position["y"])
+                        position = self.trouverRessourcePlusPres(unit, self.model.carte.MINERAI)
+                        self.deplacerUnite(position["x"], position["y"], unit)
                         self.derniereRessourceBois = time.time()
                         return
         self.creerPaysan()
@@ -205,8 +197,8 @@ class AI(Joueur):
                         for x in range(unit.x, unit.x+20):
                             for y in range(unit.y, unit.y+20):
                                 if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
-                                    position = self.trouverRessourcePlusPres(unit, self.parent.carte.CHARBON)
-                                    unit.changerCible(position["x"], position["y"])
+                                    position = self.trouverRessourcePlusPres(unit, self.model.carte.CHARBON)
+                                    self.deplacerUnite(position["x"], position["y"], unit)
                                     self.derniereRessourceBois = time.time()
                                     return
         self.creerPaysan()
@@ -216,35 +208,36 @@ class AI(Joueur):
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                         if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.FERME, position["x"], position["y"])
+                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            self.batirBatiment(position["x"], position["y"], Batiment.FERME, unit)
                             print("ferme créée?")
                             return
 
         self.creerPaysan()
 
     def changerEpoque(self):
-        if self.base != None:
+        base = self.trouverBatiment(Batiment.BASE, "")
+        if base != None:
             if self.epoque == 1:
-                if self.ressources["bois"] >= self.base.coutRecherche2["bois"]:
+                if self.ressources["bois"] >= base.coutRecherche2["bois"]:
                     self.base.recherche2()
                 else:
                     self.manqueRessource = True
-                    self.qteRessourceManquante = self.base.coutRecherche2["bois"]
+                    self.qteRessourceManquante = base.coutRecherche2["bois"]
                     self.ressourceManquante = "bois"
                 return
 
             elif self.epoque == 2:
-                if self.ressources["bois"] >= self.base.coutRecherche2["bois"]:
-                    if self.ressources["minerai"] >= self.base.coutRecherche2["minerai"]:
+                if self.ressources["bois"] >= base.coutRecherche2["bois"]:
+                    if self.ressources["minerai"] >= base.coutRecherche2["minerai"]:
                         self.base.recherche2()
                     else:
                         self.manqueRessource = True
-                        self.qteRessourceManquante = self.base.coutRecherche2["minerai"]
+                        self.qteRessourceManquante = base.coutRecherche2["minerai"]
                         self.ressourceManquante = "minerai"
                 else:
                     self.manqueRessource = True
-                    self.qteRessourceManquante = self.base.coutRecherche2["bois"]
+                    self.qteRessourceManquante = base.coutRecherche2["bois"]
                     self.ressourceManquante = "bois"
                 return
             return
@@ -254,26 +247,22 @@ class AI(Joueur):
             for unit in self.units:
                 if isinstance(unit, Paysan):
                     if unit.typeRessource == 0:
-                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                        self.parent.createBuilding(self.civilisation, self.parent.controller.view.BASE, position["x"], position["y"])
-                        for building in self.parent.buildings.values():
-                            if building.type == "base":
-                                print("bob")
-                                if building.parent.ai.civilisation == self.civilisation:
-                                    self.base = building
-                                    print("ok")
+                        position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                        self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
+
                         print("base créée poel")
 
     def creerPaysan(self):
         print("creer Paysan")
-        if self.base != None:
-            if self.ressources["bois"] >= self.base.coutCreer1["bois"]:
-                self.base.creer1()
+        base = self.trouverBatiment(Batiment.BASE, "")
+        if base != None:
+            if self.ressources["bois"] >= base.coutCreer1["bois"]:
+                base.creer1()
                 print("départ création")
                 return
             else:
                 self.manqueRessource = True
-                self.qteRessourceManquante = self.base.coutCreer1["bois"]
+                self.qteRessourceManquante = base.coutCreer1["bois"]
                 self.ressourceManquante = "bois"
                 print("il manque" + " " + str(self.qteRessourceManquante) + ":" + str(self.ressourceManquante))
                 return
@@ -283,14 +272,9 @@ class AI(Joueur):
             for unit in self.units:
                 if isinstance(unit, Paysan):
                     if unit.typeRessource == 0:
-                        position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                        self.parent.createBuilding(self.civilisation, self.parent.controller.view.BASE, position["x"], position["y"])
-                        for building in self.parent.buildings.values():
-                            if building.type == "base":
-                                print("bob")
-                                if building.parent.ai.civilisation == self.civilisation:
-                                    self.base = building
-                                    print("ok")
+                        position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                        self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
+
                         print("base créée poel")
 
                         
@@ -298,38 +282,39 @@ class AI(Joueur):
 
     def augmenterMoral(self):
         print("augmenter Moral")
-        for batiment in self.batiments:
-            if isinstance(batiment, Eglise):
-                if self.ressources["bois"] >= batiment.coutRecherche1[0]:
-                    batiment.recherche1()
-                    return
-                else:
-                    self.manqueRessource = True
-                    self.qteRessourceManquante = batiment.coutRecherche1[0]
-                    self.ressourceManquante = "bois"
-                    return
+        eglise = self.trouverBatiment(Batiment.LIEU_CULTE)
+        if eglise != None:
+            if self.ressources["bois"] >= eglise.coutRecherche1[0]:
+                eglise.recherche1()
+                return
+            else:
+                self.manqueRessource = True
+                self.qteRessourceManquante = eglise.coutRecherche1[0]
+                self.ressourceManquante = "bois"
+                return
 
         print("pas d'église")
         for unit in self.units:
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                         if time.time() - self.derniereEglise >= self.cooldownBatiment:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.EGLISE, position["x"], position["y"])
+                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            self.batirBatiment(position["x"], position["y"], Batiment.EGLISE, unit)
                             print("Eglise créée")
                             return
 
     def creerSoldat(self):
         print("creer Soldat")
-        for batiment in self.batiments:
-            if isinstance(batiment, Baraque):
-                if not batiment.enCreation:
-                    if  self.ressources["bois"] >= batiment.coutCreer1[0]:
-                        batiment.creer1()
+        baraque = self.trouverBatiment(Batiment.BARAQUE, "creation")
+        if baraque != None:
+            if isinstance(baraque, Baraque):
+                if not baraque.enCreation:
+                    if  self.ressources["bois"] >= baraque.coutCreer1[0]:
+                        baraque.creer1()
                         return
                     else:
                         self.manqueRessource = True
-                        self.qteRessourceManquante = batiment.coutCreer1[0]
+                        self.qteRessourceManquante = baraque.coutCreer1[0]
                         self.ressourceManquante = "bois"
                         return
 
@@ -338,8 +323,8 @@ class AI(Joueur):
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                         if time.time() - self.derniereBarraque >= self.cooldownBatiment:
-                            position = self.trouverRessourcePlusPres(unit, self.parent.carte.GAZON)
-                            self.parent.createBuilding(self.civilisation, self.parent.controller.view.BARAQUE, position["x"], position["y"])
+                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            self.batirBatiment(position["x"], position["y"], Batiment.BARAQUE, unit)
                             print("Baraque créée")
                             return
 
@@ -367,15 +352,11 @@ class AI(Joueur):
         #fais des test 1 fois au 30 sec pour éviter de trop répéter des taches
         if time.time() - self.lastCheck >= 30:
 
-            self.units = []
-            for unit in self.parent.units:
-                if self.parent.units[unit].civilisation == self.civilisation:
-                    self.units.append(self.parent.units[unit])
 
             self.nombrePaysans = 0
             #vérifie si tous les paysans sont occupés
-            for unit in self.units:
-                if isinstance(unit, Paysan):
+            for unit in self.units.values():
+                if isinstance(self.units[unit], Paysan):
                     self.nombrePaysans += 1
                     if unit.typeRessource == 0:
                         self.paysansOccupes = False
@@ -450,13 +431,13 @@ class AI(Joueur):
 
             #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
             #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
-            if maxX > self.parent.carte.size * 48:
-                maxX = self.parent.carte.size * 48
+            if maxX > self.model.carte.size * 48:
+                maxX = self.model.carte.size * 48
 
             #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
             #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
-            if maxY > self.parent.carte.size * 48:
-                maxY = self.parent.carte.size * 48
+            if maxY > self.model.carte.size * 48:
+                maxY = self.model.carte.size * 48
 
             print(maxX)
             print(maxY)
@@ -465,10 +446,10 @@ class AI(Joueur):
 
             for x in range (minX, maxX, 48):
                 for y in range (minY, maxY, 48):
-                    casesCible = self.parent.trouverCaseMatrice(x, y)
+                    casesCible = self.model.trouverCaseMatrice(x, y)
                     caseCibleX = casesCible[0]
                     caseCibleY = casesCible[1]
-                    if self.parent.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
+                    if self.model.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
                         ressource["x"] = x
                         ressource["y"] = y
                         return ressource
@@ -477,8 +458,46 @@ class AI(Joueur):
 
 
 
-    def delaiPenser(self):
+    def update(self):
         if time.time() - self.derniereAction >= 5:
             self.derniereAction = time.time()
             self.penser()
+
+    def deplacerUnite(self, butX, butY, unite):
+        cmd = Command(self.civilisation, Command.MOVE_UNIT)
+        cmd.addData('ID', unite.id)
+        cmd.addData('X1', unite.x)
+        cmd.addData('Y1', unite.y)
+        cmd.addData('X2', butX)
+        cmd.addData('Y2', butY)
+        self.model.controller.network.client.sendCommand(cmd)
+
+    def batirBatiment(self, posX, posY, type, unite):
+        cmd = Command(self.civilisation, Command.CREATE_BUILDING)
+        cmd.addData('ID', Batiment.generateId(self.civilisation))
+        cmd.addData('X', posX)
+        cmd.addData('Y', posY)
+        cmd.addData('CIV', self.civilisation)
+        cmd.addData('BTYPE', type)
+        self.model.controller.network.client.sendCommand(cmd)
+
+    def trouverBatiment(self, type, raison):
+        if raison == "creation":
+            for building in self.buildings.values():
+                if self.buildings[building].type == type:
+                    if not self.buildings[building].enCreation:
+                        return building
+
+        if raison == "recherche":
+            for building in self.buildings.values():
+                if self.buildings[building].type == type:
+                    if not self.buildings[building].enRecherche:
+                        return building
+
+        else:
+            for building in self.buildings.values():
+                if self.buildings[building].type == type:
+                    return building
+
+        return None
 

@@ -11,10 +11,7 @@ from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
 from Units import Paysan
-<<<<<<< HEAD
 from AI import *
-=======
->>>>>>> origin/dev
 
 
 class Model:
@@ -25,7 +22,6 @@ class Model:
         self.grandeurMat = 106
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
-        self.ai = None
 
     def update(self):
         """ Permet de lancer les commande updates importantes
@@ -92,7 +88,6 @@ class Model:
         """
         civId = self.getUnit(command['ID']).getClientId()
         self.joueurs[civId].killUnit(command['ID'])
-<<<<<<< HEAD
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
@@ -103,19 +98,6 @@ class Model:
         # TODO CRÉER BASE
 
 
-=======
-
-    def executeCreateBuilding(self, command):
-        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
-                                                         command['BTYPE'])
-
-    def executeCreateCivilisation(self, command):
-        self.creerJoueur(command['ID'])
-        # TODO CRÉER BASE
-
-
-
->>>>>>> origin/dev
     # ## HELPERS ###
 
     def trouverPlusProche(self, listeElements, coordBut):
@@ -194,11 +176,7 @@ class Model:
 
         return centreX, centreY
 
-<<<<<<< HEAD
 
-=======
-    # ## JOUEURS ###
->>>>>>> origin/dev
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
         :param uId: l'ID de l'unité à trouver
@@ -227,21 +205,19 @@ class Model:
         """
         self.joueurs[clientId] = Joueur(clientId, self)
 
-<<<<<<< HEAD
     def creerAi(self, clientId):
         self.joueurs[clientId] = AI(clientId, self)
-        cmd = Command(clientId,Command.CREATE_BUILDING )
+
+    def creerBase(self, clientId):
+        cmd = Command(clientId, Command.CREATE_BUILDING)
         cmd.addData('ID', Batiment.generateId(clientId))
-        cmd.addData('X', 200)
-        cmd.addData('Y', 200)
+        cmd.addData('X', 400)
+        cmd.addData('Y', 400)
         cmd.addData('CIV', clientId)
         cmd.addData('BTYPE', Batiment.BASE)
-
         self.controller.network.client.sendCommand(cmd)
 
 
-=======
->>>>>>> origin/dev
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations
         """
