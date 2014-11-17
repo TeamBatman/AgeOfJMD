@@ -31,7 +31,7 @@ class Controller:
         self.gameMode = Controller.MULTIPLAYER
 
         self.currentFrame = -1
-        self.nbFramesPerSecond = 10
+        self.nbFramesPerSecond = 15
         self.refreshRate = int(1000/self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)

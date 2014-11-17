@@ -80,7 +80,7 @@ class ServerController:
         self.syncFrameThreshold = 1  # Le nombre de frames minimum pour déclancher une synchronisation
         # Le nombre maximal de frames de retard sur le jeu. Lorsqu'un joueur est X frames derrière le
         # plus avancé, on lui renvoie Command.DESYNC lui indiquant qu'il ne peu plus joueur car il est désynchronisé
-        self.desynchFrameThreshold = 40
+        self.desynchFrameThreshold = 200
 
 
 

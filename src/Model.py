@@ -82,8 +82,12 @@ class Model:
           selon ses paramètres 
         :param command: la commande à exécuter [Objet Commande]
         """
-        civId = self.getUnit(command['ID']).getClientId()
-        self.joueurs[civId].killUnit(command['ID'])
+
+        try:
+            civId = self.getUnit(command['ID']).getClientId()
+            self.joueurs[civId].killUnit(command['ID'])
+        except KeyError:    # On a essayé de tuer Une unité déjà morte
+            pass    # TODO Comprendre pourquoi
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
