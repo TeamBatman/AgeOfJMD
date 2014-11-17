@@ -1,23 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from datetime import datetime
 
-import time
+import sys
+
 from Batiments import Batiment
-
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError
-
-
 from Units import Unit
-from View import View, UnitView, FrameSide
-
+from View import View, FrameSide
 from SimpleTimer import Timer
-
-
-
-import sys
 
 
 class Controller:
@@ -34,12 +26,12 @@ class Controller:
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
 
-
-        self.refreshRate = int(1000/1)  # Nombre de fois par seconde (1000x)
+        self.nbFramesPerSecond = 10
+        self.refreshRate = int(1000/self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
 
-        self.nbFramesPerSecond = 60
+
         self.currentFrame = -1
         self.nextFrame = 0
 
@@ -61,21 +53,22 @@ class Controller:
 
         self.renderGraphics()
 
-        self.view.after(int(1000 / self.refreshRate), self.mainLoop)
+        self.view.after(self.refreshRate, self.mainLoop)
 
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
         :return:
         """
-        skipUpdate = False
+        doUpdate = True
         for command in commands:
-            if command == Command.WAIT:
-                skipUpdate = True
+            if command['TYPE'] == Command.WAIT:
+                doUpdate = False
             else:
+                print(command['TYPE'])
                 self.model.executeCommand(command)
 
-        if not skipUpdate:
+        if doUpdate:
             self.model.update()
             print("Finnished %s" % self.currentFrame)
             self.currentFrame += 1
@@ -105,6 +98,7 @@ class Controller:
         # INITIALISATION MODEL
         cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
         cmd.addData('ID', self.network.getClientId())
+        self.sendCommand(cmd)
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
 
