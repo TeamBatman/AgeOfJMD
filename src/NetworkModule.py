@@ -74,7 +74,13 @@ class ServerController:
             Civilisation.JAUNE
         ]
 
-        self.frameLatency = 2
+        # Le nombre de frames dans le futur depuis le temps de sa réception qu'une commande doit être exécutée
+        self.commandFrameLatency = 2
+
+        self.syncFrameThreshold = 1  # Le nombre de frames minimum pour déclancher une synchronisation
+        # Le nombre maximal de frames de retard sur le jeu. Lorsqu'un joueur est X frames derrière le
+        # plus avancé, on lui renvoie Command.DESYNC lui indiquant qu'il ne peu plus joueur car il est désynchronisé
+        self.desynchFrameThreshold = 40
 
 
 
@@ -92,14 +98,15 @@ class ServerController:
         Server.outputDebug('LE CLIENT %s A REJOINT LA PARTIE' % newClient.civId)
         return newClient.civId
 
-    def sendCommand(self, command, curentFrame):
+    def sendCommand(self, command, currentFrame):
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
+        maxFrame = self.getFrameMostForwardInTime()
         try:
-            self.commands[curentFrame + self.frameLatency].append(command)
+            self.commands[maxFrame + self.commandFrameLatency].append(command)
         except KeyError:
-            self.commands[curentFrame + self.frameLatency] = [command]
+            self.commands[maxFrame + self.commandFrameLatency] = [command]
 
 
 
@@ -113,7 +120,7 @@ class ServerController:
 
         currentClient = self.clients[clientId]
         currentClient.currentFrame = currentFrame
-        print(["%s: %s" % (c.civId, c.currentFrame) for c in self.clients.values()])
+        #print(["%s: %s" % (c.civId, c.currentFrame) for c in self.clients.values()])   # PROGRESSION CLIENTS
 
 
         # a-t-on suffisamment de joueurs pour commencer la partie?
@@ -121,11 +128,21 @@ class ServerController:
             cmd = Command(-1, Command.WAIT)
             return [pickle.dumps(cmd.convertToDict())]
 
+        # Le client est-il totalement désynchro?
+        if self.getFrameMostForwardInTime() - currentClient.currentFrame >= self.desynchFrameThreshold:
+            Server.outputDebug("client avec ID: %s est DÉSYNCHRONISÉ" % currentClient.civId)
+            return [pickle.dumps(Command(-1, Command.DESYNC).convertToDict())]
+
+
 
         # Si quelqu'un est plus en retard que nous on ne peut obtenir notre prochaine frame
+        # On va attendre que le(s) client(s) en retard se synchronise(nt)
         if self.isSomeoneLate():
             if self.isSomeoneMoreLate(currentClient):
-                return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
+                # Si différence temps entre client courant et le plus en retard > threshold on le fait attendre
+                if currentFrame - self.getFrameMostBackwardInTime() >= self.syncFrameThreshold:
+                    return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
+
 
         try:
             return self.commands[currentFrame+1]
@@ -133,9 +150,17 @@ class ServerController:
             return []
 
 
+    def getFrameMostForwardInTime(self):
+        """ Retourne la frame du client le PLUS avancé dans le temps
+        :return: int frame la PLUS avancée dans le temps
+        """
+        return max([c.currentFrame for c in self.clients.values()])
 
-
-
+    def getFrameMostBackwardInTime(self):
+        """ Retourne la frame du client le MOINS avancé dans le temps
+        :return: int frame la MOINS avancée dans le temps
+        """
+        return min([c.currentFrame for c in self.clients.values()])
 
 
     def isSomeoneMoreLate(self, refClient):

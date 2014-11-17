@@ -896,7 +896,7 @@ class Unit():
         if self.timerAttack.isDone():
             attack = random.randint(self.attackMin, self.attackMax)
             # TODO ENVOYER L'ATTAQUE AU SERVEUR
-            cmd = Command(model.controller.network.client.id, Command.ATTACK_UNIT)
+            cmd = Command(model.controller.network.client.id, Command.UNIT_ATTACK_UNIT)
             cmd.addData('SOURCE_ID', self.id)
             cmd.addData('TARGET_ID', self.ennemiCible.id)
             cmd.addData('DMG', attack)
@@ -914,7 +914,7 @@ class Unit():
 
         if self.hp <= 0:
             self.hp = 0  # UNITÉ MORTE
-            cmd = Command(self.getClientId(), Command.KILL_UNIT)
+            cmd = Command(self.getClientId(), Command.UNIT_DIE)
 
             cmd.addData('ID', self.id)
             model.controller.sendCommand(cmd)

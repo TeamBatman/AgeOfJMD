@@ -34,14 +34,14 @@ class Model:
         :param command: la commande à exécuter [Objet Command]
         """
         commands = {
-            Command.CREATE_UNIT: self.executeCreateUnit,
-            Command.MOVE_UNIT: self.executeMoveUnit,
-            Command.ATTACK_UNIT: self.executeAttackUnit,
-            Command.KILL_UNIT: self.executeKillUnit,
+            Command.UNIT_CREATE: self.executeCreateUnit,
+            Command.UNIT_MOVE: self.executeMoveUnit,
+            Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_DIE: self.executeKillUnit,
 
-            Command.CREATE_BUILDING: self.executeCreateBuilding,
+            Command.BUILDING_CREATE: self.executeCreateBuilding,
 
-            Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
+            Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
         }
 
         try:

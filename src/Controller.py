@@ -6,7 +6,7 @@ import sys
 from Batiments import Batiment
 from Commands import Command
 from Model import Model
-from NetworkModule import NetworkController, ClientConnectionError
+from NetworkModule import NetworkController, ClientConnectionError, Client
 from Units import Unit
 from View import View, FrameSide
 from SimpleTimer import Timer
@@ -26,16 +26,16 @@ class Controller:
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
 
+
+
+        self.gameMode = Controller.MULTIPLAYER
+        
+        self.currentFrame = -1
         self.nbFramesPerSecond = 10
         self.refreshRate = int(1000/self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
 
-
-        self.currentFrame = -1
-        self.nextFrame = 0
-
-        self.gameMode = Controller.MULTIPLAYER
 
 
 
@@ -64,13 +64,15 @@ class Controller:
         for command in commands:
             if command['TYPE'] == Command.WAIT:
                 doUpdate = False
+            elif command['TYPE'] == Command.DESYNC:
+                Client.outputDebug("Votre clent est DÉSYNCHRONISÉ")
+                self.shutdown()  # TODO Afficher message
             else:
-                print(command['TYPE'])
                 self.model.executeCommand(command)
 
         if doUpdate:
             self.model.update()
-            print("Finnished %s" % self.currentFrame)
+            #print("Finnished %s" % self.currentFrame)
             self.currentFrame += 1
 
 
@@ -96,7 +98,7 @@ class Controller:
         self.network.connectClient(ipAddress='10.57.100.193', port=33333)
 
         # INITIALISATION MODEL
-        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
+        cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
         self.sendCommand(cmd)
         self.model.creerJoueur(self.network.getClientId())
@@ -186,7 +188,7 @@ class EventListener:
     def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None):
         """Pour la fonction onMapRClick !!!"""
         #print("select", leaderUnit)
-        cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+        cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
         cmd.addData('ID', unitSelected.id)
         cmd.addData('X1', unitSelected.x)
         cmd.addData('Y1', unitSelected.y)
@@ -247,7 +249,7 @@ class EventListener:
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
 
-            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', Batiment.generateId(clientId))
             cmd.addData('X', currentX)
             cmd.addData('Y', currentY)
@@ -380,7 +382,7 @@ class EventListener:
         else:
             # CRÉATION D'UNITÉ
             clientId = self.controller.network.client.id
-            cmd = Command(clientId, Command.CREATE_UNIT)
+            cmd = Command(clientId, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(clientId))
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
@@ -407,7 +409,7 @@ class EventListener:
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
 
-            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', Batiment.generateId(clientId))
             cmd.addData('X', currentX)
             cmd.addData('Y', currentY)
@@ -435,7 +437,7 @@ class EventListener:
         else:
             # CRÉATION D'UNITÉ
             clientId = self.controller.network.client.id
-            cmd = Command(clientId, Command.CREATE_UNIT)
+            cmd = Command(clientId, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(clientId))
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
