@@ -985,6 +985,118 @@ class Paysan(Unit):
             # TODO Faire retourner à la base !
 
 
+class GuerrierEpee(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierEpee, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 40
+        self.hp = 40
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 15
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/guerrier_epee_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/guerrier_epee_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/guerrier_epee_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/guerrier_epee_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/guerrier_epee_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/guerrier_epee_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/guerrier_epee_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/guerrier_epee_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/guerrier_epee_rose.png'
+        }
+        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+class GuerrierLance(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierLance, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 30
+        self.hp = 30
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 25
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/guerrier_lance_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/guerrier_lance_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/guerrier_lance_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/guerrier_lance_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/guerrier_lance_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/guerrier_lance_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/guerrier_lance_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/guerrier_lance_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/guerrier_lance_rose.png'
+        }
+        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+class GuerrierBouclier(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierBouclier, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 50
+        self.hp = 50
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 10
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/guerrier_boucl_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/guerrier_boucl_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/guerrier_boucl_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/guerrier_boucl_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/guerrier_boucl_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/guerrier_boucl_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/guerrier_boucl_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/guerrier_boucl_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/guerrier_boucl_rose.png'
+        }
+        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+class Scout(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(Scout, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 10
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 20
+        self.hp = 20
+        # Force à laquelle l'unité frappe
+        self.attackMin = 0
+        self.attackMax = 8
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/scout_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/scout_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/scout_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/scout_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/scout_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/scout_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/scout_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/scout_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/scout_rose.png'
+        }
+        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
 class Noeud:
     def __init__(self, parent, x, y, cibleX, cibleY):
         self.parent = parent
