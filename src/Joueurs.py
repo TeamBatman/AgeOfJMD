@@ -153,5 +153,4 @@ class Joueur:
         """ Met à jour les bâtiments 
         """
         # TODO Ajouter Méthode Update dans les bâtiments
-        #[b.update(self.model) for b in self.buildings.values()]
-        pass
+        [b.miseAJour() for b in self.buildings.values()]

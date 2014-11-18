@@ -28,36 +28,34 @@ class Model:
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
 
+
     # ## EXECUTION COMMANDES ###
     def executeCommand(self, command):
         """ Exécute une commande
         :param command: la commande à exécuter [Objet Command]
         """
         commands = {
-            Command.CREATE_UNIT: self.executeCreateUnit,
-            Command.MOVE_UNIT: self.executeMoveUnit,
-            Command.ATTACK_UNIT: self.executeAttackUnit,
-            Command.KILL_UNIT: self.executeKillUnit,
+            Command.UNIT_CREATE: self.executeCreateUnit,
+            Command.UNIT_MOVE: self.executeMoveUnit,
+            Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_DIE: self.executeKillUnit,
 
-            Command.CREATE_BUILDING: self.executeCreateBuilding,
+            Command.BUILDING_CREATE: self.executeCreateBuilding,
 
-            Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
-
-            Command.EMPTY: lambda info: None
+            Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
         }
 
         try:
             exe = commands[command.data['TYPE']]
-            #print("EXECUTE: %s" % datetime.now())      # DEBUG
-            exe(command)
         except KeyError:
-            raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")
+            raise NotImplementedError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
+        exe(command)
 
     def executeCreateUnit(self, command):
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
         """
-
+        print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
@@ -85,8 +83,12 @@ class Model:
           selon ses paramètres 
         :param command: la commande à exécuter [Objet Commande]
         """
-        civId = self.getUnit(command['ID']).getClientId()
-        self.joueurs[civId].killUnit(command['ID'])
+
+        try:
+            civId = self.getUnit(command['ID']).getClientId()
+            self.joueurs[civId].killUnit(command['ID'])
+        except KeyError:    # On a essayé de tuer Une unité déjà morte
+            pass    # TODO Comprendre pourquoi
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
@@ -204,6 +206,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = Joueur(clientId, self)
+        self.joueurs[clientId].ressources['bois'] += 100
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations
