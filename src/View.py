@@ -320,9 +320,9 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         }
 
         for x in range(caseX - radius, caseX + radius):
-            if 0 < x < 106:
+            if 0 <= x <= 106:
                 for y in range(caseY - radius, caseY + radius):
-                    if 0 < y < 106:
+                    if 0 <= y <= 106:
                         if not carte[x][y].revealed:
                             posX1 = self.miniMapX + x * self.tailleTuile
                             posY1 = self.miniMapY + y * self.tailleTuile
@@ -472,21 +472,20 @@ class CarteView():
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
 
-                if 1:
-                    if not carte[x][y].revealed:
-                        couleur = "#333"
-                    elif not carte[x][y].type == 5:#bâtiment
-                        couleur = couleurs[carte[x][y].type]
-                    else:
-                        couleur = couleurs[0]
-                    self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
-                    if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
-                        self.canvas.create_image(posX1, posY1, anchor=NW,
-                                                image=GraphicsManager.getPhotoImage('World/grass.png'),
-                                                tags=self.tagName)
-                        # else:
-                        # couleur = "#333"
-                        #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                if not carte[x][y].revealed:
+                    couleur = "#333"
+                elif not carte[x][y].type == 5:#bâtiment
+                    couleur = couleurs[carte[x][y].type]
+                else:
+                    couleur = couleurs[0]
+                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
+                    self.canvas.create_image(posX1, posY1, anchor=NW,
+                                            image=GraphicsManager.getPhotoImage('World/grass.png'),
+                                            tags=self.tagName)
+                    # else:
+                    # couleur = "#333"
+                    #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
