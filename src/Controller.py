@@ -54,9 +54,8 @@ class Controller:
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
 
-        if self.view.needUpdateCarte:
-            self.view.update(self.model.getUnits(), self.model.getBuildings(),
-                                    self.model.carte.matrice)
+        if self.view.needUpdateCarte():
+            self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
         else:
             self.view.update(self.model.getUnits(), self.model.getBuildings())
 
@@ -76,6 +75,8 @@ class Controller:
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.network.client.sendCommand(cmd)
+
+        self.model.civNumber = self.network.getClientId()
 
 
         self.view.drawMinimap(self.model.carte.matrice)

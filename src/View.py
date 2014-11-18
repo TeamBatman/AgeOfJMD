@@ -837,9 +837,11 @@ class View(GWindow):
         # self.drawBuildings
 
     def needUpdateCarte(self):
-        for unite in self.evListener.controller.model.joueur.units.values():
-            if self.isUnitShown(unite) and unite.enDeplacement:
-                return True
+        #print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))
+        for unite in self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units.values():
+            if self.carte.isUnitShown(unite):
+                if unite.enDeplacement:
+                    return True
         return False
 
     def destroy(self):
