@@ -14,12 +14,12 @@
 - [-] Morale (Valeurs dépendantes de la morale)
 - [x] Faire Icônes passif/actif
 - [x] Afficher l'icône le mode d'attaque
-- [ ] Position des unités lors d'un affrontement
+- [-] Position des unités lors d'un affrontement
 - [-] Corriger les Bugs du mode actif: Client essaie de tuer unité déjà morte
 
 ### Bonus
-- [-] Animation de combat [Bonus] Ou bien "flasher Unité en rouge lorsque touchée"
-- [-] Image Gazon au lieu d'un carré Vert
+- [x] Animation de combat [Bonus] Ou bien "flasher Unité en rouge lorsque touchée"
+- [x] Image Gazon au lieu d'un carré Vert
 
 
 ## QUESTIONS DE GROUPES
