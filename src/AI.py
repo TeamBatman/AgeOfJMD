@@ -17,13 +17,13 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {"bois" : 100, "minerai" : 0, "charbon" : 0}
+        self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
         self.nombreSoldatsEnnemis = 0
         self.hpMoyen = 0
-
+        self.ennemiPlusFort = None
         #valeurs pour empêcher de rappeler des fonctions trop souvent
         self.derniereFerme = 0
         self.derniereScierie = 0
@@ -96,15 +96,9 @@ class AI(Joueur):
                 self.departEpoque = time.time()
                 return
             #print("peux pas changer d'époque")
-            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
-            if (self.paysansOccupes and time.time() - self.dernierPaysan >= self.cooldownUnite) or self.nombrePaysans < 10:
-                print("besoin Paysan")
-                self.creerPaysan()
-                self.dernierPaysan = time.time()
-                return
-            #print("paysans libres")
+
             #si le moral est trop bas, faire une fête
-            if self.moral < 50 and time.time() - self.derniereFete >= self.cooldownRecherche:
+            if self.morale < 50 and time.time() - self.derniereFete >= self.cooldownRecherche:
                 print("moral bas")
                 self.augmenterMoral()
                 self.derniereFete = time.time()
@@ -124,17 +118,27 @@ class AI(Joueur):
                 self.derniereAttaque = time.time()
                 return
             #print("peux pas attaquer")
+            
             #si rien d'autre, faire des recgerches
             if time.time() - self.derniereRecherche >= self.cooldownRecherche:
                 print("démarrer recherche")
                 self.rechercher()
                 return
             #print("cooldown recherche")
+
+            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
+            if (self.paysansOccupes and time.time() - self.dernierPaysan >= self.cooldownUnite) or self.nombrePaysans < 10:
+                print("besoin Paysan")
+                self.creerPaysan()
+                self.dernierPaysan = time.time()
+                return
+            #print("paysans libres")
         #sinon on est en guerre
         else:
             if self.hpMoyen < 50 :
                 print("retreat")
                 self.retraite()
+            self.attaquer()
             #print("pas besoin retraite")
 
 
@@ -151,79 +155,71 @@ class AI(Joueur):
             self.chercherNourriture()
 
     def chercherBois(self):
-        for unitID in self.units:
-            unit = self.model.getUnit(unitID)
-            if isinstance(unit, Paysan):
-                if unit.typeRessource == 0:
-                    if self.epoque >= 2:
-                        if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, Tuile.FORET)
-                            self.batirBatiment(position["x"], position["y"], Batiment.SCIERIE, unit)
-                            print("scierie créée?")
-                            return
-                    if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
-                        print("not cd")
-                        position = self.trouverRessourcePlusPres(unit,Tuile.FORET)
-                        self.deplacerUnite(position["x"], position["y"], unit)
-                        self.derniereRessourceBois = time.time()
-                        return
-                    else:
-                        print("en cooldown bois")
-                        return
-                else:
-                    print("WTF", unit.typeRessource)
+        unit = self.trouverUniteLibre(Tuile.FORET)
+        if unit != None:
+            if self.epoque >= 2:
+                if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
+                    position = self.trouverRessourcePlusPres(unit, Tuile.FORET)
+                    self.batirBatiment(position["x"], position["y"], Batiment.SCIERIE, unit)
+                    print("scierie créée?")
                     return
+            if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
+                print("not cd")
+                position = self.trouverRessourcePlusPres(unit,Tuile.FORET)
+                self.deplacerUnite(position["x"], position["y"], unit)
+                self.derniereRessourceBois = time.time()
+                return
+            else:
+                print("en cooldown bois")
+                return
         self.creerPaysan()
 
     def chercherminerais(self):
-        for unit in self.units:
-            if isinstance(unit, Paysan):
-                if unit.typeRessource == 0:
-                    if self.epoque >= 3:
-                        if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
-                            self.batirBatiment(position["x"], position["y"], Batiment.FONDERIE, unit)
-                            print("fonderie créée?")
-                            return
-                    if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
-                        position = self.trouverRessourcePlusPres(unit, self.model.carte.MINERAI)
-                        self.deplacerUnite(position["x"], position["y"], unit)
-                        self.derniereRessourceBois = time.time()
-                        return
+        unit = self.trouverUniteLibre(Tuile.MINERAI)
+        if unit != None:
+            if self.epoque >= 3:
+                if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
+                    position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
+                    self.batirBatiment(position["x"], position["y"], Batiment.FONDERIE, unit)
+                    print("fonderie créée?")
+                    return
+            if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
+                position = self.trouverRessourcePlusPres(unit, Tuile.MINERAI)
+                self.deplacerUnite(position["x"], position["y"], unit)
+                self.derniereRessourceBois = time.time()
+                return
         self.creerPaysan()
 
     def cherchercharbon(self):
-        for unit in self.units:
-            if isinstance(unit, Paysan):
-                if unit.typeRessource == 0:
-                    if time.time() - self.derniereRessourceCharbon >= self.cooldownRessource:
-                        for x in range(unit.x, unit.x+20):
-                            for y in range(unit.y, unit.y+20):
-                                if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
-                                    position = self.trouverRessourcePlusPres(unit, self.model.carte.CHARBON)
-                                    self.deplacerUnite(position["x"], position["y"], unit)
-                                    self.derniereRessourceBois = time.time()
-                                    return
+        unit = self.trouverUniteLibre(Tuile.CHARBON)
+        if unit != None:
+            if time.time() - self.derniereRessourceCharbon >= self.cooldownRessource:
+                for x in range(unit.x, unit.x+20):
+                    for y in range(unit.y, unit.y+20):
+                        if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
+                            position = self.trouverRessourcePlusPres(unit, Tuile.CHARBON)
+                            self.deplacerUnite(position["x"], position["y"], unit)
+                            self.derniereRessourceBois = time.time()
+                            return
         self.creerPaysan()
 
     def chercherNourriture(self):
-        for unit in self.units:
-            if isinstance(unit, Paysan):
-                if unit.typeRessource == 0:
-                        if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
-                            self.batirBatiment(position["x"], position["y"], Batiment.FERME, unit)
-                            print("ferme créée?")
-                            return
+        unit = self.trouverUniteLibre("")
+        if unit != None:
+            if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
+                position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
+                self.batirBatiment(position["x"], position["y"], Batiment.FERME, unit)
+                print("ferme créée?")
+                return
 
         self.creerPaysan()
 
     def changerEpoque(self):
-        base = self.trouverBatiment(Batiment.BASE, "")
+        base = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
         if base != None:
             if self.epoque == 1:
                 if self.ressources["bois"] >= base.coutRecherche2["bois"]:
-                    self.base.recherche2()
+                    base.recherche2()
                 else:
                     self.manqueRessource = True
                     self.qteRessourceManquante = base.coutRecherche2["bois"]
@@ -233,7 +229,7 @@ class AI(Joueur):
             elif self.epoque == 2:
                 if self.ressources["bois"] >= base.coutRecherche2["bois"]:
                     if self.ressources["minerai"] >= base.coutRecherche2["minerai"]:
-                        self.base.recherche2()
+                        base.recherche2()
                     else:
                         self.manqueRessource = True
                         self.qteRessourceManquante = base.coutRecherche2["minerai"]
@@ -250,14 +246,14 @@ class AI(Joueur):
             for unit in self.units:
                 if isinstance(unit, Paysan):
                     if unit.typeRessource == 0:
-                        position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                        position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                         self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
 
                         print("base créée poel")
 
     def creerPaysan(self):
         print("creer Paysan")
-        base = self.trouverBatiment(Batiment.BASE, "")
+        base = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
         if base != None:
             if self.ressources["bois"] >= base.coutCreer1["bois"]:
                 base.creer1()
@@ -275,7 +271,7 @@ class AI(Joueur):
             for unit in self.units:
                 if isinstance(unit, Paysan):
                     if unit.typeRessource == 0:
-                        position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                        position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                         self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
 
                         print("base créée poel")
@@ -285,7 +281,7 @@ class AI(Joueur):
 
     def augmenterMoral(self):
         print("augmenter Moral")
-        eglise = self.trouverBatiment(Batiment.LIEU_CULTE)
+        eglise = self.trouverBatiment(Batiment.LIEU_CULTE, self.civilisation)
         if eglise != None:
             if self.ressources["bois"] >= eglise.coutRecherche1[0]:
                 eglise.recherche1()
@@ -301,14 +297,14 @@ class AI(Joueur):
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                         if time.time() - self.derniereEglise >= self.cooldownBatiment:
-                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                             self.batirBatiment(position["x"], position["y"], Batiment.EGLISE, unit)
                             print("Eglise créée")
                             return
 
     def creerSoldat(self):
         print("creer Soldat")
-        baraque = self.trouverBatiment(Batiment.BARAQUE, "creation")
+        baraque = self.trouverBatiment(Batiment.BARAQUE, "creation", self.civilisation)
         if baraque != None:
             if isinstance(baraque, Baraque):
                 if not baraque.enCreation:
@@ -326,24 +322,27 @@ class AI(Joueur):
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                         if time.time() - self.derniereBarraque >= self.cooldownBatiment:
-                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                             self.batirBatiment(position["x"], position["y"], Batiment.BARAQUE, unit)
                             print("Baraque créée")
                             return
 
     def attaquer(self):
         print("attaquer")
-        for unit in self.units:
+        base = self.trouverBatiment(Batiment.BASE, "", self.ennemiPlusFort)
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
             if isinstance(unit, Soldat):
-                #TODO faire Attaquer les Soldats
-                pass
+                self.deplacerUnite(base.posX, base.posY, unit)
+
 
     def retraite(self):
         print("retraite")
-        for unit in self.units:
+        hopital = self.trouverBatiment(Batiment.HOPITAL, "", self.ennemiPlusFort)
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
             if isinstance(unit, Soldat):
-                #TODO faire retraiter les Soldats
-                pass
+                self.deplacerUnite(hopital.posX, hopital.posY, unit)
 
     def rechercher(self):
         print("rechercher")
@@ -368,7 +367,8 @@ class AI(Joueur):
             #compte les soldats à nous et trouve le hp moyen de ces soldats
             #self.nombreSoldatsAllies = 0
             #hpTotal = 0
-            #for unit in self.units:
+            #for unitID in self.units:
+                #unit = self.model.getUnit(unitID)
                 #if isinstance(unit, Soldat):
                     #self.nombreSoldatsAllies += 1
                     #hpTotal += unit.hp
@@ -377,34 +377,24 @@ class AI(Joueur):
 
 
             #trouve le nombre de soldats de l'ennemi avec le plus de soldats
-            #ennemis = [8]
-            #for unit in self.parent.units:
-                #if self.parent.units[unit].civilisation == 0:
-                    #ennemis[0] += 1
-                #elif self.parent.units[unit].civilisation == 1:
-                    #ennemis[1] += 1
-                #elif self.parent.units[unit].civilisation == 2:
-                    #ennemis[2] += 1
-                #elif self.parent.units[unit].civilisation == 3:
-                    #ennemis[3] += 1
-                #elif self.parent.units[unit].civilisation == 4:
-                    #ennemis[4] += 1
-                #elif self.parent.units[unit].civilisation == 5:
-                    #ennemis[5] += 1
-                #elif self.parent.units[unit].civilisation == 6:
-                    #ennemis[6] += 1
-                #elif self.parent.units[unit].civilisation == 7:
-                    #ennemis[7] += 1
-                #elif self.parent.units[unit].civilisation == 8:
-                    #ennemis[8] += 1
-                #else:
-                    #print("erreur civilisations")
+            #joueurs = [0,0,0,0,0,0,0,0,0]
+            #i = 0
+            #for joueur in self.model.joueurs.values():
+                #for unitID in joueur.units:
+                    #unit = joueur.getUnit(unitID)
+                        #if isinstance(unit, Soldat):
+                        #joueurs[i] += 1
+                #i += 1
+
+
 
             #check nombre ennemis
             #self.nombreSoldatsEnnemis = 0
-            #for i in ennemis:
-                #if self.nombreSoldatsEnnemis < i:
-                    #self.nombreSoldatsEnnemis = i
+            #for i in joueurs:
+                #if i != self.civilisation:
+                    #if self.nombreSoldatsEnnemis < joueurs[i]:
+                        #self.nombreSoldatsEnnemis = joueurs[i]
+                        #self.ennemiPlusFort = i
 
             self.lastCheck = time.time()
 
@@ -466,6 +456,10 @@ class AI(Joueur):
             self.derniereAction = time.time()
             self.penser()
 
+        self.updateUnits()
+        self.updatePaysans()
+        self.updateBuildings()
+
     def deplacerUnite(self, butX, butY, unite):
         print(butX, butY, unite.x, unite.y)
         self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite])
@@ -486,23 +480,61 @@ class AI(Joueur):
         cmd.addData('BTYPE', type)
         self.model.controller.network.client.sendCommand(cmd)
 
-    def trouverBatiment(self, type, raison):
-        if raison == "creation":
-            for building in self.buildings.values():
-                if self.buildings[building].type == type:
-                    if not self.buildings[building].enCreation:
+    def trouverBatiment(self, type, raison, civilisation):
+        if civilisation == self.civilisation:
+            if raison == "creation":
+                for building in self.buildings.values():
+                    if building.type == type:
+                        if not building.enCreation:
+                            return building
+
+            if raison == "recherche":
+                for building in self.buildings.values():
+                    if building.type == type:
+                        if not building.enRecherche:
+                            return building
+
+            else:
+                for building in self.buildings.values():
+                    if building.type == type:
                         return building
 
-        if raison == "recherche":
-            for building in self.buildings.values():
-                if self.buildings[building].type == type:
-                    if not self.buildings[building].enRecherche:
-                        return building
+            return None
 
         else:
-            for building in self.buildings.values():
-                if building.type == type:
-                    return building
+            for joueur in self.model.joueurs.values():
+                    if joueur.civilisation == civilisation:
+                        for batimentID in joueur.buildings:
+                            if isinstance(self.model.getBuilding(batimentID), Base):
+                                return self.model.getBuilding(batimentID)
 
+
+    def trouverUniteLibre(self, typeRessource):
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
+            if isinstance(unit, Paysan):
+                if unit.typeRessource == 0:
+                    return unit
+
+        bois = True
+        minerai = True
+        charbon = True
+
+        if self.ressources['bois'] >= 150:
+            bois = False
+        if self.ressources['minerai'] >= 100:
+            minerai = False
+        if self.ressources['charbon'] >= 50:
+            charbon = False
+
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
+            if isinstance(unit, Paysan):
+                if unit.typeRessource != typeRessource:
+                    if unit.typeRessource == Tuile.FORET and not bois:
+                        return unit
+                    elif unit.typeRessource == Tuile.MINERAI and not minerai:
+                        return unit
+                    elif unit.typeRessource == Tuile.CHARBON and not charbon:
+                        return unit
         return None
-

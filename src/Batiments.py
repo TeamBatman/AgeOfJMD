@@ -252,7 +252,7 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        print("creaa", self.posX,self.posY,self.enCreation, time.time() - self.tempsDepartCreation , self.vitesseDeCreation)
+        #print("creaa", self.posX,self.posY,self.enCreation, time.time() - self.tempsDepartCreation , self.vitesseDeCreation)
         if not self.enCreation:
             if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
                 self.joueur.ressources['bois'] -= self.coutCreer1['bois']
@@ -261,10 +261,12 @@ class Base(Batiment):
                 print("creation",self.enCreation)
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            posXUnit, posYUnit = self.joueur.model.trouverCentreCase(self.posX-1, self.posY-1)
+            print("UNIT",posXUnit,posYUnit )
             cmd = Command(self.joueur.civilisation, Command.CREATE_UNIT)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
-            cmd.addData('X', self.posX + 100)
-            cmd.addData('Y', self.posY + 100)
+            cmd.addData('X', posXUnit)
+            cmd.addData('Y', posYUnit)
             cmd.addData('CIV', self.joueur.civilisation)
             self.joueur.model.controller.network.client.sendCommand(cmd)
             print("Paysan créé?")
@@ -345,6 +347,7 @@ class Base(Batiment):
                     self.joueur.epoque = 2
                     self.typeRecherche = None
                     self.joueur.recherche.append("Époque 2")
+                    print("époque changée")
         elif self.joueur.epoque == 2:
             for recherche in self.joueur.recherche:
                 if recherche == "Époque 3":
@@ -362,6 +365,7 @@ class Base(Batiment):
                     self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 3")
                     self.typeRecherche = None
+                    print("époque changée")
 
     def miseAJour(self):
         if self.enCreation:

@@ -929,8 +929,8 @@ class Paysan(Unit):
 
     def __init__(self, clientId, x, y, model, civilisation):
         super(Paysan, self).__init__(clientId, x, y, model, civilisation)
-        self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
-        self.nbRessourcesMax = 2
+        self.vitesseRessource = 1 #0.01  # La vitesse à ramasser des ressources
+        self.nbRessourcesMax = 10
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
 
