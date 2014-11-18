@@ -294,16 +294,19 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         item = 2
 
         for unit in units.values():
-            color = couleursCiv[unit.civilisation]
 
-            self.updateFog(unit)
+            color = couleursCiv[unit.civilisation]
+            if unit.civilisation == self.eventListener.controller.model.civNumber:
+                self.updateFog(unit)
 
             caseX, caseY = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
-            x1 = self.miniMapX + (caseX * item)
-            y1 = self.minimapMargeY + (caseY * item)
-            x2 = x1 + item
-            y2 = y1 + item
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
+
+            if self.eventListener.controller.model.carte.matrice[caseX][caseY].revealed:
+                x1 = self.miniMapX + (caseX * item)
+                y1 = self.minimapMargeY + (caseY * item)
+                x2 = x1 + item
+                y2 = y1 + item
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags=(tagUnits, self.miniMapTag))
 
 
     def updateFog(self, unit):
