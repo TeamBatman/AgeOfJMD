@@ -28,6 +28,7 @@ class Model:
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
 
+
     # ## EXECUTION COMMANDES ###
     def executeCommand(self, command):
         """ Exécute une commande
@@ -204,6 +205,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = Joueur(clientId, self)
+        self.joueurs[clientId].ressources['bois'] += 100
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations

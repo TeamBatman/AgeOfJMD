@@ -65,7 +65,7 @@ class Controller:
 
         self.network.startServer(port=33333)
 
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
+        self.network.connectClient(ipAddress='10.57.100.129', port=33333)
 
 
         cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
@@ -222,8 +222,11 @@ class EventListener:
         # SÉLECTION BUILDINGS
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
-            #for b in buildings:
-                #print(b.id)
+            for b in buildings:
+                print(b.id)
+                if b.estBatimentDe(clientId):
+                    if b.type == "base":
+                        self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 
 

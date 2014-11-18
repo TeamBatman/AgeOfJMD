@@ -31,6 +31,7 @@ class Color:
 class FrameSide():
     UNITVIEW      = 0
     CONSTRUCTIONVIEW  = 1
+    BASEVIEW = 2
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
         self.canvas = canvas
@@ -45,6 +46,9 @@ class FrameSide():
 
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
+        self.baseButton = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
+                                         iconPath="Graphics/Buildings/Age_I/Base.png")
+
         self.childView = None  # La vue à afficher sur ce menu
         self.unitView = None
         self.constructionView = None
@@ -57,7 +61,14 @@ class FrameSide():
             self.childView.draw()
         self.frame.draw(self.x, self.y)
 
-    def changeView(self,selectedView):
+    def drawBaseButton(self):
+        self.baseButton.draw(x=self.x + 25, y=self.y + 25)
+
+    def createBuildingBase(self):
+        self.eventListener.createBuilding(Batiment.BASE)
+        self.destroy()
+
+    def changeView(self,selectedView, building=None):
         if self.childView:
             self.childView.destroy()
 
@@ -69,10 +80,23 @@ class FrameSide():
             self.unitView = UnitView(self.canvas, unit, self, self.eventListener)
             self.unitView.draw()
             self.childView = self.unitView
+
         elif selectedView == FrameSide.CONSTRUCTIONVIEW:
             self.constructionView = ConstructionView(self.canvas, self, self.eventListener)
             self.constructionView.draw()
             self.childView = self.constructionView
+
+        elif selectedView == FrameSide.BASEVIEW:
+            self.baseView = BaseView(self.canvas, building, self, self.eventListener)
+            self.baseView.draw()
+            self.childView = self.baseView
+
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
 
 
 class UnitView():
@@ -132,7 +156,7 @@ class UnitView():
         self.canvas.delete('unitView')
         attr = self.__dict__
         for value in attr.values():
-            if isinstance(value, GMediumButton):
+            if isinstance(value, GButton):
                 value.destroy()
 
 
@@ -147,12 +171,11 @@ class ConstructionView():
         self.x = parent.x
         self.y = parent.y
 
+        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFerme,
+                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
+
         self.buttonBaraque = GMediumButton(self.canvas, 'Baraque', self.onCreateBuildingBaraque, GButton.GREY)
         self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
-        self.buttonBase = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFerme,
-                                        iconPath="Graphics/Buildings/Age_I/Farm.png")
-        self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
-                                         iconPath="Graphics/Buildings/Age_I/Base.png")
 
         self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
                                        iconPath='Graphics/Icones/arrowBack.png')
@@ -176,7 +199,6 @@ class ConstructionView():
     def draw(self):
         # BTN CONSTRUCTION
         self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
-        self.buttonBase.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
         self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
         self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
 
@@ -186,7 +208,35 @@ class ConstructionView():
     def destroy(self):
         attr = self.__dict__
         for value in attr.values():
-            if isinstance(value, GMediumButton):
+            if isinstance(value, GButton):
+                value.destroy()
+
+
+class BaseView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.base = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
+
+    def draw(self):
+        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onCreateUnit(self):
+        self.base.creer1()
+        print("created unit")
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
                 value.destroy()
 
 
@@ -433,7 +483,7 @@ class CarteView():
         """
         self.canvas.create_rectangle(0, 0, self.width, self.height, fill='green', tags=self.tagName)
         self.canvas.tag_lower('carte')  # Pour que ce soit derrière le HUD
-        self.canvas.tag_bind('carte', '<Button-2>', self.eventListener.onMapCenterClick)
+        self.canvas.tag_bind('carte', '<Button-2>', self.eventListener.onMapRClick)
         self.canvas.tag_bind('carte', '<Button-3>', self.eventListener.onMapRClick)
 
         self.canvas.tag_bind('carte', '<ButtonPress-1>', self.eventListener.onMapLPress)
@@ -663,6 +713,7 @@ class View(GWindow):
         # LE CADRE DROIT
         self.frameSide = FrameSide(self.canvas, self, self.frameMinimap.width, self.frameMinimap.height, self.eventListener)
         self.frameSide.draw()
+        self.frameSide.drawBaseButton()
 
         # LE CADRE DU BAS
         self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
@@ -697,7 +748,6 @@ class View(GWindow):
         self.carte.drawBuildings(buildings)
 
     def addBuildingToCursor(self, posX, posY):
-        # self.buildingSprite =
         pass
 
 
