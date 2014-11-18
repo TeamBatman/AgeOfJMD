@@ -64,30 +64,36 @@ class AI(Joueur):
                 print("manque ressource")
                 self.chercherRessource(self.ressourceManquante)
                 if self.ressourceManquante == "bois":
-                    if self.qteRessourceManquante >= self.ressources["bois"]:
+                    if self.qteRessourceManquante <= self.ressources["bois"]:
                         self.manqueRessource = False
                     else:
                         self.chercherRessource("bois")
                         return
                 elif self.ressourceManquante == "minerais":
-                    if self.qteRessourceManquante >= self.ressources["minerai"]:
+                    if self.qteRessourceManquante <= self.ressources["minerai"]:
                         self.manqueRessource = False
                     else:
                         self.chercherRessource("minerais")
                         return
                 elif self.ressourceManquante == "nourriture":
-                    if self.qteRessourceManquante >= self.nbNourriture:
+                    if self.qteRessourceManquante <= self.nbNourriture:
                         self.manqueRessource = False
                     else:
                         self.chercherRessource("nourriture")
                         return
                 elif self.ressourceManquante == "charbon":
-                    if self.qteRessourceManquante >= self.ressources["charbon"]:
+                    if self.qteRessourceManquante <= self.ressources["charbon"]:
                         self.manqueRessource = False
                     else:
                         self.chercherRessource("charbon")
                         return
 
+            else:
+                for unitId in self.units:
+                    unit = self.units['unitId']
+                    if isinstance(unit, Paysan):
+                        position = self.trouverRessourcePlusPres(unit,Tuile.GAZON)
+                        self.deplacerUnite(position["x"], position["y"], unit)
 
             #si l'on peut changer d'époque, le faire
             if time.time() - self.departEpoque >= self.cooldownEpoque and self.epoque < 3:
@@ -118,7 +124,7 @@ class AI(Joueur):
                 self.derniereAttaque = time.time()
                 return
             #print("peux pas attaquer")
-            
+
             #si rien d'autre, faire des recgerches
             if time.time() - self.derniereRecherche >= self.cooldownRecherche:
                 print("démarrer recherche")
@@ -365,36 +371,36 @@ class AI(Joueur):
 
 
             #compte les soldats à nous et trouve le hp moyen de ces soldats
-            #self.nombreSoldatsAllies = 0
-            #hpTotal = 0
-            #for unitID in self.units:
-                #unit = self.model.getUnit(unitID)
-                #if isinstance(unit, Soldat):
-                    #self.nombreSoldatsAllies += 1
-                    #hpTotal += unit.hp
+            self.nombreSoldatsAllies = 0
+            hpTotal = 0
+            for unitID in self.units:
+                unit = self.model.getUnit(unitID)
+                if isinstance(unit, Soldat):
+                    self.nombreSoldatsAllies += 1
+                    hpTotal += unit.hp
 
-            #self.hpMoyen = hpTotal/self.nombreSoldatsAllies
+            self.hpMoyen = hpTotal/self.nombreSoldatsAllies
 
 
             #trouve le nombre de soldats de l'ennemi avec le plus de soldats
-            #joueurs = [0,0,0,0,0,0,0,0,0]
-            #i = 0
-            #for joueur in self.model.joueurs.values():
-                #for unitID in joueur.units:
-                    #unit = joueur.getUnit(unitID)
-                        #if isinstance(unit, Soldat):
-                        #joueurs[i] += 1
-                #i += 1
+            joueurs = [0,0,0,0,0,0,0,0,0]
+            i = 0
+            for joueur in self.model.joueurs.values():
+                for unitID in joueur.units:
+                    unit = joueur.getUnit(unitID)
+                    if isinstance(unit, Soldat):
+                        joueurs[i] += 1
+                i += 1
 
 
 
             #check nombre ennemis
-            #self.nombreSoldatsEnnemis = 0
-            #for i in joueurs:
-                #if i != self.civilisation:
-                    #if self.nombreSoldatsEnnemis < joueurs[i]:
-                        #self.nombreSoldatsEnnemis = joueurs[i]
-                        #self.ennemiPlusFort = i
+            self.nombreSoldatsEnnemis = 0
+            for i in joueurs:
+                if i != self.civilisation:
+                    if self.nombreSoldatsEnnemis < joueurs[i]:
+                        self.nombreSoldatsEnnemis = joueurs[i]
+                        self.ennemiPlusFort = i
 
             self.lastCheck = time.time()
 

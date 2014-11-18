@@ -262,7 +262,7 @@ class Base(Batiment):
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             posXUnit, posYUnit = self.joueur.model.trouverCentreCase(self.posX-1, self.posY-1)
-            print("UNIT",posXUnit,posYUnit )
+            #print("UNIT",posXUnit,posYUnit )
             cmd = Command(self.joueur.civilisation, Command.CREATE_UNIT)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
             cmd.addData('X', posXUnit)
