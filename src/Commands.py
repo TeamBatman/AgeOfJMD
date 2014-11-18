@@ -26,6 +26,7 @@ class Command():
     MOVE_UNIT = 'mu'           # Utilisée lorsqu'on veut déplacer une unité
     ATTACK_UNIT = 'au'         # Utilisée lorsqu'on veut attaquer une unité
     ATTACK_BUILDING = 'ab'     # Utilisée lorsqu'une unité attaque un bâtiment  # TODO Vérfier pertinence de la commande
+    TAKE_RESSOURCES = 'tr'
 
     #  COMMANDE POUR BÂTIMENTS
     CREATE_BUILDING = 'cb'     # Utilisée lorsqu'on désire créer un bâtiment

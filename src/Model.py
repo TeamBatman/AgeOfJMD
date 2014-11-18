@@ -38,7 +38,8 @@ class Model:
             Command.MOVE_UNIT: self.executeMoveUnit,
             Command.ATTACK_UNIT: self.executeAttackUnit,
             Command.KILL_UNIT: self.executeKillUnit,
-
+            Command.TAKE_RESSOURCES: self.executeTakeRessources,
+            
             Command.CREATE_BUILDING: self.executeCreateBuilding,
 
             Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
@@ -87,6 +88,28 @@ class Model:
         """
         civId = self.getUnit(command['ID']).getClientId()
         self.joueurs[civId].killUnit(command['ID'])
+
+    def executeTakeRessources(self, command):
+        civId = self.getUnit(command['ID']).getClientId()
+        nbRessources = self.carte.matrice[command['X1']][command['Y1']].nbRessources
+        
+        if nbRessources >= command['NB_RESSOURCES']:
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
+            
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
+        else:
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
+        if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
+            self.carte.matrice[command['X1']][command['Y1']].type = 0 #Gazon -> n'est plus une ressource
+            self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
+            self.controller.view.update(self.getUnits(), self.getBuildings(),
+                                        self.carte.matrice)
+        print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
+            #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
+            #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],

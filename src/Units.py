@@ -437,6 +437,7 @@ class Unit():
                             unit.joueur.enRessource.append(unit)
                         unit.mode = 1
                 self.mode = 1  # ressource
+                print("mode",self.mode)
                 
                 #cases = self.parent.trouverCentreCase(,noeud.y)
                 #print("avant", self.posRessource.x, self.posRessource.y)
@@ -929,10 +930,11 @@ class Paysan(Unit):
 
     def __init__(self, clientId, x, y, model, civilisation):
         super(Paysan, self).__init__(clientId, x, y, model, civilisation)
-        self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.1 #0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 2
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
+        self.compteurRessource = 0
 
     def determineSpritesheet(self):
         spritesheets = {
@@ -956,29 +958,50 @@ class Paysan(Unit):
         # TODO Regarder le type de la ressource !
         # TODO Enlever nbRessources à la case ressource !
         #print(self.nbRessources)
-
-        if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
-            self.nbRessources += self.vitesseRessource
+        cases = self.model.trouverCaseMatrice(self.posRessource.x, self.posRessource.y)
+        if self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+            self.mode = 0
+        if self.nbRessources + self.compteurRessource + self.vitesseRessource <= self.nbRessourcesMax:
+            self.compteurRessource += self.vitesseRessource
+            if self.compteurRessource >= 1:
+                cmd = Command(self.model.controller.network.client.id, Command.TAKE_RESSOURCES)
+                cmd.addData('ID',self.id)
+                cmd.addData('X1',cases[0])
+                cmd.addData('Y1',cases[1])
+                cmd.addData('NB_RESSOURCES', 1)
+                self.model.controller.network.client.sendCommand(cmd)
+                self.compteurRessource = 0
+            #self.nbRessources += self.vitesseRessource
         else:
-            self.nbRessources = self.nbRessourcesMax
-
-            if self.joueur.base:
-                if not self.cheminTrace:
-                    #print("compare",self.x, self.posUnitRessource.x, self.y, self.posUnitRessource.y)
-                    #if self.x == self.posUnitRessource.x and self.y == self.posUnitRessource.y:
-                    #print(self.id, "aller à la base",self.ressourceEnvoye )
-                    if not self.ressourceEnvoye:
-                        print(self.id, "envoyé à la base !")
-                        self.posUnitRessource = Noeud(None, self.x, self.y, None, None)
-                        groupe = []
-                        groupe.append(self)
-                        self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
-                        self.ressourceEnvoye = True
-                    #else:
-                     #   print("aller à la ressource", self.enDeplacement)
-                        #Remettre les ressources
+            if not self.ressourceEnvoye:
+                cmd = Command(self.model.controller.network.client.id, Command.TAKE_RESSOURCES)
+                cmd.addData('ID',self.id)
+                cmd.addData('X1',cases[0])
+                cmd.addData('Y1',cases[1])
+                cmd.addData('NB_RESSOURCES', self.nbRessourcesMax-self.nbRessources)
+                #self.nbRessources = self.nbRessourcesMax
+           
+                if self.joueur.base:
+                    if not self.cheminTrace:
+                        #print("compare",self.x, self.posUnitRessource.x, self.y, self.posUnitRessource.y)
+                        #if self.x == self.posUnitRessource.x and self.y == self.posUnitRessource.y:
+                        #print(self.id, "aller à la base",self.ressourceEnvoye )
+                        if not self.ressourceEnvoye:
+                            print(self.id, "envoyé à la base !")
+                            self.posUnitRessource = Noeud(None, self.x, self.y, None, None)
+                            groupe = []
+                            groupe.append(self)
+                            #self.ressourceEnvoye = True
+                            
+                            self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
+                            self.model.controller.network.client.sendCommand(cmd)
+                            #self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)#QUICK FIX
+                            self.ressourceEnvoye = True
+                        #else:
+                         #   print("aller à la ressource", self.enDeplacement)
+                            #Remettre les ressources
                         
-
+        
                 #self.mode = 2
 
             # print("MAX!", self.nbRessources)
