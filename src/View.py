@@ -465,7 +465,7 @@ class CarteView():
             Tuile.CHARBON: "#BDBDBD",  # gris fonce
             Tuile.EAU: "#2E9AFE"  # bleu
         }
-        print("draw")
+
         for x in range(x1, x1 + self.nbCasesX):
             for y in range(y1, y1 + self.nbCasesY):
                 posX1 = 0 + (x - x1) * self.item

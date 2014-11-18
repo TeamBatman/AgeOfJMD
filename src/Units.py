@@ -342,7 +342,7 @@ class Unit():
         liste = [-1,0,1]
         for i in liste:
             for j in liste:
-                if not(i==0 and j==0):
+                if not(i==0 and j==0) and not i==-1 and not j==-1:
                     try:
                         if self.model.carte.matrice[case[0]+i][case[1]+j].isWalkable:
                             if i==0 or j==0: # Pas de diagonale
