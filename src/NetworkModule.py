@@ -19,10 +19,10 @@ from Commands import Command
 
 
 # CONFIGURATION PYRO
-
-
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
-Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindre et deconnecte le client après ce délais
+Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet serveur de s'éteindre et de deconnecter le client après délais
+# Pyro4.config.REQUIRE_EXPOSE = True      # Permet d'exposer certaines méthodes et attributs d'un Proxy Pyro
+
 
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
@@ -37,12 +37,13 @@ def detectIP():
 class SCClient:
     """ Représentation d'un client pour le ServerController
     """
-    def __init__(self, ipAddress, name, cid):
-        self.civId = cid             # Identifiant de civilisation du client
-        self.name = name             # Nom du client/joueur
-        self.ipAddress = ipAddress   # Adresse IP du client
-        self.currentFrame = 0        # la Frame de simulation actuel du client
 
+    def __init__(self, ipAddress, name, cid):
+        self.civId = cid  # Identifiant de civilisation du client
+        self.name = name  # Nom du client/joueur
+        self.ipAddress = ipAddress  # Adresse IP du client
+        self.currentFrame = 0  # la Frame de simulation actuel du client
+        self.isHost = False  # Spécifie si le client est aussi l'hote (True) on Non (False)
 
 
 class ServerController:
@@ -80,8 +81,16 @@ class ServerController:
         self.syncFrameThreshold = 1  # Le nombre de frames minimum pour déclancher une synchronisation
         # Le nombre maximal de frames de retard sur le jeu. Lorsqu'un joueur est X frames derrière le
         # plus avancé, on lui renvoie Command.DESYNC lui indiquant qu'il ne peu plus joueur car il est désynchronisé
-        self.desynchFrameThreshold = 200
+        self.desynchFrameThreshold = 40
 
+    #@Pyro4.expose
+    #@property
+    def getClients(self):
+        """ Retourne la liste des clients du serveu, chacun sous la forme d'un dictionnaire
+        :return: une liste contenant les clients sous forme de dictionnaire
+        """
+
+        return [c.__dict__ for c in self.clients.values()]
 
 
     def join(self, ip, name='Joueur Anonyme'):
@@ -95,6 +104,8 @@ class ServerController:
         newClient = SCClient(ip, name, civ)
         self.clients[civ] = newClient
 
+        newClient.isHost = (detectIP() == ip)
+
         Server.outputDebug('LE CLIENT %s A REJOINT LA PARTIE' % newClient.civId)
         return newClient.civId
 
@@ -107,7 +118,6 @@ class ServerController:
             self.commands[maxFrame + self.commandFrameLatency].append(command)
         except KeyError:
             self.commands[maxFrame + self.commandFrameLatency] = [command]
-
 
 
     def getNextCommand(self, clientId, currentFrame):  # TODO Simplifier
@@ -143,9 +153,8 @@ class ServerController:
                 if currentFrame - self.getFrameMostBackwardInTime() >= self.syncFrameThreshold:
                     return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
 
-
         try:
-            return self.commands[currentFrame+1]
+            return self.commands[currentFrame + 1]
         except KeyError:
             return []
 
@@ -179,7 +188,6 @@ class ServerController:
         :return: True si quelqu'un est en retard sinon False:
         """
         return len(set([c.currentFrame for c in self.clients.values()])) != 1
-
 
 
     def leave(self, clientId):
@@ -267,7 +275,7 @@ class Client:
 
         self.uri = "PYRO:%s@%s:%s" % (hostName, host, port)
         self.host = Pyro4.Proxy(self.uri)
-        self.id = self.host.join(detectIP())    # TODO Ajouter le nom
+        self.id = self.host.join(detectIP())  # TODO Ajouter le nom
 
         Client.outputDebug("Connecté à %s avec ID: %s" % (self.uri, self.id))
 
