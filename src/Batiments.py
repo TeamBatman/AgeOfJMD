@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 from PIL import Image, ImageTk
+from Commands import Command
 from GraphicsManagement import GraphicsManager
 
 
@@ -262,10 +263,13 @@ class Base(Batiment):
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             print("creating lalala")
             posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
-            self.joueur.createUnit(Unit.generateId(self.joueur.civilisation), posUnitX, posUnitY,
-                                   self.joueur.civilisation)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            self.joueur.model.controller.sendCommand(cmd)
             self.enCreation = False
-        print(time.time() - self.tempsDepartCreation)
 
 
     def recherche1(self):  # meilleure vitesse de création de paysans
