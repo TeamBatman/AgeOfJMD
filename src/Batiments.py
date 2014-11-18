@@ -240,7 +240,7 @@ class Base(Batiment):
         self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
         self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
-        self.vitesseDeCreation = 40
+        self.vitesseDeCreation = 10
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
@@ -252,19 +252,21 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
+        print("creaa", self.posX,self.posY,self.enCreation, time.time() - self.tempsDepartCreation , self.vitesseDeCreation)
         if not self.enCreation:
             if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
                 self.joueur.ressources['bois'] -= self.coutCreer1['bois']
                 self.enCreation = True
                 self.tempsDepartCreation = time.time()
+                print("creation",self.enCreation)
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             cmd = Command(self.joueur.civilisation, Command.CREATE_UNIT)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
-            cmd.addData('X', self.posX + 10)
-            cmd.addData('Y', self.posY + 10)
+            cmd.addData('X', self.posX + 100)
+            cmd.addData('Y', self.posY + 100)
             cmd.addData('CIV', self.joueur.civilisation)
-            self.joueur.parent.controller.network.client.sendCommand(cmd)
+            self.joueur.model.controller.network.client.sendCommand(cmd)
             print("Paysan créé?")
             self.enCreation = False
 

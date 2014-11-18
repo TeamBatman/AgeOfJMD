@@ -122,6 +122,7 @@ class EventListener:
     def onMapRClick(self, event, groupe=None, pos2=None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
+        print("OnMapRClick")
         try:
             if pos2:
                 x2 = pos2[0]
@@ -135,7 +136,7 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupe, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
                                                                     groupe[0].grandeur)
-
+            print("leader", leaderUnit.x, leaderUnit.y)
             groupeSansLeader = groupe[:]
             groupeSansLeader.remove(leaderUnit)
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
@@ -157,7 +158,7 @@ class EventListener:
         cmd.addData('Y1', unitSelected.y)
         cmd.addData('X2', x2)
         cmd.addData('Y2', y2)
-
+        print(unitSelected.x, unitSelected.y)
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:

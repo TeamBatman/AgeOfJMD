@@ -6,7 +6,9 @@ from Batiments import *
 #TODO mettre les bonnes valeurs pour les couts de construction et de recherche
 from Joueurs import Joueur
 from Units import Paysan
+from Units import Noeud
 from Batiments import *
+from Carte import Tuile
 
 
 class AI(Joueur):
@@ -15,7 +17,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {"bois" : 50, "minerai" : 0, "charbon" : 0}
+        self.ressources = {"bois" : 100, "minerai" : 0, "charbon" : 0}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
@@ -149,18 +151,19 @@ class AI(Joueur):
             self.chercherNourriture()
 
     def chercherBois(self):
-        for unit in self.units:
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
             if isinstance(unit, Paysan):
                 if unit.typeRessource == 0:
                     if self.epoque >= 2:
                         if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
-                            position = self.trouverRessourcePlusPres(unit, self.model.carte.GAZON)
+                            position = self.trouverRessourcePlusPres(unit, Tuile.FORET)
                             self.batirBatiment(position["x"], position["y"], Batiment.SCIERIE, unit)
                             print("scierie créée?")
                             return
                     if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
                         print("not cd")
-                        position = self.trouverRessourcePlusPres(unit, self.model.carte.FORET)
+                        position = self.trouverRessourcePlusPres(unit,Tuile.FORET)
                         self.deplacerUnite(position["x"], position["y"], unit)
                         self.derniereRessourceBois = time.time()
                         return
@@ -168,7 +171,7 @@ class AI(Joueur):
                         print("en cooldown bois")
                         return
                 else:
-                    print("WTF")
+                    print("WTF", unit.typeRessource)
                     return
         self.creerPaysan()
 
@@ -356,7 +359,7 @@ class AI(Joueur):
             self.nombrePaysans = 0
             #vérifie si tous les paysans sont occupés
             for unit in self.units.values():
-                if isinstance(self.units[unit], Paysan):
+                if isinstance(unit, Paysan):
                     self.nombrePaysans += 1
                     if unit.typeRessource == 0:
                         self.paysansOccupes = False
@@ -464,13 +467,15 @@ class AI(Joueur):
             self.penser()
 
     def deplacerUnite(self, butX, butY, unite):
-        cmd = Command(self.civilisation, Command.MOVE_UNIT)
-        cmd.addData('ID', unite.id)
-        cmd.addData('X1', unite.x)
-        cmd.addData('Y1', unite.y)
-        cmd.addData('X2', butX)
-        cmd.addData('Y2', butY)
-        self.model.controller.network.client.sendCommand(cmd)
+        print(butX, butY, unite.x, unite.y)
+        self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite])
+        #cmd = Command(self.civilisation, Command.MOVE_UNIT)
+        #cmd.addData('ID', unite.id)
+        #cmd.addData('X1', unite.x)
+        #cmd.addData('Y1', unite.y)
+        #cmd.addData('X2', butX)
+        #cmd.addData('Y2', butY)
+        #self.model.controller.network.client.sendCommand(cmd)
 
     def batirBatiment(self, posX, posY, type, unite):
         cmd = Command(self.civilisation, Command.CREATE_BUILDING)
