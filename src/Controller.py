@@ -34,6 +34,8 @@ class Controller:
         self.networkTimer = Timer(200)
         self.networkTimer.start()
 
+        self.view.show()
+
 
     def mainLoop(self):
         try:
@@ -62,27 +64,21 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
-
-        self.network.startServer(port=33333)
-
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
-
-
-        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
-        cmd.addData('ID', self.network.getClientId())
-        self.model.creerJoueur(self.network.getClientId())
-        self.model.joueur = self.model.joueurs[self.network.getClientId()]
-        self.network.client.sendCommand(cmd)
-
-
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
         self.mainLoop()
 
+    def startServeur(self):
+        self.network.startServer(port=33333)
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
 
+        self.model.creerJoueur(self.network.getClientId())
 
-        self.view.show()
+        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
+        cmd.addData('ID', self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
+        self.network.client.sendCommand(cmd)
 
     def shutdown(self):
         self.view.destroy()
@@ -468,4 +464,3 @@ class EventListener:
 
 if __name__ == '__main__':
     app = Controller()
-    app.start()

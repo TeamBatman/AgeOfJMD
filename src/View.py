@@ -14,6 +14,7 @@ except ImportError:
     from Tkinter import *  # Python 2
 
 from GuiAwesomeness import *
+from MenuDebut import *
 
 
 class Color:
@@ -628,29 +629,63 @@ class View(GWindow):
 
         self.width = 1024
         self.height = 768
-        self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
-
-        self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#2B2B2B')
 
         # ZONE DE DESSIN
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
                              highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
-        self.canvas.pack()
-
-
+        
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
 
+        self.canevasActif = None
+
+        self.afficheMenuInit()
+
+    def debutJeu(self):
+        self.changeCanevas(self.canvas)
+        self.selected = []  # Liste qui contient ce qui est selectionné
+
+        self.root.geometry('%sx%s' % (self.width, self.height))
+        self.root.configure(background='#2B2B2B')
         # LE HUD
         self.drawHUD()
-        self.carte = CarteView(self.canvas, evListener, self.width, self.height, self.frameSide.width,
-                               self.frameBottom.height)
+        self.carte = CarteView(self.canvas, self.eventListener, self.width, self.height, self.frameSide.width,self.frameBottom.height)
 
         # LIAISON DES ÉVÉNEMENTS
         self.bindEvents()
 
         self.modeConstruction = False
+        self.eventListener.controller.start()
+        
+
+    def changeCanevas(self, canevas):
+        if self.canevasActif:
+            self.canevasActif.pack_forget()
+        self.canevasActif = canevas
+        self.canevasActif.pack()
+        
+    def afficheMenuInit(self):
+        self.affiche = MenuInit(self)
+
+    def menuMultijoueur(self):
+        self.affiche = MenuMultijoueur(self)
+
+    def menuServeur(self):
+        self.affiche = MenuServeur(self)
+
+    def menuRejoindreServeur(self):
+        self.affiche = MenuRejoindreServeur(self)
+
+    def menuLobby(self):
+        self.affiche = MenuLobby(self)
+
+    def pret(self):
+        # signaler au serveur
+        # marquer le joueur visuellement
+        pass
+
+    def creationSolo(self):
+        self.affiche = MenuSolo(self)
 
 
     def drawHUD(self):

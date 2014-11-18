@@ -49,7 +49,7 @@ class ServerController:
         self.clients = {}
         self.idIndex = 0  # À chaque attributionID ce nombre est augmenté [constitue l'ID unique des commandes]
         self.commands = {}  # une dict des commandes reçues la clé est l'ID de la commande etl a valeur la commande
-
+        
         # Les civilisations possibles
         self.civilisations = [
             Civilisation.ROUGE,
