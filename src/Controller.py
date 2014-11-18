@@ -54,8 +54,11 @@ class Controller:
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
 
-
-        self.view.update(self.model.getUnits(), self.model.getBuildings())
+        if self.view.needUpdateCarte:
+            self.view.update(self.model.getUnits(), self.model.getBuildings(),
+                                    self.model.carte.matrice)
+        else:
+            self.view.update(self.model.getUnits(), self.model.getBuildings())
 
         self.view.after(int(1000 / self.refreshRate), self.mainLoop)
 
