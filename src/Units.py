@@ -152,7 +152,11 @@ class Unit():
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
-
+        if self.ennemiCible:
+            print("changement", self.id)
+        else:
+            self.mode = 3
+            
         self.cibleX = cibleX
         self.cibleY = cibleY
         self.cibleXDeplacement = cibleX
@@ -205,9 +209,6 @@ class Unit():
         elif cibleY < self.y:
             self.y -= self.vitesse
             self.animation.direction = SpriteSheet.Direction.UP
-
-        #if self.getClientId() == self.parent.joueur.civilisation:      # DEBUG
-            #self.parent.controller.network.client.sendCommand(Command(self.getClientId(), Command.EMPTY))
 
         self.timerDeplacement.reset()
 
@@ -342,7 +343,7 @@ class Unit():
         liste = [-1,0,1]
         for i in liste:
             for j in liste:
-                if not(i==0 and j==0):
+                if not(i==0 and j==0) and not case[0]+i < 0 and not case[1]+j < 0:
                     try:
                         if self.model.carte.matrice[case[0]+i][case[1]+j].isWalkable:
                             if i==0 or j==0: # Pas de diagonale
@@ -420,6 +421,8 @@ class Unit():
         caseY = cases[1]
         if self.leader == 1:
             self.mode = 0
+        if self.ennemiCible:
+            self.mode = 3
         casesCible = self.model.trouverCaseMatrice(self.cibleX, self.cibleY)
         self.ressource = False
         if not self.model.carte.matrice[casesCible[0]][casesCible[1]].isWalkable:
@@ -437,6 +440,7 @@ class Unit():
                             unit.joueur.enRessource.append(unit)
                         unit.mode = 1
                 self.mode = 1  # ressource
+                print("mode",self.mode)
                 
                 #cases = self.parent.trouverCentreCase(,noeud.y)
                 #print("avant", self.posRessource.x, self.posRessource.y)
@@ -544,18 +548,6 @@ class Unit():
         self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
         while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
             del self.cheminTrace[-1]
-                
-            print("DUDE !", self.cibleX, self.cibleY)
-            # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-            self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
-        else:
-            print("DUDE !", self.cibleX, self.cibleY)
-            self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
-
-        self.cheminTrace = self.cheminTrace[:len(self.cheminTrace) - self.nbTour]
-        while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(
-                        self.cheminTrace[-1].y - self.cibleY):
-            del self.cheminTrace[-1]
 
         self.trouverDebutPath(self)
         self.trouverCheminMultiSelection()
@@ -571,6 +563,7 @@ class Unit():
         
         for case in cheminDebutTrace:
             unit.cheminTrace.append(case)
+            
         unit.cibleXDeplacement = unit.cheminTrace[-1].x
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
@@ -612,7 +605,6 @@ class Unit():
         if self.leader == 1 and self.groupeID:
             for unitId in self.groupeID:
                 unit = self.model.getUnit(unitId)
-                print("trouverChemin", unit.id, unit.mode)
                 if not unit.leader == 1:
                     self.trouverCheminMultiSelectionUnit(unit)
                     
@@ -806,28 +798,26 @@ class Unit():
         if int(self.getClientId()) != model.joueur.civilisation:
              return     # Ce n'est pas une unité du joueur en cours
 
-        if self.ennemiCible:
-            if self.ancienPosEnnemi is None:
-                self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
-            self.attaquer(model)
-            return
+        if self.ennemiCible == self:
+            self.ennemiCible = None
 
         # ACTIF
-        if self.modeAttack == Unit.ACTIF:
+        if self.modeAttack == Unit.ACTIF and not self.mode == 3:
             # On se choisie une cible et on envoie une commande pour l'attaquer
             # vision range
-            units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
-                                                      self.x + self.rayonVision, self.y + self.rayonVision,
-                                                      units=self.model.getUnits())
+            try:
+                units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
+                                                          self.x + self.rayonVision, self.y + self.rayonVision,
+                                                          units=self.model.getUnits())
+            except:
+                print("ennemi tué")
 
             # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
             units = [u for u in units if u.id != self.id]
             if not units:
                 return
 
-
             # Prendre la plus proche
-
             closestDistance = 2000
             closestUnit = units[0]
             for unit in units:
@@ -835,13 +825,32 @@ class Unit():
                 if d > closestDistance:
                     closestUnit = unit
             self.ennemiCible = closestUnit
+            self.cibleX = self.ennemiCible.x
+            self.cibleY = self.ennemiCible.y
+            self.mode = 3
+            if self.leader == 1:
+                #print("leader")
+                groupe = []
+                for unitID in self.groupeID: 
+                    groupe.append(model.getUnit(unitID))
+
+                model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
                 self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
-
             # Chercher une cible dans sans champ de vision
             # Lancer une commande attaque vers la cible
 
+
+        #ATTAQUE
+        if self.ennemiCible:
+            if self.ancienPosEnnemi is None:
+                self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
+            if not self.ennemiCible == self and self.mode == 3:
+                self.attaquer(model)
+                return
+            else:
+                print("NON", self.id, self.mode)
 
     def attaquer(self, model):
         """ Permet d'attaquer une unité
@@ -855,14 +864,16 @@ class Unit():
             #TODO: SI en déplacement trouver une nouvelle position...
             return
 
-        # Si je suis trop loin je me rapproche de l'ennemi
         
-        if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur: #and not self.cheminTrace:
+
+        # Si je suis trop loin je me rapproche de l'ennemi
+        distance = self.grandeur + (model.controller.view.carte.item/2) #Car il va au centre de la case...
+        if abs(self.x - self.ennemiCible.x) > distance or abs(self.y - self.ennemiCible.y) > distance: #and not self.cheminTrace:
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
                 if not self.ennemiCible.x == self.ancienPosEnnemi[0] and not self.ennemiCible.y == self.ancienPosEnnemi[1]: #or not self.cheminTrace:
-                    #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1], self.cheminTrace)
+                    print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1], self.cheminTrace)
                     x2 = self.ennemiCible.x-self.grandeur
                     y2 = self.ennemiCible.y-self.grandeur
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -881,9 +892,9 @@ class Unit():
                         
                         #posFin = model.trouverFinMultiSelection(x2, y2, 1,self.grandeur)
                         #model.controller.eventListener.selectionnerUnit(self,False, posFin,self.ennemiCible.x-self.grandeur, self.ennemiCible.y-self.grandeur, self )
-                        groupe = []
-                        groupe.append(self)
-                        model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+                        #groupe = []
+                        #groupe.append(self)
+                        #model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
                     #print("1")
                     return
                 #print("2")
@@ -896,7 +907,7 @@ class Unit():
         if self.timerAttack.isDone():
             attack = random.randint(self.attackMin, self.attackMax)
             # TODO ENVOYER L'ATTAQUE AU SERVEUR
-            cmd = Command(model.controller.network.client.id, Command.UNIT_ATTACK_UNIT)
+            cmd = Command(cmdType=Command.UNIT_ATTACK_UNIT)
             cmd.addData('SOURCE_ID', self.id)
             cmd.addData('TARGET_ID', self.ennemiCible.id)
             cmd.addData('DMG', attack)
@@ -923,16 +934,18 @@ class Unit():
         # TODO Compatibiliser avec l'AI
         if int(self.getClientId()) == model.joueur.civilisation:
             self.ennemiCible = attaquant
+            self.mode = 3
 
 
 class Paysan(Unit):
 
     def __init__(self, clientId, x, y, model, civilisation):
         super(Paysan, self).__init__(clientId, x, y, model, civilisation)
-        self.vitesseRessource = 0.01  # La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.1 #0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 2
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
+        self.compteurRessource = 0
 
     def determineSpritesheet(self):
         spritesheets = {
@@ -956,29 +969,50 @@ class Paysan(Unit):
         # TODO Regarder le type de la ressource !
         # TODO Enlever nbRessources à la case ressource !
         #print(self.nbRessources)
-
-        if self.nbRessources + self.vitesseRessource <= self.nbRessourcesMax:
-            self.nbRessources += self.vitesseRessource
+        cases = self.model.trouverCaseMatrice(self.posRessource.x, self.posRessource.y)
+        if self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+            self.mode = 0
+        if self.nbRessources + self.compteurRessource + self.vitesseRessource <= self.nbRessourcesMax:
+            self.compteurRessource += self.vitesseRessource
+            if self.compteurRessource >= 1:
+                cmd = Command(cmdType=Command.UNIT_TAKE_RESSOURCES)
+                cmd.addData('ID',self.id)
+                cmd.addData('X1',cases[0])
+                cmd.addData('Y1',cases[1])
+                cmd.addData('NB_RESSOURCES', 1)
+                self.model.controller.sendCommand(cmd)
+                self.compteurRessource = 0
+            #self.nbRessources += self.vitesseRessource
         else:
-            self.nbRessources = self.nbRessourcesMax
-
-            if self.joueur.base:
-                if not self.cheminTrace:
-                    #print("compare",self.x, self.posUnitRessource.x, self.y, self.posUnitRessource.y)
-                    #if self.x == self.posUnitRessource.x and self.y == self.posUnitRessource.y:
-                    #print(self.id, "aller à la base",self.ressourceEnvoye )
-                    if not self.ressourceEnvoye:
-                        print(self.id, "envoyé à la base !")
-                        self.posUnitRessource = Noeud(None, self.x, self.y, None, None)
-                        groupe = []
-                        groupe.append(self)
-                        self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
-                        self.ressourceEnvoye = True
-                    #else:
-                     #   print("aller à la ressource", self.enDeplacement)
-                        #Remettre les ressources
+            if not self.ressourceEnvoye:
+                cmd = Command(cmdType=Command.UNIT_TAKE_RESSOURCES)
+                cmd.addData('ID',self.id)
+                cmd.addData('X1',cases[0])
+                cmd.addData('Y1',cases[1])
+                cmd.addData('NB_RESSOURCES', self.nbRessourcesMax-self.nbRessources)
+                #self.nbRessources = self.nbRessourcesMax
+           
+                if self.joueur.base:
+                    if not self.cheminTrace:
+                        #print("compare",self.x, self.posUnitRessource.x, self.y, self.posUnitRessource.y)
+                        #if self.x == self.posUnitRessource.x and self.y == self.posUnitRessource.y:
+                        #print(self.id, "aller à la base",self.ressourceEnvoye )
+                        if not self.ressourceEnvoye:
+                            print(self.id, "envoyé à la base !")
+                            self.posUnitRessource = Noeud(None, self.x, self.y, None, None)
+                            groupe = []
+                            groupe.append(self)
+                            #self.ressourceEnvoye = True
+                            
+                            self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
+                            self.model.controller.sendCommand(cmd)
+                            #self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)#QUICK FIX
+                            self.ressourceEnvoye = True
+                        #else:
+                         #   print("aller à la ressource", self.enDeplacement)
+                            #Remettre les ressources
                         
-
+        
                 #self.mode = 2
 
             # print("MAX!", self.nbRessources)

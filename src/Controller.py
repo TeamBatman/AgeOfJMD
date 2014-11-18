@@ -224,7 +224,7 @@ class EventListener:
             if unitSelected.leader == 1:
                 print("changement leader")
             else:
-                print("else",unitSelected.id, unitSelected.leader)
+                print("pas changment leader",unitSelected.id, unitSelected.leader)
 
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
@@ -322,12 +322,14 @@ class EventListener:
         for unitSelected in groupeSansLeader:
             unitSelected.ennemiCible = targetUnit
             unitSelected.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+            unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
             self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+        leaderUnit.mode = 3
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2,groupeSansLeader, leaderUnit.ennemiCible )  # Faire le leader en dernier
         

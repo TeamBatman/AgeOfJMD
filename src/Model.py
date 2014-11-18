@@ -35,10 +35,12 @@ class Model:
         :param command: la commande à exécuter [Objet Command]
         """
         commands = {
+
             Command.UNIT_CREATE: self.executeCreateUnit,
             Command.UNIT_MOVE: self.executeMoveUnit,
             Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
             Command.UNIT_DIE: self.executeKillUnit,
+            Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
             Command.BUILDING_CREATE: self.executeCreateBuilding,
 
@@ -87,8 +89,30 @@ class Model:
         try:
             civId = self.getUnit(command['ID']).getClientId()
             self.joueurs[civId].killUnit(command['ID'])
-        except KeyError:    # On a essayé de tuer Une unité déjà morte
-            pass    # TODO Comprendre pourquoi
+        except AttributeError:    # On a essayé de tuer Une unité déjà morte
+            print("UNIT DÉJÀ MORTE?")  # TODO Comprendre pourquoi
+
+    def executeTakeRessources(self, command):
+        civId = self.getUnit(command['ID']).getClientId()
+        nbRessources = self.carte.matrice[command['X1']][command['Y1']].nbRessources
+        
+        if nbRessources >= command['NB_RESSOURCES']:
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
+            
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
+        else:
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
+        if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
+            self.carte.matrice[command['X1']][command['Y1']].type = 0 #Gazon -> n'est plus une ressource
+            self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
+            self.controller.view.update(self.getUnits(), self.getBuildings(),
+                                        self.carte.matrice)
+        print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
+            #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
+            #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],

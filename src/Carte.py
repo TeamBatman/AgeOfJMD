@@ -66,6 +66,7 @@ class Tuile(object):
     def __init__(self):
         # Type de la ressource sur la case
         self.type = Tuile.GAZON
+        self.nbRessources = 10
         self.ressourceUnits = 0
         self.revealed = 0
         self.isWalkable = True
