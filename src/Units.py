@@ -983,9 +983,11 @@ class Paysan(Unit):
 
             # print("MAX!", self.nbRessources)
             # TODO Faire retourner à la base !
+class Soldat(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(Soldat, self).__init__(clientId, x, y, model, civilisation)
 
-
-class GuerrierEpee(Unit):
+class GuerrierEpee(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
         super(GuerrierEpee, self).__init__(clientId, x, y, model, civilisation)
         self.vitesse = 5
@@ -999,21 +1001,21 @@ class GuerrierEpee(Unit):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/guerrier_epee_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/guerrier_epee_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/guerrier_epee_jaune.png',
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/guerrier_epee_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/guerrier_epee_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/guerrier_epee_orange.png',
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/guerrier_epee_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/guerrier_epee_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/guerrier_epee_rose.png'
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
         return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
-class GuerrierLance(Unit):
+class GuerrierLance(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
         super(GuerrierLance, self).__init__(clientId, x, y, model, civilisation)
         self.vitesse = 5
@@ -1027,21 +1029,21 @@ class GuerrierLance(Unit):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/guerrier_lance_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/guerrier_lance_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/guerrier_lance_jaune.png',
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/guerrier_lance_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/guerrier_lance_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/guerrier_lance_orange.png',
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/guerrier_lance_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/guerrier_lance_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/guerrier_lance_rose.png'
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
         return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
-class GuerrierBouclier(Unit):
+class GuerrierBouclier(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
         super(GuerrierBouclier, self).__init__(clientId, x, y, model, civilisation)
         self.vitesse = 5
@@ -1055,21 +1057,21 @@ class GuerrierBouclier(Unit):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/guerrier_boucl_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/guerrier_boucl_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/guerrier_boucl_jaune.png',
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/guerrier_boucl_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/guerrier_boucl_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/guerrier_boucl_orange.png',
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/guerrier_boucl_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/guerrier_boucl_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/guerrier_boucl_rose.png'
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
         return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
-class Scout(Unit):
+class Scout(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
         super(Scout, self).__init__(clientId, x, y, model, civilisation)
         self.vitesse = 10
@@ -1083,17 +1085,17 @@ class Scout(Unit):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/scout_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/scout_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/scout_jaune.png',
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/scout_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/scout_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/scout_orange.png',
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/scout_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/scout_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/scout_rose.png'
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
         return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
 
