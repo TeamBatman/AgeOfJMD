@@ -155,8 +155,8 @@ class Unit():
         if self.ennemiCible:
             print("changement", self.id)
         else:
-            print("else",self.id)
             self.mode = 3
+            
         self.cibleX = cibleX
         self.cibleY = cibleY
         self.cibleXDeplacement = cibleX
@@ -551,18 +551,6 @@ class Unit():
         self.cheminTrace = self.cheminTrace[:len(self.cheminTrace)-self.nbTour]
         while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(self.cheminTrace[-1].y - self.cibleY):
             del self.cheminTrace[-1]
-                
-            print("DUDE !", self.cibleX, self.cibleY)
-            # Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
-            self.cheminTrace[0] = Noeud(None, self.cibleX, self.cibleY, None, None)
-        else:
-            print("DUDE !", self.cibleX, self.cibleY)
-            self.cheminTrace.append(Noeud(None, self.cibleX, self.cibleY, None, None))
-
-        self.cheminTrace = self.cheminTrace[:len(self.cheminTrace) - self.nbTour]
-        while abs(self.x - self.cibleX) + abs(self.y - self.cibleY) < abs(self.cheminTrace[-1].x - self.cibleX) + abs(
-                        self.cheminTrace[-1].y - self.cibleY):
-            del self.cheminTrace[-1]
 
         self.trouverDebutPath(self)
         self.trouverCheminMultiSelection()
@@ -578,6 +566,7 @@ class Unit():
         
         for case in cheminDebutTrace:
             unit.cheminTrace.append(case)
+            
         unit.cibleXDeplacement = unit.cheminTrace[-1].x
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
@@ -619,7 +608,6 @@ class Unit():
         if self.leader == 1 and self.groupeID:
             for unitId in self.groupeID:
                 unit = self.model.getUnit(unitId)
-                print("trouverChemin", unit.id, unit.mode)
                 if not unit.leader == 1:
                     self.trouverCheminMultiSelectionUnit(unit)
                     

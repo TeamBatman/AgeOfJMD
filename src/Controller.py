@@ -171,7 +171,7 @@ class EventListener:
             if unitSelected.leader == 1:
                 print("changement leader")
             else:
-                print("else",unitSelected.id, unitSelected.leader)
+                print("pas changment leader",unitSelected.id, unitSelected.leader)
 
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
