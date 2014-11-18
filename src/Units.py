@@ -152,7 +152,11 @@ class Unit():
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
-
+        if self.ennemiCible:
+            print("changement", self.id)
+        else:
+            print("else",self.id)
+            self.mode = 3
         self.cibleX = cibleX
         self.cibleY = cibleY
         self.cibleXDeplacement = cibleX
@@ -342,7 +346,7 @@ class Unit():
         liste = [-1,0,1]
         for i in liste:
             for j in liste:
-                if not(i==0 and j==0) and not i==-1 and not j==-1:
+                if not(i==0 and j==0) and not case[0]+i < 0 and not case[1]+j < 0:
                     try:
                         if self.model.carte.matrice[case[0]+i][case[1]+j].isWalkable:
                             if i==0 or j==0: # Pas de diagonale
@@ -420,6 +424,8 @@ class Unit():
         caseY = cases[1]
         if self.leader == 1:
             self.mode = 0
+        if self.ennemiCible:
+            self.mode = 3
         casesCible = self.model.trouverCaseMatrice(self.cibleX, self.cibleY)
         self.ressource = False
         if not self.model.carte.matrice[casesCible[0]][casesCible[1]].isWalkable:
@@ -807,28 +813,26 @@ class Unit():
         if int(self.getClientId()) != model.joueur.civilisation:
              return     # Ce n'est pas une unité du joueur en cours
 
-        if self.ennemiCible:
-            if self.ancienPosEnnemi is None:
-                self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
-            self.attaquer(model)
-            return
+        if self.ennemiCible == self:
+            self.ennemiCible = None
 
         # ACTIF
-        if self.modeAttack == Unit.ACTIF:
+        if self.modeAttack == Unit.ACTIF and not self.mode == 3:
             # On se choisie une cible et on envoie une commande pour l'attaquer
             # vision range
-            units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
-                                                      self.x + self.rayonVision, self.y + self.rayonVision,
-                                                      units=self.model.getUnits())
+            try:
+                units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
+                                                          self.x + self.rayonVision, self.y + self.rayonVision,
+                                                          units=self.model.getUnits())
+            except:
+                print("ennemi tué")
 
             # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
             units = [u for u in units if u.id != self.id]
             if not units:
                 return
 
-
             # Prendre la plus proche
-
             closestDistance = 2000
             closestUnit = units[0]
             for unit in units:
@@ -836,13 +840,32 @@ class Unit():
                 if d > closestDistance:
                     closestUnit = unit
             self.ennemiCible = closestUnit
+            self.cibleX = self.ennemiCible.x
+            self.cibleY = self.ennemiCible.y
+            self.mode = 3
+            if self.leader == 1:
+                #print("leader")
+                groupe = []
+                for unitID in self.groupeID: 
+                    groupe.append(model.getUnit(unitID))
+
+                model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
                 self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
-
             # Chercher une cible dans sans champ de vision
             # Lancer une commande attaque vers la cible
 
+
+        #ATTAQUE
+        if self.ennemiCible:
+            if self.ancienPosEnnemi is None:
+                self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
+            if not self.ennemiCible == self and self.mode == 3:
+                self.attaquer(model)
+                return
+            else:
+                print("NON", self.id, self.mode)
 
     def attaquer(self, model):
         """ Permet d'attaquer une unité
@@ -856,14 +879,16 @@ class Unit():
             #TODO: SI en déplacement trouver une nouvelle position...
             return
 
-        # Si je suis trop loin je me rapproche de l'ennemi
         
-        if abs(self.x - self.ennemiCible.x) > self.grandeur or abs(self.y - self.ennemiCible.y) > self.grandeur: #and not self.cheminTrace:
+
+        # Si je suis trop loin je me rapproche de l'ennemi
+        distance = self.grandeur + (model.controller.view.carte.item/2) #Car il va au centre de la case...
+        if abs(self.x - self.ennemiCible.x) > distance or abs(self.y - self.ennemiCible.y) > distance: #and not self.cheminTrace:
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
                 if not self.ennemiCible.x == self.ancienPosEnnemi[0] and not self.ennemiCible.y == self.ancienPosEnnemi[1]: #or not self.cheminTrace:
-                    #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1], self.cheminTrace)
+                    print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1], self.cheminTrace)
                     x2 = self.ennemiCible.x-self.grandeur
                     y2 = self.ennemiCible.y-self.grandeur
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -882,9 +907,9 @@ class Unit():
                         
                         #posFin = model.trouverFinMultiSelection(x2, y2, 1,self.grandeur)
                         #model.controller.eventListener.selectionnerUnit(self,False, posFin,self.ennemiCible.x-self.grandeur, self.ennemiCible.y-self.grandeur, self )
-                        groupe = []
-                        groupe.append(self)
-                        model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+                        #groupe = []
+                        #groupe.append(self)
+                        #model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
                     #print("1")
                     return
                 #print("2")
@@ -924,6 +949,7 @@ class Unit():
         # TODO Compatibiliser avec l'AI
         if int(self.getClientId()) == model.joueur.civilisation:
             self.ennemiCible = attaquant
+            self.mode = 3
 
 
 class Paysan(Unit):

@@ -86,8 +86,11 @@ class Model:
           selon ses paramètres 
         :param command: la commande à exécuter [Objet Commande]
         """
-        civId = self.getUnit(command['ID']).getClientId()
-        self.joueurs[civId].killUnit(command['ID'])
+        try:
+            civId = self.getUnit(command['ID']).getClientId()
+            self.joueurs[civId].killUnit(command['ID'])
+        except:
+            print("Déjà tuée")#Unité déjà morte
 
     def executeTakeRessources(self, command):
         civId = self.getUnit(command['ID']).getClientId()

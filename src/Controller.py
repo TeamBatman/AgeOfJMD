@@ -266,12 +266,14 @@ class EventListener:
         for unitSelected in groupeSansLeader:
             unitSelected.ennemiCible = targetUnit
             unitSelected.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+            unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
             self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+        leaderUnit.mode = 3
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2,groupeSansLeader, leaderUnit.ennemiCible )  # Faire le leader en dernier
         
