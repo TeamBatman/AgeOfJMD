@@ -826,8 +826,6 @@ class View(GWindow):
         """ Met à jours la carte et la minimap (et leurs unités) (au besoin)"""
 
         if carte:
-            # self.drawMinimap(units, carte)
-            self.drawRectMiniMap()
             self.drawMap(carte)
             self.drawBuildings(buildings)  # TODO isBuilding Shown
 
