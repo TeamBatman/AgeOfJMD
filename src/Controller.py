@@ -95,7 +95,7 @@ class Controller:
 
         # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333)
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
 
         # INITIALISATION MODEL
