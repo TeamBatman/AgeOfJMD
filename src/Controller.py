@@ -1,22 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time
-from Batiments import Batiment
+import sys
 
+from Batiments import Batiment
 from Commands import Command
 from Model import Model
-from NetworkModule import NetworkController, ClientConnectionError
-
-
+from NetworkModule import NetworkController, ClientConnectionError, Client
 from Units import Unit
-from View import View, UnitView, FrameSide
-
-from Timer import Timer
-
-
-
-import sys
+from View import View, FrameSide
+from SimpleTimer import Timer
 
 
 class Controller:
@@ -24,77 +17,109 @@ class Controller:
         de sorte à ce qu'ils n'aient pas accès entre eux directement.
     """
 
+    SINGLE_PLAYER = 0
+    MULTIPLAYER = 1
+
     def __init__(self):
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
-        self.refreshRate = 64  # Nombre de fois par seconde
 
-        self.networkTimer = Timer(200)
-        self.networkTimer.start()
+
+
+        self.gameMode = Controller.MULTIPLAYER
+
+        self.currentFrame = -1
+        self.nbFramesPerSecond = 15
+        self.refreshRate = int(1000/self.nbFramesPerSecond)
+
+        self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
+
+
+
 
 
     def mainLoop(self):
         try:
-            cmd = self.network.synchronizeClient()
-            if cmd['TYPE'] != Command.WAIT and cmd['TYPE'] != Command.LAG:
-                self.model.executeCommand(cmd)
-
-            if cmd['TYPE'] != Command.LAG and cmd['TYPE'] != Command.EMPTY:
-                self.model.update()
-                if self.networkTimer.isDone():  # On force une synchro sur le serveur
-                    self.network.client.sendCommand(Command(self.network.client.id, Command.EMPTY))
-                    self.networkTimer.reset()
-            else:   # LAG
-                pass
-
+            cmd = self.network.synchronizeClient(self.currentFrame)
         except ClientConnectionError:
             self.shutdown()
         # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
 
+        self.doLogic(cmd)
+
+        self.renderGraphics()
+
+        self.view.after(self.refreshRate, self.mainLoop)
 
 
-        self.view.update(self.model.getUnits(), self.model.getBuildings())
+    def doLogic(self, commands):
+        """ Une itération sur cette fonction constitue une FRAME
+        :return:
+        """
+        doUpdate = True
+        for command in commands:
+            if command['TYPE'] == Command.WAIT:
+                doUpdate = False
+            elif command['TYPE'] == Command.DESYNC:
+                Client.outputDebug("Votre clent est DÉSYNCHRONISÉ")
+                self.shutdown()  # TODO Afficher message
+            else:
+                self.model.executeCommand(command)
 
-        self.view.after(int(1000 / self.refreshRate), self.mainLoop)
+        if doUpdate:
+            self.model.update()
+            #print("Finnished %s" % self.currentFrame)
+            self.currentFrame += 1
+
+
+    def renderGraphics(self):
+        """ Méthode principale d'affichage des Graphics
+        :return:
+        """
+        if self.displayTimer.isDone():
+
+            if self.view.needUpdateCarte():
+                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
+            else:
+                self.view.update(self.model.getUnits(), self.model.getBuildings())
+            self.displayTimer.reset()
+
+
+
 
     def start(self):
         """ Starts the controller
         """
 
+        # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
-        self.network.connectClient(ipAddress='127.0.0.1', port=33333)
 
-
-        cmd = Command(self.network.getClientId(), Command.CREATE_CIVILISATION)
+        # INITIALISATION MODEL
+        cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
+        self.sendCommand(cmd)
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
-        self.network.client.sendCommand(cmd)
 
-        cmd = Command(9, Command.CREATE_CIVILISATION)
-        cmd.addData('ID', 9)
-        self.model.creerAi(9)
-        self.network.client.sendCommand(cmd)
+        self.model.civNumber = self.network.getClientId()
 
 
+        # INITIALISATION AFFICHAGE
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
+
+        #TIMERS
+        self.displayTimer.start()
+
+        # FRAMES
+        self.currentFrame = 0
+
         self.mainLoop()
-
-        cmd = Command(9,Command.CREATE_BUILDING )
-        cmd.addData('ID', Batiment.generateId(9))
-        cmd.addData('X', 200)
-        cmd.addData('Y', 200)
-        cmd.addData('CIV', 9)
-        cmd.addData('BTYPE', Batiment.BASE)
-
-        self.network.client.sendCommand(cmd)
-        self.model.creerAi(6)
-        self.model.creerBase(6)
         self.view.show()
 
     def shutdown(self):
@@ -104,6 +129,21 @@ class Controller:
         if self.network.server:
             self.network.stopServer()
         sys.exit(0)
+
+
+
+    def sendCommand(self, command):
+        """ Raccourci permettant d'envoyer une commande au serveur
+        en passant par le network module
+        """
+        if command.clientId == -1:
+            command.clientId = self.network.client.id
+        self.network.client.sendCommand(command, self.currentFrame)
+
+
+
+
+
 
 
 class EventListener:
@@ -122,7 +162,6 @@ class EventListener:
     def onMapRClick(self, event, groupe=None, pos2=None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         """
-        print("OnMapRClick")
         try:
             if pos2:
                 x2 = pos2[0]
@@ -136,7 +175,7 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupe, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
                                                                     groupe[0].grandeur)
-            print("leader", leaderUnit.x, leaderUnit.y)
+
             groupeSansLeader = groupe[:]
             groupeSansLeader.remove(leaderUnit)
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
@@ -152,13 +191,13 @@ class EventListener:
     def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None):
         """Pour la fonction onMapRClick !!!"""
         #print("select", leaderUnit)
-        cmd = Command(self.controller.network.client.id, Command.MOVE_UNIT)
+        cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
         cmd.addData('ID', unitSelected.id)
         cmd.addData('X1', unitSelected.x)
         cmd.addData('Y1', unitSelected.y)
         cmd.addData('X2', x2)
         cmd.addData('Y2', y2)
-        print(unitSelected.x, unitSelected.y)
+
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -185,12 +224,12 @@ class EventListener:
             if unitSelected.leader == 1:
                 print("changement leader")
             else:
-                print("else",unitSelected.id, unitSelected.leader)
+                print("pas changment leader",unitSelected.id, unitSelected.leader)
 
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
             cmd.addData('GROUPE', None)
-        self.controller.network.client.sendCommand(cmd)
+        self.controller.sendCommand(cmd)
 
 
     def onMapLPress(self, event):
@@ -213,13 +252,13 @@ class EventListener:
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
 
-            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', Batiment.generateId(clientId))
             cmd.addData('X', currentX)
             cmd.addData('Y', currentY)
             cmd.addData('CIV', self.model.joueur.civilisation)
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
             self.controller.view.modeConstruction = False
@@ -236,8 +275,11 @@ class EventListener:
         # SÉLECTION BUILDINGS
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
-            #for b in buildings:
-                #print(b.id)
+            for b in buildings:
+                print(b.id)
+                if b.estBatimentDe(clientId):
+                    if b.type == "base":
+                        self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 
 
@@ -280,12 +322,14 @@ class EventListener:
         for unitSelected in groupeSansLeader:
             unitSelected.ennemiCible = targetUnit
             unitSelected.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+            unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
             self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+        leaderUnit.mode = 3
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2,groupeSansLeader, leaderUnit.ennemiCible )  # Faire le leader en dernier
         
@@ -346,12 +390,12 @@ class EventListener:
         else:
             # CRÉATION D'UNITÉ
             clientId = self.controller.network.client.id
-            cmd = Command(clientId, Command.CREATE_UNIT)
+            cmd = Command(clientId, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(clientId))
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
             cmd.addData('CIV', self.controller.model.joueur.civilisation)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
     def onMinimapLPress(self, event, redo=0):
@@ -373,13 +417,13 @@ class EventListener:
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
 
-            cmd = Command(clientId, Command.CREATE_BUILDING)
+            cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', Batiment.generateId(clientId))
             cmd.addData('X', currentX)
             cmd.addData('Y', currentY)
             cmd.addData('CIV', self.model.joueur.civilisation)
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
 
@@ -401,12 +445,12 @@ class EventListener:
         else:
             # CRÉATION D'UNITÉ
             clientId = self.controller.network.client.id
-            cmd = Command(clientId, Command.CREATE_UNIT)
+            cmd = Command(clientId, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(clientId))
             cmd.addData('X', event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item))
             cmd.addData('Y', event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item))
             cmd.addData('CIV', self.controller.model.joueur.civilisation)
-            self.controller.network.client.sendCommand(cmd)
+            self.controller.sendCommand(cmd)
 
 
     def onMinimapLPress(self, event, redo=0):

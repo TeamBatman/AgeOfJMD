@@ -8,9 +8,7 @@ Module de gestion des graphiques
 - Modification d'images
 """
 
-from Timer import Timer
-
-
+from SimpleTimer import Timer
 
 
 DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
@@ -18,6 +16,7 @@ DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManag
 from PIL import Image
 from PIL import ImageTk
 from PIL import ImageEnhance
+from PIL import ImageDraw
 
 
 def colorizeImage(pilImg):
@@ -32,11 +31,43 @@ def colorizeImage(pilImg):
     return pilImg
 
 
+def hex_to_rgba(value):
+    """ Source: https://github.com/aroscoe/Hex-to-RGBA/blob/master/Hex-to-RGBA.py
+    :param value: une string de forme #FFF ou #FFF00F
+    :return: Un Tuple (RGB)
+    """
+    value = value.lstrip('#')
+    if len(value) == 3:
+        value = ''.join([v*2 for v in list(value)])
+    return tuple(int(value[i:i+2], 16) for i in range(0, 6, 2))+(1,)
+
+
+
+
+
+def generateCircle(radius, colorRGBA):
+    """ Permet de générer une image contenant une ellipse antialiased
+    :param radius:
+    :return: PIL Image
+    """
+
+    im = Image.new('RGBA', size=(radius*2, radius*2), color=colorRGBA)
+
+    bigsize = (im.size[0] * 3, im.size[1] * 3)
+    mask = Image.new('L', bigsize, 0)
+    draw = ImageDraw.Draw(mask)
+
+    draw.ellipse((0, 0) + bigsize, fill=50)
+
+    mask = mask.resize(im.size, Image.ANTIALIAS)
+    im.putalpha(mask)
+    return im
 
 
 class AnimationSheet():
     """ Permet de splitter une image et d'en retournant les sous parties
     """
+
     def __init__(self, imgPath, nbFrameCol, nbFrameRow):
         """
         :param imgPath:  Le chemin vers l'image de la feuille d'Animation
@@ -44,15 +75,13 @@ class AnimationSheet():
         self.NB_FRAME_COL = nbFrameCol
         self.NB_FRAME_ROW = nbFrameRow
 
-
         self.imgPath = imgPath  # Le chemin vers la feuille d'animation
-        self.sheet = GraphicsManager.getImage(imgPath)   # La feuille de sprite en tant qu'image
+        self.sheet = GraphicsManager.getImage(imgPath)  # La feuille de sprite en tant qu'image
         self.sheet.convert('RGBA')
 
         width, height = self.sheet.size
         self.CELL_WIDTH = int(width / self.NB_FRAME_ROW)  # La largeur d'une frame d'animation
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
-
 
         self.frames = []
         self._splitSheet()
@@ -68,8 +97,8 @@ class AnimationSheet():
                 img = self.sheet.crop(rectangle)
                 self.frames.append(ImageTk.PhotoImage(img))
 
-class SpriteSheet():
 
+class SpriteSheet():
     class Direction:
         UP = 'UP'
         DOWN = 'DOWN'
@@ -92,7 +121,7 @@ class SpriteSheet():
         self.CELL_HEIGHT = int(height / self.NB_FRAME_COL)  # La hauteur d'une frame d'animation
 
         self.frames = {}  # Le dictionnaire contenant toute les frames
-        self.framesOutlines = {}    # Le dictionnaire contenant toutes les frames en version sélectionnées
+        self.framesOutlines = {}  # Le dictionnaire contenant toutes les frames en version sélectionnées
         self._splitSheet()
 
     def _splitRow(self, rowNb, rowTag):
@@ -126,6 +155,7 @@ class SpriteSheet():
 class Animation():
     """ Représente une animation Générique
     """
+
     def __init__(self, animationSheet, frameDelay):
         self.sheet = animationSheet
         self.frameIndex = 0
@@ -144,13 +174,13 @@ class Animation():
         except IndexError:  # On est allé trop loin
             self.activeFrame = 0
 
-
         self.timer.reset()
 
 
 class SpriteAnimation():
     """ Correspond à l'animation d'un sprite et l'anime au besoin (manuellement via animate() )
     """
+
     def __init__(self, spriteSheet, frameDelay):
         """
         :param frameDelay: the delay between frames
@@ -193,13 +223,13 @@ class SpriteAnimation():
         self.timer.reset()
 
 
-
 class OneTimeAnimation(Animation):
     """ Animation ne pouvant s'exécuter qu'une seule fois
     """
+
     def __init__(self, animationSheet, frameDelay):
-        super(OneTimeAnimation, self). __init__(animationSheet, frameDelay)
-        self.isFinished = False   # Spécifie si l'animation est terminée
+        super(OneTimeAnimation, self).__init__(animationSheet, frameDelay)
+        self.isFinished = False  # Spécifie si l'animation est terminée
 
     def animate(self):
         if not self.timer.isDone():
@@ -213,7 +243,6 @@ class OneTimeAnimation(Animation):
             return
 
         self.timer.reset()
-
 
 
 class GraphicsManager():
@@ -233,15 +262,14 @@ class GraphicsManager():
 
 
     # VARIALBES D'INSTANCE
-    directories = []         # Une liste de dossiers dans lesquels chercher les ressources
-    graphics = {}           # Les ressources chargées
-    photoImages = {}        # Les ressources chargées en tant que photoImage
-    spritesheets = {}       # Les Spritesheets chargées
-    animationSheets = {}    # Les feuilles d'animaton
-
-
+    directories = []  # Une liste de dossiers dans lesquels chercher les ressources
+    graphics = {}  # Les ressources chargées
+    photoImages = {}  # Les ressources chargées en tant que photoImage
+    spritesheets = {}  # Les Spritesheets chargées
+    animationSheets = {}  # Les feuilles d'animaton
 
     isInitialized = False
+
     @classmethod
     def initialize(cls):
         try:
@@ -340,7 +368,6 @@ class GraphicsManager():
         return spritesheet
 
 
-
     @classmethod
     def getAnimationSheet(cls, filename, nbCol, nbRow):
         """ Retourne une feuille d'animation de l'image en filename
@@ -359,11 +386,21 @@ class GraphicsManager():
         # Et on la retourne
         return animationSheet
 
+    @classmethod
+    def addPhotoImage(cls, photo, name):
+        """ Permet d'ajouter une image qui aurait pu être générer dynamiquement
+        durant l'exécution du programme
+        :param photo: une ImageTk.PhotoImage dynamiquement générée
+        """
+        try:
+            cls.photoImages[name]
+        except KeyError:
+            cls.photoImages[name] = photo
+
     @staticmethod
     def outputDebug(msg):
         if DEBUG_VERBOSE:
             print("Graphics Manager :: %s" % msg)
-
 
 
 
