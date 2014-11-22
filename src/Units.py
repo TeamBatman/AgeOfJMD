@@ -39,7 +39,7 @@ class Unit():
         self.cibleXTrace = y
         self.cibleXDeplacement = x
         self.cibleYDeplacement = y
-        self.mode = 0  # 1=ressource
+        self.mode = 0  # 1=ressource, 2 = batiment 3 = attack
 
         self.trouver = True  # pour le pathfinding
 
@@ -53,6 +53,7 @@ class Unit():
         self.groupeID = [] #Pour le leader
         self.leader = 0
         self.finMultiSelection = None
+        self.building = None # Tuple (Id, type)
         self.ancienPosEnnemi = None
         self.ressource = False
         self.ressourceEnvoye = False #Pour ne pas envoyer plein de commandes déplacement (ressource)
@@ -142,11 +143,7 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-
-
-
-
-    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
@@ -156,6 +153,12 @@ class Unit():
             print("changement", self.id)
         else:
             self.mode = 3
+        print("building",building)
+        if building:
+            print("buildingTrue", self.leader)
+            if self.leader == 1:
+                self.building = building
+            self.mode = 2
             
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -376,7 +379,7 @@ class Unit():
                 self.nbTour += 1
                 # chemin = chemin[:len(chemin)-self.nbTour]
                 if len(chemin) <= 0:  #FIN
-                    if mode == 0:  #vrai pathfinding
+                    if mode == 0 or mode == 2:  #vrai pathfinding
                         return self.finDeplacementTraceVrai()
                     else:  # mode attente
                         chemin = []
@@ -411,7 +414,13 @@ class Unit():
     def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
         self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
         self.enDeplacement = False
-        
+        if self.building:
+            print("JE VEUX CONSTRUIRE!")
+            self.joueur.createBuilding(self.building[0], self.x, self.y, self.building[1])
+            self.building = None
+        else:
+            print("JE VEUX PAS CONSTRUIRE!")
+            
         return -1
 
     def choisirTrace(self):

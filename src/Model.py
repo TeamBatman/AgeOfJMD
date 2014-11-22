@@ -11,6 +11,7 @@ from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
 from Units import Paysan
+from Units import Noeud
 
 
 class Model:
@@ -68,7 +69,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -115,7 +116,9 @@ class Model:
             #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
-        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
+        print("batient reseaux...")
+        if command['BTYPE'] == 0: #Base TEMPORAIRE !
+            self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
     def executeCreateCivilisation(self, command):

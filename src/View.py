@@ -500,6 +500,7 @@ class CarteView():
 
         self.canvas.tag_bind('building', '<ButtonPress-1>', self.eventListener.onMapLRelease)
         self.canvas.tag_bind('building', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
+        self.canvas.tag_bind('building', '<Button-3>', self.eventListener.onBuildingRClick)
 
 
     def draw(self, carte):
@@ -643,9 +644,7 @@ class CarteView():
         self.canvas.delete("ferme")
         self.canvas.delete("base")
         for building in buildings.values():
-            print("buildings", building)
             if self.isBuildingShown(building):
-                print("create")
                 img = building.image
                 posX = (building.posX * 48) - (self.cameraX * self.item)
                 posY = (building.posY * 48) - (self.cameraY * self.item)
