@@ -26,8 +26,6 @@ class Controller:
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
 
-
-
         self.gameMode = Controller.MULTIPLAYER
 
         self.currentFrame = -1
@@ -35,10 +33,6 @@ class Controller:
         self.refreshRate = int(1000/self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
-
-
-
-
 
     def mainLoop(self):
         try:
@@ -52,7 +46,6 @@ class Controller:
         self.renderGraphics()
 
         self.view.after(self.refreshRate, self.mainLoop)
-
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
@@ -73,15 +66,14 @@ class Controller:
             #print("Finnished %s" % self.currentFrame)
             self.currentFrame += 1
 
-
     def renderGraphics(self):
         """ Méthode principale d'affichage des Graphics
         :return:
         """
         if self.displayTimer.isDone():
 
-            if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
+            if self.view.needUpdateCarte() == 4:
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), self.model.carte.matrice)
             else:
                 self.view.update(self.model.getUnits(), self.model.getBuildings())
             self.displayTimer.reset()
@@ -97,7 +89,6 @@ class Controller:
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
-
         # INITIALISATION MODEL
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
@@ -106,7 +97,6 @@ class Controller:
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
 
         self.model.civNumber = self.network.getClientId()
-
 
         # INITIALISATION AFFICHAGE
         self.view.drawMinimap(self.model.carte.matrice)

@@ -1,5 +1,12 @@
 import Batiments
+from Commands import Command
 from Units import Paysan
+
+
+class Ressources:   # TODO appliquer à toutes les références de ressources
+    BOIS = 'bois'
+    MINERAI = 'minerai'
+    CHARBON = 'charbon'
 
 
 class Joueur:
@@ -10,7 +17,7 @@ class Joueur:
         self.civilisation = civilisation  # Couleur de la civilisation
         self.base = None  # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
         self.baseVivante = False  # À modifier, doit être true quand on commence une vraie partie
-        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.ressources = {Ressources.BOIS: 0, Ressources.MINERAI: 0, Ressources.CHARBON: 0}
         self.morale = 0
         self.nbNourriture = 0
         self.epoque = 1
@@ -33,9 +40,27 @@ class Joueur:
     def update(self):
         """ Permet de lancer les commande updates importantes
         """
+
         self.updateUnits()
         self.updatePaysans()
         self.updateBuildings()
+
+
+    def canEvolve(self):
+        """ Vérifie si la civilisation à les prérequis pour changer d'age
+        :return:
+        """
+
+        # ÉVOLUTION VERS AGE 2
+        if self.epoque == 1:
+            nbFermes = len([f for f in self.buildings.values() if isinstance(f, Batiments.Ferme)])
+            nbUnites = len(self.units.values())
+            return self.base and nbUnites >= 30 and nbFermes >= 1 and self.ressources[Ressources.BOIS] >= 500
+
+        # ÉVOLUTION VERS AGE 3
+        if self.epoque == 2:
+            return False    # TODO Déterminer
+
 
     def annihilate(self):
         """ Annihilation de la civilisation 
@@ -72,7 +97,7 @@ class Joueur:
         [u.update(self.model) for u in self.units.values()]
 
     def updatePaysans(self):
-        #print(self.enRessource)
+        # print(self.enRessource)
         for paysan in self.enRessource:
             #print(paysan.id, paysan.mode)
             if paysan.mode == 1:
@@ -95,7 +120,7 @@ class Joueur:
                 print("remove", paysan.id)
                 self.enRessource.remove(paysan)
 
-    ### BUILDINGS ###
+    # ## BUILDINGS ###
     def createBuilding(self, bId, posX, posY, btype):  # TODO CLEAN UP
         """ Crée et ajoute un nouveaue bâtiment à la liste des bâtiments
         :param bId: ID que l'on souhaite attribuer au bâtiment

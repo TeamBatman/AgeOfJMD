@@ -490,6 +490,7 @@ class CarteView():
         self.canvas.tag_lower('carte')  # Pour que ce soit derrière le HUD
         self.canvas.tag_bind('carte', '<Button-2>', self.eventListener.onMapRClick)
         self.canvas.tag_bind('carte', '<Button-3>', self.eventListener.onMapRClick)
+        self.canvas.tag_bind('unitVision', '<Button-3>', self.eventListener.onMapRClick)
 
         self.canvas.tag_bind('carte', '<ButtonPress-1>', self.eventListener.onMapLPress)
         self.canvas.tag_bind('carte', '<B1-Motion>', self.eventListener.onMapMouseMotion)
