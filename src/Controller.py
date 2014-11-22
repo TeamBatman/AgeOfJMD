@@ -162,6 +162,9 @@ class EventListener:
 
     def onMapRClick(self, event, groupe=None, building = None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
+        :param event: Tkinter Event
+        :param groupe: l'ensemble des unités qui veulent se déplacer
+        :param building: le building à construire
         """
         try:
             x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
@@ -378,7 +381,15 @@ class EventListener:
 
 
     def onBuildingRClick(self, event):
-        print("batiment") 
+        """
+        Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
+        :param event: Tkinter Event
+        """
+        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if building.type == "ferme":
+            print("batiment")
+            self.onMapRClick(event)
+            
 
     def onMapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la map

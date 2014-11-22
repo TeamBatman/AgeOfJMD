@@ -58,6 +58,7 @@ class Unit():
         self.ressource = False
         self.ressourceEnvoye = False #Pour ne pas envoyer plein de commandes déplacement (ressource)
         self.typeRessource = 0 #0 = Rien (voir Tuile)
+        self.inBuilding = False # Si l'unité est dans un bâtiment
 
 
         self.timerDeplacement = Timer(60)
@@ -217,6 +218,7 @@ class Unit():
 
 
     def deplacement(self):
+        """Déplacement lorsqu'on a pas trouvé notre path"""
         if not self.timerDeplacement.isDone():
             return
         if self.x == self.cibleX and self.y == self.cibleY:
@@ -243,6 +245,7 @@ class Unit():
         self.timerDeplacement.reset()
 
     def eviterObstacles(self):
+        """Évite les obstacles lorsqu'on n'a pas de path"""
         contact = False
         casesPossibles = [  self.model.trouverCaseMatrice(self.x, self.y),
                             self.model.trouverCaseMatrice(self.x+self.grandeur/2, self.y),
@@ -342,6 +345,7 @@ class Unit():
 
 
     def trouverNouvelleCase(self, case):
+        """Trouve une case qui esr walkable... Lorsqu'on a pas de path"""
         casesPossibles = []
         liste = [-1,0,1]
         for i in liste:
@@ -371,6 +375,7 @@ class Unit():
         return case  # FAIL !
 
     def deplacementTrace(self, chemin, mode):
+        """Déplacement lorsqu'on a trouvé un path (principal ou secondaire)"""
         # TODO: Mettre les obstacles !
 
         if len(chemin) > 0:
@@ -412,6 +417,7 @@ class Unit():
             self.timerDeplacement.reset()
 
     def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
+        """La fin du déplacement"""
         self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
         self.enDeplacement = False
         if self.building:
@@ -420,10 +426,15 @@ class Unit():
             self.building = None
         else:
             print("JE VEUX PAS CONSTRUIRE!")
+
+        if self.mode == 4:
+            self.inBuilding = True
+            
             
         return -1
 
     def choisirTrace(self):
+        """Premier essai pour trouver un path"""
         self.ressourceEnvoye = False
         cases = self.model.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
@@ -434,41 +445,46 @@ class Unit():
             self.mode = 3
         casesCible = self.model.trouverCaseMatrice(self.cibleX, self.cibleY)
         self.ressource = False
+        
+        #Ressources
         if not self.model.carte.matrice[casesCible[0]][casesCible[1]].isWalkable:
-            if isinstance(self, Paysan):
-                print("ressource", len(self.groupeID))
-                if self not in self.joueur.enRessource:
-                    self.joueur.enRessource.append(self)
-                for unitID in self.groupeID:
-                    unit = self.model.getUnit(unitID)
-                    print("UNIT", unit.id)
-                    if isinstance(unit, Paysan):
-                        print(unit.id)
-                        if unit not in unit.joueur.enRessource:
-                            print(unit.id)
-                            unit.joueur.enRessource.append(unit)
-                        unit.mode = 1
-                self.mode = 1  # ressource
-                print("mode",self.mode)
-                
-                #cases = self.parent.trouverCentreCase(,noeud.y)
-                #print("avant", self.posRessource.x, self.posRessource.y)
-                if not self.model.carte.matrice[casesCible[0]][casesCible[1]].type == 5:
+            if not self.model.carte.matrice[casesCible[0]][casesCible[1]].type == 5:# Pas sur un bâtiment (ressource)
+                if isinstance(self, Paysan): #Paysan sur ressource 
+                    print("ressource", len(self.groupeID))
+                    if self not in self.joueur.enRessource:
+                        self.joueur.enRessource.append(self)
                     for unitID in self.groupeID:
                         unit = self.model.getUnit(unitID)
-                        unit.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
-                        unit.ressource = True
-                        unit.typeRessource = self.model.carte.matrice[casesCible[0]][casesCible[1]].type
+                        print("UNIT", unit.id)
+                        if isinstance(unit, Paysan):
+                            print(unit.id)
+                            if unit not in unit.joueur.enRessource:
+                                print(unit.id)
+                                unit.joueur.enRessource.append(unit)
+                            unit.mode = 1
+                    self.mode = 1  # ressource
+                    print("mode",self.mode)
                     
-                    self.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
-                    self.ressource = True
-                    self.typeRessource = self.model.carte.matrice[casesCible[0]][casesCible[1]].type
-                #self.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
-                #print("ressource node" , self.mode, cases[0], cases[1])
+                    #cases = self.parent.trouverCentreCase(,noeud.y)
+                    #print("avant", self.posRessource.x, self.posRessource.y)
+                    if not self.model.carte.matrice[casesCible[0]][casesCible[1]].type == 5:
+                        for unitID in self.groupeID:
+                            unit = self.model.getUnit(unitID)
+                            unit.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
+                            unit.ressource = True
+                            unit.typeRessource = self.model.carte.matrice[casesCible[0]][casesCible[1]].type
+                        
+                        self.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
+                        self.ressource = True
+                        self.typeRessource = self.model.carte.matrice[casesCible[0]][casesCible[1]].type
+                    #self.posRessource = Noeud(None, self.cibleX, self.cibleY, None, None)
+                    #print("ressource node" , self.mode, cases[0], cases[1])
 
-                # TODO Changer le chemin pour aller à côté de la ressource !
+                    # TODO Changer le chemin pour aller à côté de la ressource !
+                else:
+                    return -1  # Ne peut pas aller sur un obstacle
             else:
-                return -1  # Ne peut pas aller sur un obstacle
+                self.mode = 4 #Rentre dans un building
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
 
@@ -506,6 +522,7 @@ class Unit():
         return cheminTrace
 
     def choisirTraceFail(self):
+        """Essai de trouver le path(après un essai)"""
         # print("traceFail", self.cibleX,self.cibleY)
         # print("avant", n.x,n.y)
         self.open = []
@@ -546,6 +563,7 @@ class Unit():
                 self.finTrace()
 
     def finTrace(self):
+        """Trouver la fin du path"""
         if self.cheminTrace:
             print("DUDE !",self.cibleX,self.cibleY)
             #Pour ne pas finir sur le centre de la case (Pour finir sur le x,y du clic)
@@ -562,6 +580,7 @@ class Unit():
         self.trouverCheminMultiSelection()
 
     def trouverDebutPath(self, unit):
+        """Trouver le path entre toi et le debut d'un autre path"""
         # Trouver le chemin entre le début du pathfinding et la position actuelle
 
         unit.cibleX = self.cheminTrace[-1].x
@@ -577,6 +596,7 @@ class Unit():
         unit.cibleYDeplacement = unit.cheminTrace[-1].y
 
     def trouverFinPath(self, unit):
+        """Trouver un path entre la fin d'un path et un autre path"""
         # unit.afficherList("unit chemin AVANT", unit.cheminTrace)
         unit.cibleX = unit.cheminTrace[0].x
         unit.cibleY = unit.cheminTrace[0].y
@@ -789,7 +809,7 @@ class Unit():
         if noeud.x == caseCibleX and noeud.y == caseCibleY:
             return True
         elif abs(noeud.x - caseCibleX) <= 1 and abs(
-                        noeud.y - caseCibleY) <= 1 and self.mode == 1:  # pour les ressources
+                        noeud.y - caseCibleY) <= 1 and (self.mode == 1 or self.mode == 4):  # pour les ressources
             #cases = self.parent.trouverCentreCase(noeud.x,noeud.y)
             #print("avant", self.posRessource.x, self.posRessource.y)
             #self.posRessource = Noeud(None, cases[0], cases[1], None, None)

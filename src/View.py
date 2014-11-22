@@ -683,7 +683,7 @@ class CarteView():
         unitX2 = unit.x + unit.grandeur / 2
         unitY2 = unit.y + unit.grandeur / 2
 
-        if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2:
+        if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2 and not unit.inBuilding:
             return True
 
         return False
