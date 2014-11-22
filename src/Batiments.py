@@ -247,21 +247,24 @@ class Base(Batiment):
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
         self.coutCreer1['bois'] = 5
+        self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
 
 
     def creer1(self):  # création des paysans
-        if not self.enCreation:
-            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-                print("in creation 1")
-                self.joueur.ressources['bois'] -= self.coutCreer1['bois']
-                self.enCreation = True
+        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
+            print("in creation 1", self.paysanAFaire)
+            self.joueur.ressources['bois'] -= self.coutCreer1['bois']
+            self.paysanAFaire += 1
+            if not self.enCreation:
                 self.tempsDepartCreation = time.time()
+                self.enCreation = True
 
-        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            print("creating lalala")
+    def updateCreer1(self):
+        if self.enCreation and time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            print("creating lalala", self.paysanAFaire)
             posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
             cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
@@ -269,8 +272,11 @@ class Base(Batiment):
             cmd.addData('Y', posUnitY)
             cmd.addData('CIV', self.joueur.civilisation)
             self.joueur.model.controller.sendCommand(cmd)
-            self.enCreation = False
-
+            self.paysanAFaire -= 1
+            if self.paysanAFaire > 0:
+                self.tempsDepartCreation = time.time()
+            else:
+                self.enCreation = False
 
     def recherche1(self):  # meilleure vitesse de création de paysans
         self.rechercheCompletee = False
@@ -356,8 +362,7 @@ class Base(Batiment):
 
     def miseAJour(self):
         if self.enCreation:
-            print("wassup")
-            self.creer1()
+            self.updateCreer1()
         if self.enRecherche:
             self.recherche1()
 
