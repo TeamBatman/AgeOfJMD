@@ -33,20 +33,20 @@ Paramètres:
 ### COMMANDES POUR CIVILISATIONS
 Utilisée par la machine hôte pour lancer la partie sur tous les clients
 
-### CREATE_CIVILISATION
+### CIVILISATION_CREATE
 - **ID:** Identificateur de la civilisation
 - **BASE_X:** Position X de la base
 - **BASE_Y:** Position Y de la base
 
 
-#### PROMOTE_CIVILISATION
+#### CIVILISATION_EVOLVE
 Utilisée lorsqu'une unité change d'âge (évolue)
 
 Paramètres:
 - **CIV:** identificateur de la civilisation
 - **AGE:** le nouvel Âge de la civilisation
 
-#### ANNIHILATE_CIVILISATION
+#### CIVILISATION_ANNIHILATE
 Utilisée lorsqu'une civilisation quitte la partie pour tuer et détruire tous
 ses effectifs
 
@@ -62,7 +62,7 @@ Paramètres:
 
 
 ### COMMANDES POUR UNITÉS
-#### CREATE_UNIT
+#### UNIT_CREATE
 Utilisée lorsqu'on veut créer une unité
 
 Paramètres:
@@ -73,14 +73,14 @@ Paramètres:
 - **UTYPE**: Le type d'unité [PAYSAN, .. **TODO COMPLÉTER**]
 
 
-#### KILL_UNIT   
+#### UNIT_DIE   
 Utilisée lorsqu'on veut "détruire" une unité
 
 Paramètres:
 - **ID**: identificateur de l'unité
 
 
-#### MOVE_UNIT
+#### UNIT_MOVE
 Utilisée lorsqu'on veut déplacer une unité
 
 Paramètres:
@@ -92,7 +92,7 @@ Paramètres:
 
 
 
-#### ATTACK_UNIT     
+#### UNIT_ATTACK_UNIT     
 Utilisée lorsqu'une unité source attaque (comprendre fait des dégats) une unité cible 
 
 Paramètres:
@@ -110,7 +110,7 @@ Utilisé lorsqu'une unité attaque un bâtiment
 
 ### COMMANDE POUR BÂTIMENTS
 
-#### CREATE_BUILDING
+#### BUILDING_CREATE
 Utilisée lorsqu'on veut créer un bâtiment
 
 Paramètres:
@@ -120,7 +120,7 @@ Paramètres:
 - **CIV:** Civilisation du bâtiment à créer
 - **BTYPE:** Le type de building à construire
 
-#### DESTROY_BUILDING
+#### BUILDING_DESTROY
 Utilisé lorsqu'on désire détruire un bâtiment
 - **ID**: identificateur du bâtiment
 
