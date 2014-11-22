@@ -34,6 +34,10 @@ class Controller:
 
         self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
 
+
+
+
+
     def mainLoop(self):
         try:
             cmd = self.network.synchronizeClient(self.currentFrame)
@@ -108,6 +112,12 @@ class Controller:
 
         # FRAMES
         self.currentFrame = 0
+
+
+        # RESSOURCES
+        self.model.loadResources()
+
+
 
         self.mainLoop()
         self.view.show()

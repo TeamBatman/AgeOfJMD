@@ -3,14 +3,9 @@
 
 from __future__ import division
 
-from datetime import datetime
-
-from Batiments import Batiment
-import Batiments
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-from Units import Paysan
 
 
 class Model:
@@ -250,13 +245,8 @@ class Model:
         return {bId: b for civ in self.joueurs.values() for bId, b in civ.buildings.items()}
 
 
-    def loadResources(self):
-        """ Charge toutes les images nécessaire à une partie dans le graphics manager
-        :return:
-        """
-        resources = []
-        couleurs = ['blanc', 'bleu', 'jaune', 'mauve', 'noir', 'orange', 'rose', 'rouge', 'vert']
-        ages = ['Age_I', 'Age_II', 'Age_III']
+
+
 
 
 

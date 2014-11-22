@@ -166,8 +166,7 @@ class GProgressBar(GWidget):
         self._buildFullImage()
 
     def setProgression(self, progress):
-        """
-        Completion sur 100
+        """ Completion sur 100
         :param pourcentage:
         """
         if progress <= 100:

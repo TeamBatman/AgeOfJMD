@@ -7,16 +7,17 @@ Module de gestion des graphiques
 - Gestion des animations
 - Modification d'images
 """
-
-from SimpleTimer import Timer
-
-
-DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du GraphicsManager
+import os
 
 from PIL import Image
 from PIL import ImageTk
 from PIL import ImageEnhance
 from PIL import ImageDraw
+
+from SimpleTimer import Timer
+
+
+DEBUG_VERBOSE = True    # Permet d'afficher les messages de debug du GraphicsManager
 
 
 def colorizeImage(pilImg):
@@ -404,6 +405,24 @@ class GraphicsManager():
 
 
 
+
+
+
+
+
+
+def detectGraphics():
+    """
+    Retourne une liste de tous les fichier graphics à charger
+    :return:
+    """
+    graphics = []
+    for root, dirs, files in os.walk("Graphics/"):
+        for file in files:
+            if file.endswith('.png') or file.endswith('.jpg') or file.endswith('.jpeg'):
+                path = os.path.join(root, file).replace('\\', '/').replace('Graphics/', '')
+                graphics.append(path)
+    return graphics
 
 
 GraphicsManager.addDirectory('Graphics/')
