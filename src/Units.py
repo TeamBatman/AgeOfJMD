@@ -5,7 +5,7 @@ import math
 from Commands import Command
 from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
-from SimpleTimer import Timer
+from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation
 
 
@@ -59,7 +59,7 @@ class Unit():
         self.typeRessource = 0 #0 = Rien (voir Tuile)
 
 
-        self.timerDeplacement = Timer(60)
+        self.timerDeplacement = FrameTimer(5)
         self.timerDeplacement.start()
 
         # ANIMATION
@@ -78,7 +78,7 @@ class Unit():
         self.ennemiCible = None
 
         self.modeAttack = Unit.PASSIF
-        self.timerAttack = Timer(900)
+        self.timerAttack = FrameTimer(30)
         self.timerAttack.start()
 
         self.oneTimeAnimations = []

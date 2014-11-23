@@ -113,12 +113,6 @@ class Controller:
         # FRAMES
         self.currentFrame = 0
 
-
-        # RESSOURCES
-        self.model.loadResources()
-
-
-
         self.mainLoop()
         self.view.show()
 

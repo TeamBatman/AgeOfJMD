@@ -4,7 +4,8 @@ from GuiAwesomeness import *
 import time
 import math
 from PIL import Image
-
+from PIL import ImageTk
+from PIL import ImageEnhance
 
 
 class Cloud:
@@ -26,19 +27,32 @@ class Wave:
         self.y = y
         self.vx = 1
 
-        self.center = y
-        self.offset = 0
-        self.radius = 5
-        self.invert = 5
+        self.radius = 10
+        self.invert = 1
 
 
     def update(self):
         # TODO fixerl le rate avec des Frame en remplaçant
         # msElapsed par un frameTick auxquel on fait ++ à chaque call de update
-        msElapsed = time.time() * self.vx
-        offset = math.sin(msElapsed) * self.radius * self.invert
-        #self. y = offset
-        self.x = offset
+        msElapsed = time.time()
+        newX = self.invert  * math.sin(msElapsed) * self.radius
+        self.x = newX * self.vx
+
+
+def reduceOpacity(im, opacity):
+    """ Permet de réduire l'opacité d'une image
+    Source: http://www.pythonware.com/products/pil/
+    """
+    if not (opacity >= 0 and opacity <= 1):
+        opacity = 1
+    if im.mode != 'RGBA':
+        im = im.convert('RGBA')
+    else:
+        im = im.copy()
+    alpha = im.split()[3]
+    alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+    im.putalpha(alpha)
+    return im
 
 
 
@@ -62,6 +76,12 @@ class TitleScreen(GWindow):
         self.initClouds()
         self.initWaves()
 
+        #self.castle = GraphicsManager.getPhotoImage('Graphics/Screens/TitleScreen/castle.png')
+        self.castle = GraphicsManager.getImage('Graphics/Screens/TitleScreen/castle.png')
+        self.castle = ImageTk.PhotoImage(self.castle)
+        self.canvas.create_image(327, 457, anchor=NW, image=self.castle, tags=('castle'))
+        self.canvas.tag_raise('castle')
+
         self.initMenu()
 
 
@@ -84,17 +104,25 @@ class TitleScreen(GWindow):
 
 
     def initBackground(self):
-        self.title = GraphicsManager.getPhotoImage('Graphics/Screens/title.jpg')
-        self.canvas.create_image(0, 0, anchor=NW, image=self.title)
-
+        self.title = GraphicsManager.getPhotoImage('Graphics/Screens/TitleScreen/title.jpg')
         self.canvas.create_image(0, 0, anchor=NW, image=self.title, tags=('background'))
+
+        """
+        self.titleNight = GraphicsManager.getImage('Graphics/Screens/TitleScreen/titleNight.jpg')
+        self.nightOpacity = 0
+        night = ImageTk.PhotoImage(reduceOpacity(self.titleNight, self.nightOpacity))
+        self.canvas.create_image(0, 0, anchor=NW, image=night, tags=('backgroundNight'))
+        """
+
+
+
 
 
 
     def initClouds(self):
         self.clouds = []
         for c in range(8):
-            image = GraphicsManager.getPhotoImage("Graphics/Screens/Cloud_%s.png" % c)
+            image = GraphicsManager.getPhotoImage("Graphics/Screens/TitleScreen/Cloud_%s.png" % c)
             x = 0
             y = 0
             self.clouds.append(Cloud(image, x, y, 1))
@@ -139,7 +167,7 @@ class TitleScreen(GWindow):
     def initWaves(self):
         self.waves = []
         for w in range(4):
-            image = GraphicsManager.getPhotoImage("Graphics/Screens/wave_%s.png" % w)
+            image = GraphicsManager.getPhotoImage("Graphics/Screens/TitleScreen/wave_%s.png" % w)
             x = 0
             y = 0
             self.waves.append(Wave(image, x, y))
@@ -162,8 +190,16 @@ class TitleScreen(GWindow):
 
 
     def update(self):
+        self.canvas.delete('backgroundNight')
         self.canvas.delete('cloud')
         self.canvas.delete('wave')
+
+        # NUIT
+        """self.nightOpacity += 0.1
+        print(self.nightOpacity)
+        self.night = ImageTk.PhotoImage(reduceOpacity(self.titleNight, self.nightOpacity))
+        self.canvas.create_image(0, 0, anchor=NW, image=self.night, tags=('backgroundNight'))
+        self.canvas.tag_raise('backgroundNight', 'background')"""
 
         # UPDATE CLOUDS
         for c in self.clouds:
@@ -178,9 +214,11 @@ class TitleScreen(GWindow):
             wave.update()
             self.canvas.create_image(wave.x, wave.y, anchor=NW, image=wave.pI, tags=('wave'))
 
+
         self.canvas.tag_raise('cloud', 'background')
         self.canvas.tag_raise('wave', 'background')
-        self.after(100, self.update)
+        self.after(80, self.update)
+
 
 
 
