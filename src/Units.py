@@ -152,8 +152,9 @@ class Unit():
         #    self.mode = 0
         if self.ennemiCible:
             print("changement", self.id)
-        else:
             self.mode = 3
+        else:
+            print("what!")
         print("building",building)
         if building:
             print("buildingTrue", self.leader)
@@ -418,6 +419,7 @@ class Unit():
 
     def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
         """La fin du déplacement"""
+        print("MODE DE FIN ",self.mode)
         self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
         self.enDeplacement = False
         if self.building:
@@ -427,10 +429,13 @@ class Unit():
         else:
             print("JE VEUX PAS CONSTRUIRE!")
 
-        if self.mode == 4:
-            self.inBuilding = True
-            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())[0]
-            buildingDetected.unitInBuilding.append(self)
+        if self.mode == 4: #Rentre dans un building
+            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
+            if buildingDetected:
+                buildingDetected = buildingDetected[0]
+                if buildingDetected.peutEtreOccupe:
+                    self.inBuilding = True
+                    buildingDetected.unitInBuilding.append(self)
             
         return -1
 
@@ -440,8 +445,8 @@ class Unit():
         cases = self.model.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
         caseY = cases[1]
-        if self.leader == 1:
-            self.mode = 0
+        #if self.leader == 1:
+        #    self.mode = 0
         if self.ennemiCible:
             self.mode = 3
         casesCible = self.model.trouverCaseMatrice(self.cibleX, self.cibleY)
@@ -485,7 +490,9 @@ class Unit():
                 else:
                     return -1  # Ne peut pas aller sur un obstacle
             else:
-                self.mode = 4 #Rentre dans un building
+                print("MODE semi", self.mode)
+                if not self.mode == 1: #S'il ne retourne pas à la base (ressource)
+                    self.mode = 4 #Rentre dans un building
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
 
