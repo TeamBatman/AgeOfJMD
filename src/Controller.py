@@ -171,9 +171,24 @@ class EventListener:
             y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             if not groupe:
                 groupe = self.controller.view.selected[:]
+                if isinstance(groupe[0], Batiment):
+                    print("batiment")
+                    return
                 print(groupe)
             leaderUnit = self.controller.model.trouverPlusProche(groupe, (x2, y2))
-            posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
+
+            #Pour aller sur un batiment
+            posFin = None
+            carte = self.model.carte.matrice
+            cases = self.model.trouverCaseMatrice(x2,y2)
+            if not carte[cases[0]][cases[1]].isWalkable and carte[cases[0]][cases[1]].type == 5:
+                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings())[0]
+                if buildingDetected.peutEtreOccupe:
+                    posFin = []
+                    for i in range(len(groupe)-1):
+                        posFin.append((x2,y2))
+            if posFin == None:
+                posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
                                                                     groupe[0].grandeur)
 
             groupeSansLeader = groupe[:]
@@ -261,6 +276,8 @@ class EventListener:
                 if b.estBatimentDe(clientId):
                     if b.type == "base":
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
+                    elif b.type == "ferme":
+                        self.controller.view.frameSide.changeView(FrameSide.FERMEVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
         print("modeConstruct", self.controller.view.modeConstruction)
         if self.controller.view.modeConstruction:

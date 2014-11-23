@@ -33,6 +33,7 @@ class FrameSide():
     UNITVIEW      = 0
     CONSTRUCTIONVIEW  = 1
     BASEVIEW = 2
+    FERMEVIEW = 3
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -92,6 +93,11 @@ class FrameSide():
             self.baseView = BaseView(self.canvas, building, self, self.eventListener)
             self.baseView.draw()
             self.childView = self.baseView
+
+        elif selectedView == FrameSide.FERMEVIEW:
+            self.fermeView = FermeView(self.canvas, building, self, self.eventListener)
+            self.fermeView.draw()
+            self.childView = self.fermeView
 
 
     def destroy(self):
@@ -234,6 +240,32 @@ class BaseView():
     def onCreateUnit(self):
         self.base.creer1()
         print("created unit")
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class FermeView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.ferme = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonCreateUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
+
+    def draw(self):
+        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onRemoveUnit(self):
+        self.ferme.sortir()
 
     def destroy(self):
         attr = self.__dict__

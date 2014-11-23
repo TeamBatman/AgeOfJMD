@@ -380,10 +380,6 @@ class Baraque(Batiment):
         self.coutCreer2['bois'] = 50
         self.coutCreer3['bois'] = 50
 
-
-0
-
-
 def creer1(self):  # création de soldats avec épée
     if self.enCreation == False:
         if self.parent.ressources >= self.coutCreer1:
@@ -518,24 +514,43 @@ def miseAJour(self):
 class Ferme(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.tailleX = 128
-        self.tailleY = 128
+        self.tailleX = 96
+        self.tailleY = 96
         self.peutEtreOccupe = True
-        self.production = 10
+        self.unitInBuilding = [] # Les unités dans la ferme
+        self.production = 5
         self.tempsProduction = 10
         self.type = "ferme"
         self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
-        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.coutRecherche1['bois'] = 50
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
-        if self.estOccupe:
+        if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.nourriture += self.production
+                self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
+                print("ressource:", self.joueur.ressources)
                 self.tempsProduction = time.time()
 
+    def sortir(self):
+        for unit in self.unitInBuilding:
+            unit.inBuilding = False
+        unitExit = self.unitInBuilding
+        self.unitInBuilding = []
+
+        #trouve une case pour mettre les units
+        if unitExit:
+            cases = self.joueur.model.trouverCentreCase(self.posX, self.posY)
+            posFin = self.joueur.model.trouverFinMultiSelection(cases[0],cases[1],1, unitExit[0].grandeur)[0]
+            print("fin exit", posFin)
+            self.joueur.model.controller.eventListener.onMapRClick(Noeud(None, posFin[0], posFin[1], None, None), unitExit)
+            
+        #for i in listeI:
+        #    for j in listeJ:
+                
+        
 
     def recherche1(self):  # meilleure vitesse de production
         self.rechercheCompletee = False

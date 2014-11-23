@@ -429,7 +429,8 @@ class Unit():
 
         if self.mode == 4:
             self.inBuilding = True
-            
+            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())[0]
+            buildingDetected.unitInBuilding.append(self)
             
         return -1
 
