@@ -61,6 +61,8 @@ class Joueur:
         if self.epoque == 2:
             return False    # TODO Déterminer
 
+        return False
+
 
     def annihilate(self):
         """ Annihilation de la civilisation 
@@ -183,3 +185,8 @@ class Joueur:
         """
         # TODO Ajouter Méthode Update dans les bâtiments
         [b.miseAJour() for b in self.buildings.values()]
+
+    def changerAge(self, nouvelAge):
+        self.epoque = nouvelAge
+        # TODO Changer les images pour les buildings
+        # TODO Changer les images pour les unités
