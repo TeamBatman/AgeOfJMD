@@ -523,7 +523,7 @@ class CarteView():
         }
 
 
-        for x in range(x1, x1 + self.nbCasesX):
+        for x in range(x1, x1 + self.nbCasesX+1):
             for y in range(y1, y1 + self.nbCasesY):
                 posX1 = 0 + (x - x1) * self.item
                 posY1 = 0 + (y - y1) * self.item
@@ -536,18 +536,30 @@ class CarteView():
                     couleur = couleurs[carte[x][y].type]
                 else:
                     couleur = couleurs[0]
-                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
+                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.tagName)
                 if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
                     self.canvas.create_image(posX1, posY1, anchor=NW,
                                             image=GraphicsManager.getPhotoImage('World/grass.png'),
                                             tags=self.tagName)
+
+                if carte[x][y].type == Tuile.FORET:
+                    self.canvas.create_image(posX1, posY1, anchor=NW,
+                                            image=GraphicsManager.getPhotoImage('World/foret.png'),
+                                            tags=(self.tagName, 'foret'))
+
+                if carte[x][y].type == Tuile.EAU:
+                    self.canvas.create_image(posX1, posY1, anchor=NW,
+                                            image=GraphicsManager.getPhotoImage('World/water.png'),
+                                            tags=self.tagName)
+
+
                     # else:
                     # couleur = "#333"
                     #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
-
+        self.canvas.tag_raise('foret')
 
     def drawUnits(self, units, selectedUnits):
         """ Dessine les unités dans la map
