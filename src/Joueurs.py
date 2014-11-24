@@ -54,14 +54,24 @@ class Joueur:
         # ÉVOLUTION VERS AGE 2
         if self.epoque == 1:
             nbFermes = len([f for f in self.buildings.values() if isinstance(f, Batiments.Ferme)])
-            nbUnites = len(self.units.values())
-            return self.base and nbUnites >= 30 and nbFermes >= 1 and self.ressources[Ressources.BOIS] >= 500
-
+            nbUnites = len(self.units)
+            #return self.base and nbUnites >= 30 and nbFermes >= 1 and self.ressources[Ressources.BOIS] >= 500
+            return self.base and nbUnites >= 2
         # ÉVOLUTION VERS AGE 3
         if self.epoque == 2:
             return False    # TODO Déterminer
 
         return False
+
+    def changerAge(self, nouvelAge):
+        self.epoque = nouvelAge
+        # TODO Changer les images pour les buildings
+        #[b.determineImage() for b in self.buildings.values()]
+        # TODO Changer les images pour les unités
+        [u.determineSpritesheet() for u in self.units.values()]
+
+
+
 
 
     def annihilate(self):
@@ -185,10 +195,3 @@ class Joueur:
         """
         # TODO Ajouter Méthode Update dans les bâtiments
         [b.miseAJour() for b in self.buildings.values()]
-
-    def changerAge(self, nouvelAge):
-        self.epoque = nouvelAge
-        # TODO Changer les images pour les buildings
-        #[b.determineImage() for b in self.buildings]
-        # TODO Changer les images pour les unités
-        [u.determineSpritesheet() for u in self.units]

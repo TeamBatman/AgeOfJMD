@@ -49,6 +49,9 @@ class Model:
             Command.BUILDING_CREATE: self.executeCreateBuilding,
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
+
+
+            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation
         }
 
         try:
@@ -85,8 +88,7 @@ class Model:
         target.recevoirAttaque(self, attacker, command['DMG'])
 
     def executeKillUnit(self, command):
-        """ Execute la commande TUER UNE UNITÉ
-          selon ses paramètres 
+        """ Execute la commande TUER UNE UNITÉ selon ses paramètres
         :param command: la commande à exécuter [Objet Commande]
         """
         try:
@@ -119,12 +121,37 @@ class Model:
         #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
+        """ Execute la commande CRÉER UN BÂTIMENT  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
     def executeCreateCivilisation(self, command):
+        """ Execute la commande CRÉER UNE CIVILISATION  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
         self.creerJoueur(command['ID'])
         # TODO CRÉER BASE
+
+
+
+    def executeEvolveCivilisation(self, command):
+        """ Execute la commande CHANGER AGE CIVILISATION  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        self.joueurs[command.data['CIV']].changerAge(command['AGE'])
+
+
+
+
+
+
+
+
+
+
+
 
 
     # ## HELPERS ###
