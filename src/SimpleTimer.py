@@ -46,7 +46,7 @@ class FrameTimer:
 
 
     def isDone(self):
-        """ Retourne si oui ou non le délais requis à été complété
+        """ Retourne si oui ou non le délais requis à été complété, doit etre appelé à chaque frame
         :return: True si le délais est terminé sinon False
         """
         if not (self.startFrame >= 0 and self.lastCheck >= 0):
@@ -55,6 +55,7 @@ class FrameTimer:
         return self.lastCheck - self.startFrame >= self.delay
 
     def reset(self):
+        self.lastCheck = 0
         self.startFrame = 0
 
 class TimerException(Exception):

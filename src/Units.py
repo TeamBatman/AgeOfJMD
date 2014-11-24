@@ -59,12 +59,13 @@ class Unit():
         self.typeRessource = 0 #0 = Rien (voir Tuile)
 
 
-        self.timerDeplacement = FrameTimer(5)
+        self.timerDeplacement = FrameTimer(1)
         self.timerDeplacement.start()
 
         # ANIMATION
-        self.spriteSheet = None
-        self.animation = SpriteAnimation(self.determineSpritesheet(), 333)  # 1000/333 = 3 fois par secondes
+        self.animation = None
+        self.determineSpritesheet()
+
 
         # Kombat
         # Health Points, Points de Vie
@@ -78,7 +79,7 @@ class Unit():
         self.ennemiCible = None
 
         self.modeAttack = Unit.PASSIF
-        self.timerAttack = FrameTimer(30)
+        self.timerAttack = FrameTimer(8)
         self.timerAttack.start()
 
         self.oneTimeAnimations = []
@@ -948,20 +949,25 @@ class Paysan(Unit):
         self.compteurRessource = 0
 
     def determineSpritesheet(self):
+
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/%s/paysan_blanc.png' % age,
+            Civilisation.BLEU: 'Units/%s/paysan_bleu.png' % age,
+            Civilisation.JAUNE: 'Units/%s/paysan_jaune.png' % age,
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/%s/paysan_mauve.png' % age,
+            Civilisation.NOIR: 'Units/%s/paysan_noir.png' % age,
+            Civilisation.ORANGE: 'Units/%s/paysan_orange.png' % age,
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/%s/paysan_rouge.png' % age,
+            Civilisation.VERT: 'Units/%s/paysan_vert.png' % age,
+            Civilisation.ROSE: 'Units/%s/paysan_rose.png' % age
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 
     def chercherRessources(self):

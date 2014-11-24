@@ -189,4 +189,6 @@ class Joueur:
     def changerAge(self, nouvelAge):
         self.epoque = nouvelAge
         # TODO Changer les images pour les buildings
+        #[b.determineImage() for b in self.buildings]
         # TODO Changer les images pour les unités
+        [u.determineSpritesheet() for u in self.units]
