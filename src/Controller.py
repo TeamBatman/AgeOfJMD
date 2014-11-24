@@ -304,7 +304,8 @@ class EventListener:
 
 
     def envoyerCommandBatiment(self,idBatiment, posX, posY, unitsSelected, bType, civ = None):
-        if unitsSelected:
+        caseX, caseY = self.model.trouverCaseMatrice(posX, posY)
+        if self.model.validPosBuilding(caseX, caseY) and unitsSelected:
             self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
             
         if bType == 0: #Base TEMPORAIRE !

@@ -205,6 +205,26 @@ class Model:
 
         return centreX, centreY
 
+    def validPosBuilding(self, caseX, caseY):
+        """Regarde si on peut construire à cette endroit un building
+        :param caseX: la case en X du bâtiment
+        :param caseY: la case en Y du bâtiment
+        """
+        if not self.carte.matrice[caseX][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        
+        return True
+
     # ## JOUEURS ###
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
