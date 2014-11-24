@@ -441,12 +441,15 @@ class Unit():
 
     def choisirTrace(self):
         """Premier essai pour trouver un path"""
+        self.distance = abs(self.x - self.cibleX) + abs(self.y - self.cibleY)
+        print("distance", self.distance)
+        self.tempsTotal = 0
         self.ressourceEnvoye = False
         cases = self.model.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
         caseY = cases[1]
-        #if self.leader == 1:
-        #    self.mode = 0
+        if self.leader == 1:
+            self.mode = 0
         if self.ennemiCible:
             self.mode = 3
         casesCible = self.model.trouverCaseMatrice(self.cibleX, self.cibleY)
@@ -457,16 +460,18 @@ class Unit():
             if not self.model.carte.matrice[casesCible[0]][casesCible[1]].type == 5:# Pas sur un bâtiment (ressource)
                 if isinstance(self, Paysan): #Paysan sur ressource 
                     print("ressource", len(self.groupeID))
-                    if self not in self.joueur.enRessource:
-                        self.joueur.enRessource.append(self)
+                    if self.model.carte.matrice[casesCible[0]][casesCible[1]].revealed:
+                        if self not in self.joueur.enRessource:
+                            self.joueur.enRessource.append(self)
                     for unitID in self.groupeID:
                         unit = self.model.getUnit(unitID)
                         print("UNIT", unit.id)
                         if isinstance(unit, Paysan):
                             print(unit.id)
                             if unit not in unit.joueur.enRessource:
-                                print(unit.id)
-                                unit.joueur.enRessource.append(unit)
+                                print("ressource choix", unit.id, self.model.carte.matrice[casesCible[0]][casesCible[1]].revealed)
+                                if self.model.carte.matrice[casesCible[0]][casesCible[1]].revealed:
+                                    unit.joueur.enRessource.append(unit)
                             unit.mode = 1
                     self.mode = 1  # ressource
                     print("mode",self.mode)
@@ -680,7 +685,9 @@ class Unit():
         nbNoeud = 100
         while self.open:
             n = self.open[0]
+            #print("temps", self.tempsTotal , self.distance/1000)
             if self.goal(n):
+                print("Temps total: ", self.tempsTotal)
                 self.trouver = True
                 #print("changeent true trouver !")
                 self.ancienOpen = []
@@ -698,6 +705,10 @@ class Unit():
                       #  self.posRessource = Noeud(None, cases[0], cases[1], None, None)
                        # print("ressource node" ,cases[0], cases[1])
                 return n
+            if self.tempsTotal > self.distance/1000 and self.tempsTotal > 1:
+                    print("introuvable ", n.x, n.y, tempsMax)
+                    self.trouver = True
+                    return -1
             self.open.remove(n)
             self.closed.append(n)
 
@@ -721,7 +732,7 @@ class Unit():
                     #  time1= time.time()
 
             self.open.sort(key=lambda x: x.cout)
-                # tempsTotal += time.time()-time1
+            
                 # print("Temps sort: ", tempsTotal)
 
             if len(self.open) > nbNoeud:
@@ -733,6 +744,8 @@ class Unit():
                 #self.parent.parent.v.afficherCourantPath(self.open)
             if time.time() - self.time1 > tempsMax:
                 self.trouver = False
+                self.tempsTotal += time.time()-self.time1
+                #print("lol", self.tempsTotal,time.time()-self.time1 )
 
                 # print("changeent false", n.x, n.y)
                 # self.ancienClosed = self.closed

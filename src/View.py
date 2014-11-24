@@ -409,22 +409,26 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
             if 0 <= x <= 106:
                 for y in range(caseY - radius, caseY + radius):
                     if 0 <= y <= 106:
-                        if not carte[x][y].revealed:
-                            posX1 = self.miniMapX + x * self.tailleTuile
-                            posY1 = self.miniMapY + y * self.tailleTuile
-                            posX2 = posX1 + self.tailleTuile
-                            posY2 = posY1 + self.tailleTuile
+                        try:
+                            if not carte[x][y].revealed:
+                                posX1 = self.miniMapX + x * self.tailleTuile
+                                posY1 = self.miniMapY + y * self.tailleTuile
+                                posX2 = posX1 + self.tailleTuile
+                                posY2 = posY1 + self.tailleTuile
 
-                            if not carte[x][y].type == 5:  # bâtiment
-                                couleur = couleurs[carte[x][y].type]
-                            else:
-                                couleur = couleurs[0]
+                                if not carte[x][y].type == 5:  # bâtiment
+                                    couleur = couleurs[carte[x][y].type]
+                                else:
+                                    couleur = couleurs[0]
 
-                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
-                                                         tags=self.miniMapTag)
-                            self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
+                                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
+                                                             tags=self.miniMapTag)
+                                self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
 
-                            self.canvas.tag_raise('rectMiniMap')
+                                self.canvas.tag_raise('rectMiniMap')
+                        except IndexError:
+                            pass
+                            #print("index map fog!")
 
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
