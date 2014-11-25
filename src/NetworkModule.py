@@ -20,7 +20,7 @@ from Commands import Command
 
 # CONFIGURATION PYRO
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
-Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet serveur de s'éteindre et de deconnecter le client après délais
+Pyro4.config.COMMTIMEOUT = 500000.0  # en sec Permet serveur de s'éteindre et de deconnecter le client après délais
 # Pyro4.config.REQUIRE_EXPOSE = True      # Permet d'exposer certaines méthodes et attributs d'un Proxy Pyro
 
 

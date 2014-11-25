@@ -45,6 +45,7 @@ class Model:
             Command.BUILDING_CREATE: self.executeCreateBuilding,
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
+            Command.START_LOADING: self.executeLoading,
         }
 
         try:
@@ -121,6 +122,10 @@ class Model:
     def executeCreateCivilisation(self, command):
         self.creerJoueur(command['ID'])
         # TODO CRÉER BASE
+
+    def executeLoading(self, command):
+        print("loading")
+        self.controller.view.debutJeu()
 
 
 

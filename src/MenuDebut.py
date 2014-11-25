@@ -1,6 +1,8 @@
 from View import *
 import socket
 
+from Commands import Command
+
         
 
 class MenuInit:
@@ -140,49 +142,64 @@ class MenuLobby:
         """
         #self.clientId = self.vue.eventListener.controller.network.client.id
         #self.clientId = self.vue.eventListener.controller.network.getClientId()
-        
-        self.clients = self.vue.eventListener.controller.network.client.host.getClients()
-        print(self.clients)
+        # TODO - chercher dans View - Color
+        #                  ROUGE     BLEU        VERT       MAUVE    ORANGE      ROSE        NOIR      BLANC      JAUNE
+        self.couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF", "#F5F520"]
 
         self.boutPret = GButton(self.canevasLobby, text="Prêt",command=self.vue.pret,color=0)
         self.boutQuitServ = GButton(self.canevasLobby, text="Quitter le serveur",command=self.vue.menuMultijoueur,color=0)
         #bouton "Lancer la partie" - si serveur
         if self.vue.siServeur == True:
-            self.boutLancerPartie = GButton(self.canevasLobby, text="Lancer la partie",command=self.vue.debutJeu,color=0)
-            #label "vitesse"
+            #self.boutLancerPartie = GButton(self.canevasLobby, text="Lancer la partie",command=self.vue.debutJeu,color=0)
+            self.boutLancerPartie = GButton(self.canevasLobby, text="Lancer la partie",command=self.envoiCommandeLancer,color=0)
             #scale "vitesse"
             self.scaleVitesse = Scale(self.canevasLobby,orient=HORIZONTAL,length=250,
                               from_=1, to=10,tickinterval=1, resolution=1,
                               sliderlength=10,troughcolor="#B45F04",fg="#B45F04",
                               width=10,bd=0,showvalue=0,bg="#D3BF8F")
-        self.draw(self.initX,self.initY,self.clients)
+        self.draw()
+        
+    def envoiCommandeLancer(self):
+        print("envoie")
+        cmd = Command(self.vue.eventListener.controller.network.client.id, Command.START_LOADING)
+        #cmd.addData('ID', 'MOI')
+        self.vue.eventListener.controller.sendCommand(cmd)
 
-    def draw(self,x,y,clients):
-        nb = len(clients)
-        print(nb)
+    def draw(self):
+        x = self.initX
+        y = self.initY
+        
         self.frameLobby.draw(x+0, y+0)
         self.canevasLobby.create_text(x+200, y+30, anchor='n',text="Joueurs",fill="#B45F04",font="Arial 22")
         #couleur = Color()
-        # TODO - chercher dans View - Color
-        #              ROUGE     BLEU        VERT       MAUVE    ORANGE      ROSE        NOIR      BLANC      JAUNE
-        couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF", "#F5F520"]
+        
         # fond pour les joueurs
         self.canevasLobby.create_rectangle(x+30,y+75,x+400,y+350, fill="#E1F5A9")
-        # afficher l'information des joueurs
-        ligne = 1
-        for i in range(nb):
-            # ID de client
-            self.canevasLobby.create_text(x+35, y+50+30*ligne, anchor='nw',text=clients[i]["name"],fill="#B45F04",font="Arial 14")
-            # couleur de client
-            self.canevasLobby.create_rectangle(x+345,y+55+30*ligne,x+395,y+75+30*ligne, fill=couleurs[clients[i]["civId"]-1])
-            ligne+=1
-
+        
         self.boutPret.draw(x+30,y+370)
         self.boutQuitServ.draw(x+30,y+475)
         if self.vue.siServeur == True:
             self.boutLancerPartie.draw(x+570,y+475)
-            self.canevasLobby.create_text(x+600, y+50, anchor='n',text="Vitesse du jeu",fill="#B45F04",font="Arial 20")
-            self.scaleVitesse.place(x=x+470, y=y+80)
+            #self.canevasLobby.create_text(x+600, y+50, anchor='n',text="Vitesse du jeu",fill="#B45F04",font="Arial 20")
+            #self.scaleVitesse.place(x=x+470, y=y+80)
+        self.afficheClients()
+        
+    def afficheClients(self):
+        x = self.initX
+        y = self.initY
+        self.canevasLobby.delete("lobby")
+        self.clients = self.vue.eventListener.controller.network.client.host.getClients()
+        nb = len(self.clients)
+        # afficher l'information des joueurs
+        ligne = 1
+        for i in range(nb):
+            # ID de client
+            self.canevasLobby.create_text(x+35, y+50+30*ligne, anchor='nw',text=self.clients[i]["name"],fill="#B45F04",font="Arial 14",tag="lobby")
+            # couleur de client
+            self.canevasLobby.create_rectangle(x+345,y+55+30*ligne,x+395,y+75+30*ligne, fill=self.couleurs[self.clients[i]["civId"]-1],tag="lobby")
+            ligne+=1
+
+        self.vue.after(1, self.afficheClients)
 
 class MenuSolo:
     def __init__(self,vue):

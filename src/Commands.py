@@ -11,6 +11,7 @@ class Command():
     NEXT_FRAME = 'nf'      # Utilisée pour indiquer au client de changer de frame
     WAIT = 'w'             # Utilisée par le serveur pour indiquer à un client qu'il doit attendre
     DESYNC = 'dsc'         # Utilisée par le serveur pour indiquer à un client qu'il est totalement désynchronisé
+    START_LOADING = 'sl'   # Utilisée par l'hôte pour lancer le chargement de la partie
 
     # COMMANDES POUR CIVILISATIONS
     CIVILISATION_CREATE = 'cc'          # Utilisée lorsqu'un joueur se joint à la partie
