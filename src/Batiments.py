@@ -258,6 +258,7 @@ class Base(Batiment):
             print("in creation 1", self.paysanAFaire)
             self.joueur.ressources['bois'] -= self.coutCreer1['bois']
             self.paysanAFaire += 1
+            self.joueur.model.controller.view.frameBottom.updateResources(self.joueur.ressources)
             if not self.enCreation:
                 self.tempsDepartCreation = time.time()
                 self.enCreation = True
@@ -531,7 +532,7 @@ class Ferme(Batiment):
         if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
                 self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
-                print("ressource:", self.joueur.ressources)
+                self.joueur.model.controller.view.frameBottom.updateResources(self.joueur.ressources)
                 self.tempsProduction = time.time()
 
     def sortir(self):

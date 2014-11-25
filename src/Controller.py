@@ -25,7 +25,7 @@ class Controller:
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View(self.eventListener)
+        self.view = View( self.eventListener)
 
 
 
@@ -277,7 +277,7 @@ class EventListener:
                     if b.type == "base":
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
                     elif b.type == "ferme":
-                        self.controller.view.frameSide.changeView(FrameSide.FERMEVIEW, b)
+                        self.controller.view.frameSide.changeView(FrameSide.FARMVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
         print("modeConstruct", self.controller.view.modeConstruction)
         if self.controller.view.modeConstruction:

@@ -33,7 +33,7 @@ class FrameSide():
     UNITVIEW      = 0
     CONSTRUCTIONVIEW  = 1
     BASEVIEW = 2
-    FERMEVIEW = 3
+    FARMVIEW = 3
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -94,10 +94,10 @@ class FrameSide():
             self.baseView.draw()
             self.childView = self.baseView
 
-        elif selectedView == FrameSide.FERMEVIEW:
-            self.fermeView = FermeView(self.canvas, building, self, self.eventListener)
-            self.fermeView.draw()
-            self.childView = self.fermeView
+        elif selectedView == FrameSide.FARMVIEW:
+            self.farmView = FarmView(self.canvas, building, self, self.eventListener)
+            self.farmView.draw()
+            self.childView = self.farmView
 
 
     def destroy(self):
@@ -247,25 +247,25 @@ class BaseView():
             if isinstance(value, GButton):
                 value.destroy()
 
-class FermeView():
+class FarmView():
     def __init__(self, canvas, building, parent, evListener):
         self.canvas = canvas
         self.parent = parent
         self.eventListener = evListener
 
-        self.ferme = building
+        self.farm = building
 
         self.width = parent.width
         self.height = parent.width
         self.x = parent.x
         self.y = parent.y
-        self.boutonCreateUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
+        self.boutonReleaseUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
 
     def draw(self):
-        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 25)
 
     def onRemoveUnit(self):
-        self.ferme.sortir()
+        self.farm.sortir()
 
     def destroy(self):
         attr = self.__dict__
@@ -478,6 +478,7 @@ class FrameBottom():
         self.width = int(self.canvas.cget('width')) - largeurMinimap
         self.height = 100
 
+
         self.x = 0
         self.y = int(self.canvas.cget('height')) - self.height
 
@@ -487,12 +488,29 @@ class FrameBottom():
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         self.moraleProg.setProgression(63)
 
+        self.texteNourriture = GLabel(self.canvas,text="Nourriture: "+str(0))
+        self.texteBois = GLabel(self.canvas,text="Bois: "+str(100))
+        self.texteMinerai = GLabel(self.canvas,text="Minerai: "+str(0))
+        self.texteCharbon = GLabel(self.canvas,text="Charbon: "+str(0))
+
+
 
     def draw(self):
         """ Dessine le cadre
         """
         self.frame.draw(self.x, self.y)
         self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        self.texteNourriture.draw(x=self.frame.x + 225, y=self.frame.y + 35)
+        self.texteBois.draw(x=self.frame.x + 375, y=self.frame.y + 35)
+        self.texteMinerai.draw(x=self.frame.x + 500, y=self.frame.y + 35)
+        self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
+
+    def updateResources(self, ressources):
+        self.texteNourriture.text = "Nourriture: "+str(ressources['nourriture'])
+        self.texteBois.text = "Bois: "+str(ressources['bois'])
+        self.texteMinerai.text = "Minerai: "+str(ressources['minerai'])
+        self.texteCharbon.text = "Charbon: "+str(ressources['charbon'])
+        self.draw()
 
 
 class CarteView():
