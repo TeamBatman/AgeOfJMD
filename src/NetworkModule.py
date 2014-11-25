@@ -31,7 +31,7 @@ LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fon
 
 
 def detectIP():
-    return socket.gethostbyname(socket.gethostname())
+    return socket.gethostbyname("127.0.0.1")
 
 
 class SCClient:
