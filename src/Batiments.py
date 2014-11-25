@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 from PIL import Image, ImageTk
+from Commands import Command
 from GraphicsManagement import GraphicsManager
 
 
@@ -241,11 +242,11 @@ class Base(Batiment):
         self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
         self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
-        self.vitesseDeCreation = 40
+        self.vitesseDeCreation = 3
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-        self.coutCreer1['bois'] = 50
+        self.coutCreer1['bois'] = 5
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
@@ -253,14 +254,21 @@ class Base(Batiment):
 
     def creer1(self):  # création des paysans
         if not self.enCreation:
-            if self.joueur.ressources >= self.coutCreer1:
+            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
+                print("in creation 1")
                 self.joueur.ressources['bois'] -= self.coutCreer1['bois']
                 self.enCreation = True
                 self.tempsDepartCreation = time.time()
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            self.joueur.createUnit(Unit.generateId(self.joueur.getId()), self.posX + 1, self.posY + 1,
-                                   self.joueur.civilisation)
+            print("creating lalala")
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            self.joueur.model.controller.sendCommand(cmd)
             self.enCreation = False
 
 
@@ -348,6 +356,7 @@ class Base(Batiment):
 
     def miseAJour(self):
         if self.enCreation:
+            print("wassup")
             self.creer1()
         if self.enRecherche:
             self.recherche1()

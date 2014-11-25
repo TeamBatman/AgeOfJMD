@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """ NetworkModule.py: Ce module contient toutes les classes et fonctions nécessaires au bon fonctionnement du réseau """
-from datetime import datetime
 
 import json as pickle
 import random
@@ -10,21 +9,20 @@ import socket
 import threading
 
 import Pyro4
+import time
 
 from Civilisations import Civilisation
-
 from Commands import Command
-from Joueurs import Joueur
 
 
 
 
 
 # CONFIGURATION PYRO
-
-
 Pyro4.PYRO_TRACELEVEL = 0  # N'affiche pas les erreurs de PYRO4
-Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet au serveur de pouvoir s'éteindre et deconnecte le client après ce délais
+Pyro4.config.COMMTIMEOUT = 5.0  # en sec Permet serveur de s'éteindre et de deconnecter le client après délais
+# Pyro4.config.REQUIRE_EXPOSE = True      # Permet d'exposer certaines méthodes et attributs d'un Proxy Pyro
+
 
 # CONSTANTE DU MODULE
 SERVER_DEBUG_VERBOSE = True  # Permet d'afficher les messages de debug du serveur
@@ -34,6 +32,18 @@ LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fon
 
 def detectIP():
     return socket.gethostbyname(socket.gethostname())
+
+
+class SCClient:
+    """ Représentation d'un client pour le ServerController
+    """
+
+    def __init__(self, ipAddress, name, cid):
+        self.civId = cid  # Identifiant de civilisation du client
+        self.name = name  # Nom du client/joueur
+        self.ipAddress = ipAddress  # Adresse IP du client
+        self.currentFrame = 0  # la Frame de simulation actuel du client
+        self.isHost = False  # Spécifie si le client est aussi l'hote (True) on Non (False)
 
 
 class ServerController:
@@ -49,7 +59,7 @@ class ServerController:
         self.clients = {}
         self.idIndex = 0  # À chaque attributionID ce nombre est augmenté [constitue l'ID unique des commandes]
         self.commands = {}  # une dict des commandes reçues la clé est l'ID de la commande etl a valeur la commande
-        
+
         # Les civilisations possibles
         self.civilisations = [
             Civilisation.ROUGE,
@@ -65,81 +75,119 @@ class ServerController:
             Civilisation.JAUNE
         ]
 
+        # Le nombre de frames dans le futur depuis le temps de sa réception qu'une commande doit être exécutée
+        self.commandFrameLatency = 2
 
-    def _generateId(self):
-        """ Génère un identifiant unique à être attribué à chaque utilisateur
-        :return: a unique ID
+        self.syncFrameThreshold = 1  # Le nombre de frames minimum pour déclancher une synchronisation
+        # Le nombre maximal de frames de retard sur le jeu. Lorsqu'un joueur est X frames derrière le
+        # plus avancé, on lui renvoie Command.DESYNC lui indiquant qu'il ne peu plus joueur car il est désynchronisé
+        self.desynchFrameThreshold = 40
+
+    #@Pyro4.expose
+    #@property
+    def getClients(self):
+        """ Retourne la liste des clients du serveu, chacun sous la forme d'un dictionnaire
+        :return: une liste contenant les clients sous forme de dictionnaire
         """
-        self.idIndex += 2
-        return self.idIndex
 
-    def join(self):
+        return [c.__dict__ for c in self.clients.values()]
+
+
+    def join(self, ip, name='Joueur Anonyme'):
         """ Permet à un client de rejoindre le serveur et lui retoune un Identifiant unique
         :return: l'identifiant unique généré pour le client
         """
+        # On choisit de aléatoirement une civilisation
         random.shuffle(self.civilisations)
-        clientId = self.civilisations.pop()
-        self.clients[clientId] = 0
-        Server.outputDebug('LE CLIENT %s A REJOINT LA PARTIE' % clientId)
-        return clientId
+        civ = self.civilisations.pop()
 
-    def sendCommand(self, command):
+        newClient = SCClient(ip, name, civ)
+        self.clients[civ] = newClient
+
+        newClient.isHost = (detectIP() == ip)
+
+        Server.outputDebug('LE CLIENT %s A REJOINT LA PARTIE' % newClient.civId)
+        return newClient.civId
+
+    def sendCommand(self, command, currentFrame):
         """ Permet à un client d'envoie une commande à tous les autres clients[dans la liste de commande à synchroniser]
         :param command: la commande à être envoyé à tous les clients
         """
-        self.commands[self._generateId()] = command
+        maxFrame = self.getFrameMostForwardInTime()
+        try:
+            self.commands[maxFrame + self.commandFrameLatency].append(command)
+        except KeyError:
+            self.commands[maxFrame + self.commandFrameLatency] = [command]
 
 
-    def getNextCommand(self, clientId):  # TODO Simplifier
+    def getNextCommand(self, clientId, currentFrame):  # TODO Simplifier
         """ Permet à un client de se renseigner sur sa prochaine commande à exécuter
         afin de se synchroniser
+        :param currentFrame: La frame actuelle du client ce qui veut dire qu'il désire currentFrame + 1
         :param clientId: le numéro d'identification du client
         :return: La prochaine commande à exécuter par le client
         """
 
-        clientIndex = self.clients[clientId]
+        currentClient = self.clients[clientId]
+        currentClient.currentFrame = currentFrame
+        #print(["%s: %s" % (c.civId, c.currentFrame) for c in self.clients.values()])   # PROGRESSION CLIENTS
 
 
-        # Y a t-il quelqu'un plus en retard que nous?
-        if self.isSomeoneMoreLate(clientId):
-            return [pickle.dumps(Command(-1, Command.LAG).convertToDict())]
-            # On Attend que tout le monde ait terminé leur choses
+        # a-t-on suffisamment de joueurs pour commencer la partie?
+        if len(self.clients) < 1:
+            cmd = Command(-1, Command.WAIT)
+            return [pickle.dumps(cmd.convertToDict())]
+
+        # Le client est-il totalement désynchro?
+        if self.getFrameMostForwardInTime() - currentClient.currentFrame >= self.desynchFrameThreshold:
+            Server.outputDebug("client avec ID: %s est DÉSYNCHRONISÉ" % currentClient.civId)
+            return [pickle.dumps(Command(-1, Command.DESYNC).convertToDict())]
 
 
-        # Le client vient-il de terminer une commande?
-        if clientIndex % 2 == 0:  # Le client vient de terminer une commande
 
-            # Y a til une commande après celle qu'on vient de terminer?
-            if clientIndex == self.idIndex:
-                return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
-                # Rien de nouveau on est totalement synchro donc le client devra attendre
+        # Si quelqu'un est plus en retard que nous on ne peut obtenir notre prochaine frame
+        # On va attendre que le(s) client(s) en retard se synchronise(nt)
+        if self.isSomeoneLate():
+            if self.isSomeoneMoreLate(currentClient):
+                # Si différence temps entre client courant et le plus en retard > threshold on le fait attendre
+                if currentFrame - self.getFrameMostBackwardInTime() >= self.syncFrameThreshold:
+                    return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
 
-            # On le met donc en Stand By
-            self.clients[clientId] += 1
-            return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
-
-
-        # Le client est donc en STAND BY
-        # Ici, Personne n'est plus en retard que nous, on peut donc tenter la prochaine commande
-        #Server.outputDebug("LE CLIENT %s id NEXT COMMANDE AVEC PROGRESSION %s et dC = %s" % (clientId, clientIndex, self.idIndex))
-        self.clients[clientId] += 1
-
-        command = self.commands[self.clients[clientId]]
-        #command['data']['EXEC_TIME'] = '5'
-        return [self.commands[self.clients[clientId]], 'BONJOUR']
+        try:
+            return self.commands[currentFrame + 1]
+        except KeyError:
+            return []
 
 
-    def isSomeoneMoreLate(self, clientId):
+    def getFrameMostForwardInTime(self):
+        """ Retourne la frame du client le PLUS avancé dans le temps
+        :return: int frame la PLUS avancée dans le temps
+        """
+        return max([c.currentFrame for c in self.clients.values()])
+
+    def getFrameMostBackwardInTime(self):
+        """ Retourne la frame du client le MOINS avancé dans le temps
+        :return: int frame la MOINS avancée dans le temps
+        """
+        return min([c.currentFrame for c in self.clients.values()])
+
+
+    def isSomeoneMoreLate(self, refClient):
         """ Trouves si un client est plus en retard que le client en paramètre
-        :param clientId: Le client à compararer au autres
+        :param refClient: Le client à compararer au autres
         :return: True si quelqu'un est plus en retard autrement False: Nous somme le plus en retard
         """
-        clientIndex = self.clients[clientId]
-        for cId, cVal in self.clients.items():
-            if cVal < clientIndex:
+        for client in self.clients.values():
+            if client.currentFrame < refClient.currentFrame:
                 return True
 
         return False
+
+    def isSomeoneLate(self):
+        """ Trouves si un client est en retard
+        :return: True si quelqu'un est en retard sinon False:
+        """
+        return len(set([c.currentFrame for c in self.clients.values()])) != 1
 
 
     def leave(self, clientId):
@@ -219,7 +267,7 @@ class Client:
         self.host = None  # L'hôte auquel on tente de se connecte
         self.id = -1  # L'identifiant logique auprès du serveur
 
-    def connect(self, host='127.0.0.1', port=3333, hostName='RTS'):
+    def connect(self, host='127.0.0.1', port=3333, hostName='RTS', playerName='Batman'):
         """ Connecte le client à son hôte
         :param host: L'addresse IP de l'hôte
         :param port: Le port ouvert de l'hôte
@@ -227,21 +275,20 @@ class Client:
 
         self.uri = "PYRO:%s@%s:%s" % (hostName, host, port)
         self.host = Pyro4.Proxy(self.uri)
-        self.id = self.host.join()
+        self.id = self.host.join(detectIP(), playerName)  # TODO Ajouter le nom
 
         Client.outputDebug("Connecté à %s avec ID: %s" % (self.uri, self.id))
 
 
-    def synchronize(self):
+    def synchronize(self, currentFrame):
         """ Vérifie s'il ya une commande non exécutée par le client
         sur le serveur
         :return: la dernière commande reçue (si il y avait une) autrement on retourne None
         """
         try:
-            response = self.host.getNextCommand(self.id)
+            response = self.host.getNextCommand(self.id, currentFrame)
             if response:
-                command = Command.buildFromDict(pickle.loads(response[0]))
-                return command
+                return [Command.buildFromDict(pickle.loads(chunk)) for chunk in response]
             else:
                 return []
         except Pyro4.errors.CommunicationError:  # Pyro4.errors.CommunicationError:
@@ -262,7 +309,7 @@ class Client:
             return False  # Échec de la tentative... le serveur n'existe peut-être plus
 
 
-    def sendCommand(self, command):
+    def sendCommand(self, command, currentFrame):
         """ Envoie un objet commande à l'hôte dans un format sérialisé JSON
         :param command: la commande à envoyer [OBJET]
         """
@@ -272,7 +319,7 @@ class Client:
             # SÉRIALISATION DE LA COMMANDE
             cmd_ser = pickle.dumps(command)
             # ENVOIE DE LA COMMANDE SÉRIALISÉE VERS L'HÔTE
-            self.host.sendCommand(cmd_ser)
+            self.host.sendCommand(cmd_ser, currentFrame)
         except Pyro4.errors.CommunicationError:
             raise ClientConnectionError("Impossible d'ENVOYER LA COMMANDE AU SERVEUR")
 
@@ -300,7 +347,7 @@ class NetworkController:
         self.server = None  # Instance du serveur (Seulement lorsque le joueur décide de hoster une partie)
         self.serverThread = None  # Le Fil d'éxécution du serveur
 
-    def connectClient(self, ipAddress, port):
+    def connectClient(self, ipAddress, port, playerName):
         """ Connecte le
         :param ipAddress: L'adresse IP du serveur auquel on veut se connecter
         :param port: Le port du serveur
@@ -308,7 +355,7 @@ class NetworkController:
         if self.serverThread:
             ipAddress = detectIP()
         try:
-            self.client.connect(ipAddress, port)
+            self.client.connect(ipAddress, port, playerName=playerName)
         except Pyro4.errors.CommunicationError:
             raise ClientConnectionError("IMPOSSIBLE DE SE CONNECTER À L'HOTE AUCUN OBJET PYRO DÉTECTER À L'ADRESSE"
                                         "ET AU PORT SPÉCIFIÉ")
@@ -340,13 +387,13 @@ class NetworkController:
             Server.outputDebug('Un serveur est déjà ouvert sur le port %s, le serveur ne sera pas lancer' %
                                self.server.port)
 
-    def synchronizeClient(self):
+    def synchronizeClient(self, currentFrame):
         """ Méthode synchronisant le client et retournant
          les commandes reçu par ce dernier s'il en a reçu
         :return: les commandes du client (une liste d'Objet Commande)
         """
         try:
-            return self.client.synchronize()
+            return self.client.synchronize(currentFrame)
         except ClientConnectionError as e:
             # TENTATIVE DE RECONNECTION
             Client.outputDebug(e.message)

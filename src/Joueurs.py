@@ -82,6 +82,10 @@ class Joueur:
                 elif not paysan.cheminTrace and not paysan.ressourceEnvoye:
                     self.ajouterRessource(paysan.typeRessource, paysan.nbRessources)
                     paysan.nbRessources = 0
+                    cases = self.model.trouverCaseMatrice(paysan.posRessource.x, paysan.posRessource.y)
+                    if self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+                        paysan.mode = 0
+                        print("Paysan mode", paysan.mode)
                     print(paysan.id, self.ressources)
                     groupe = []
                     groupe.append(paysan)
@@ -153,5 +157,4 @@ class Joueur:
         """ Met à jour les bâtiments 
         """
         # TODO Ajouter Méthode Update dans les bâtiments
-        #[b.update(self.model) for b in self.buildings.values()]
-        pass
+        [b.miseAJour() for b in self.buildings.values()]

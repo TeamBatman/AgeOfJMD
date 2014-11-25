@@ -28,36 +28,36 @@ class Model:
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
 
+
     # ## EXECUTION COMMANDES ###
     def executeCommand(self, command):
         """ Exécute une commande
         :param command: la commande à exécuter [Objet Command]
         """
         commands = {
-            Command.CREATE_UNIT: self.executeCreateUnit,
-            Command.MOVE_UNIT: self.executeMoveUnit,
-            Command.ATTACK_UNIT: self.executeAttackUnit,
-            Command.KILL_UNIT: self.executeKillUnit,
 
-            Command.CREATE_BUILDING: self.executeCreateBuilding,
+            Command.UNIT_CREATE: self.executeCreateUnit,
+            Command.UNIT_MOVE: self.executeMoveUnit,
+            Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_DIE: self.executeKillUnit,
+            Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
-            Command.CREATE_CIVILISATION: self.executeCreateCivilisation,
+            Command.BUILDING_CREATE: self.executeCreateBuilding,
 
-            Command.EMPTY: lambda info: None
+            Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
         }
 
         try:
             exe = commands[command.data['TYPE']]
-            #print("EXECUTE: %s" % datetime.now())      # DEBUG
-            exe(command)
         except KeyError:
-            raise KeyError("FONCTIONALITÉ NON IMPLÉMENTÉE...")
+            raise NotImplementedError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
+        exe(command)
 
     def executeCreateUnit(self, command):
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
         """
-
+        print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
@@ -85,8 +85,34 @@ class Model:
           selon ses paramètres 
         :param command: la commande à exécuter [Objet Commande]
         """
+
+        try:
+            civId = self.getUnit(command['ID']).getClientId()
+            self.joueurs[civId].killUnit(command['ID'])
+        except AttributeError:    # On a essayé de tuer Une unité déjà morte
+            print("UNIT DÉJÀ MORTE?")  # TODO Comprendre pourquoi
+
+    def executeTakeRessources(self, command):
         civId = self.getUnit(command['ID']).getClientId()
-        self.joueurs[civId].killUnit(command['ID'])
+        nbRessources = self.carte.matrice[command['X1']][command['Y1']].nbRessources
+        
+        if nbRessources >= command['NB_RESSOURCES']:
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
+            
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
+        else:
+            if self.joueur.civilisation == civId:
+                self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
+            self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
+        if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
+            self.carte.matrice[command['X1']][command['Y1']].type = 0 #Gazon -> n'est plus une ressource
+            self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
+            self.controller.view.update(self.getUnits(), self.getBuildings(),
+                                        self.carte.matrice)
+        print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
+            #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
+            #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
         self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
@@ -176,13 +202,6 @@ class Model:
 
         return centreX, centreY
 
-    def creerJoueur(self, clientId):
-        """  Permet de crééer l'entité joueur
-        :param clientId: L'id du client
-        """
-        self.joueur = Joueur(clientId)
-
-
     # ## JOUEURS ###
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
@@ -211,6 +230,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = Joueur(clientId, self)
+        self.joueurs[clientId].ressources['bois'] += 100
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations

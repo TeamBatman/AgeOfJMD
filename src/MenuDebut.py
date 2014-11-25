@@ -1,7 +1,6 @@
 from View import *
 import socket
 
-from NetworkModule import ServerController
         
 
 class MenuInit:
@@ -58,15 +57,25 @@ class MenuServeur:
         self.vue.changeCanevas(self.canevasServeur)
         self.frameServ = GFrame(self.canevasServeur, width=600, height=270)
         self.vue.siServeur = True
-        self.vue.eventListener.controller.startServeur()
+        #self.vue.eventListener.controller.startServeur()
         self.ip = socket.gethostbyname(socket.gethostname())
         self.inputNom = Entry(self.canevasServeur, bd=4, font="Courier 20")
         #label "taille de la carte"
         # à faire
 
-        self.boutFinalServ = GButton(self.canevasServeur, text="Finaliser serveur",command=self.vue.menuLobby,color=0)
+        self.boutFinalServ = GButton(self.canevasServeur, text="Finaliser serveur",command=self.lireNom,color=0)
         self.boutRetour = GButton(self.canevasServeur, text="Retour",command=self.vue.menuMultijoueur,color=0)
         self.draw(self.initX,self.initY)
+
+    def lireNom(self):
+        # vérifie le nom du joueur
+        self.nomJoueur = self.inputNom.get()
+        if len(self.nomJoueur) == 0:
+            self.nomJoueur = "Batman"
+        print(self.nomJoueur)
+
+        self.vue.eventListener.controller.startServeur(self.nomJoueur)
+        self.vue.menuLobby()
 
     def draw(self,x,y):
         self.frameServ.draw(x+0, y+0)
@@ -91,9 +100,19 @@ class MenuRejoindreServeur:
         self.inputIp = Entry(self.canevasRejServ, bd=4, font="Courier 30")
         #self.inputIp.bind("<Return>",self.testIP)
         self.inputNom = Entry(self.canevasRejServ, bd=4, font="Courier 20")
-        self.boutRejoindre = GButton(self.canevasRejServ, text="Rejoindre serveur",command=self.vue.menuLobby,color=0)
+        self.boutRejoindre = GButton(self.canevasRejServ, text="Rejoindre serveur",command=self.lireNom,color=0)
         self.boutRetour = GButton(self.canevasRejServ, text="Retour",command=self.vue.menuMultijoueur,color=0)
         self.draw(self.initX,self.initY)
+
+    def lireNom(self):
+        # vérifie le nom du joueur
+        self.nomJoueur = self.inputNom.get()
+        if len(self.nomJoueur) == 0:
+            self.nomJoueur = "Batgirl"
+        print(self.nomJoueur)
+
+        self.vue.eventListener.controller.startServeur(self.nomJoueur)
+        self.vue.menuLobby()
 
     def draw(self,x,y):
         self.frameRejServ.draw(x+0, y+0)
@@ -119,35 +138,11 @@ class MenuLobby:
         if len(self.nomJoueur) == 0:
             self.nomJoueur = "Batman"
         """
-
-        """
-        #labels des noms - ajouter les noms dans une liste...
-        self.labelJoueur1 = Label(self.canevasLobby, text="1. " + self.nomJoueur, font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur1.place(x=35, y=80)
-        self.labelJoueur2 = Label(self.canevasLobby, text="2. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur2.place(x=35, y=110)
-        self.labelJoueur3 = Label(self.canevasLobby, text="3. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur3.place(x=35, y=140)
-        self.labelJoueur4 = Label(self.canevasLobby, text="4. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur4.place(x=35, y=170)
-        self.labelJoueur5 = Label(self.canevasLobby, text="5. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur5.place(x=35, y=200)
-        self.labelJoueur6 = Label(self.canevasLobby, text="6. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur6.place(x=35, y=230)
-        self.labelJoueur7 = Label(self.canevasLobby, text="7. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur7.place(x=35, y=260)
-        self.labelJoueur8 = Label(self.canevasLobby, text="8. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur8.place(x=35, y=290)
-        self.labelJoueur9 = Label(self.canevasLobby, text="9. ", font="Arial 14", bg="#E1F5A9", fg="#210B61")
-        self.labelJoueur9.place(x=35, y=320)
-        """
-        self.clientId = self.vue.eventListener.controller.network.client.id
-        print(self.clientId)
-        #serv = ServerController()
-        #nbClients = len(civilisations)
-        #nbClients = self.vue.eventListener.controller.network.client.getNbClients()
+        #self.clientId = self.vue.eventListener.controller.network.client.id
+        #self.clientId = self.vue.eventListener.controller.network.getClientId()
         
-        #print(nbClients)
+        self.clients = self.vue.eventListener.controller.network.client.host.getClients()
+        print(self.clients)
 
         self.boutPret = GButton(self.canevasLobby, text="Prêt",command=self.vue.pret,color=0)
         self.boutQuitServ = GButton(self.canevasLobby, text="Quitter le serveur",command=self.vue.menuMultijoueur,color=0)
@@ -160,25 +155,28 @@ class MenuLobby:
                               from_=1, to=10,tickinterval=1, resolution=1,
                               sliderlength=10,troughcolor="#B45F04",fg="#B45F04",
                               width=10,bd=0,showvalue=0,bg="#D3BF8F")
-        self.draw(self.initX,self.initY)
+        self.draw(self.initX,self.initY,self.clients)
 
-    def draw(self,x,y):
+    def draw(self,x,y,clients):
+        nb = len(clients)
+        print(nb)
         self.frameLobby.draw(x+0, y+0)
         self.canevasLobby.create_text(x+200, y+30, anchor='n',text="Joueurs",fill="#B45F04",font="Arial 22")
+        #couleur = Color()
+        # TODO - chercher dans View - Color
+        #              ROUGE     BLEU        VERT       MAUVE    ORANGE      ROSE        NOIR      BLANC      JAUNE
+        couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF", "#F5F520"]
         # fond pour les joueurs
         self.canevasLobby.create_rectangle(x+30,y+75,x+400,y+350, fill="#E1F5A9")
-        # ID de client
-        self.canevasLobby.create_text(x+35, y+80, anchor='nw',text=self.clientId,fill="#B45F04",font="Arial 14")
-        # couleurs - à changer pour avoir le choix
-        self.canevasLobby.create_rectangle(x+345,y+85,x+395,y+105, fill="#DF0101")  # ROUGE
-        self.canevasLobby.create_rectangle(x+345,y+115,x+395,y+135, fill="#2E2EFE") # BLEU
-        self.canevasLobby.create_rectangle(x+345,y+145,x+395,y+165, fill="#01DF01") # VERT
-        self.canevasLobby.create_rectangle(x+345,y+175,x+395,y+195, fill="#DF01D7") # MAUVE
-        self.canevasLobby.create_rectangle(x+345,y+205,x+395,y+225, fill="#FF8000") # ORANGE
-        self.canevasLobby.create_rectangle(x+345,y+235,x+395,y+255, fill="#FA58F4") # ROSE
-        self.canevasLobby.create_rectangle(x+345,y+265,x+395,y+285, fill="#000000") # NOIR
-        self.canevasLobby.create_rectangle(x+345,y+295,x+395,y+315, fill="#FFFFFF") # BLANC
-        self.canevasLobby.create_rectangle(x+345,y+325,x+395,y+345, fill="#FFFF00") # JAUNE
+        # afficher l'information des joueurs
+        ligne = 1
+        for i in range(nb):
+            # ID de client
+            self.canevasLobby.create_text(x+35, y+50+30*ligne, anchor='nw',text=clients[i]["name"],fill="#B45F04",font="Arial 14")
+            # couleur de client
+            self.canevasLobby.create_rectangle(x+345,y+55+30*ligne,x+395,y+75+30*ligne, fill=couleurs[clients[i]["civId"]-1])
+            ligne+=1
+
         self.boutPret.draw(x+30,y+370)
         self.boutQuitServ.draw(x+30,y+475)
         if self.vue.siServeur == True:
