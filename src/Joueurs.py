@@ -1,6 +1,6 @@
 import Batiments
-from Units import Paysan
-
+from Units import *
+from Batiments import Batiment
 
 class Joueur:
     """docstring for Joueur"""
@@ -48,13 +48,20 @@ class Joueur:
 
 
     # ## UNITS ###
-    def createUnit(self, uId, x, y, civilisation):
+    def createUnit(self, uId, x, y, civilisation, classe):
         """ Crée et ajoute une nouvelle unité à la liste des unités
         :param uId: ID que l'on souhaite attribuer à l'unité
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
-        self.units[uId] = Paysan(uId, x, y, self, civilisation)
+        if classe == "paysan":
+            self.units[uId] = Paysan(uId, x, y, self, civilisation)
+        elif classe == "soldatEpee":
+            self.units[uId] = GuerrierEpee(uId, x, y, self, civilisation)
+        elif classe == "soldatLance":
+            self.units[uId] = GuerrierLance(uId, x, y, self, civilisation)
+        else:
+            self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
 
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
@@ -130,6 +137,7 @@ class Joueur:
                                 newID = Batiments.Batiment.generateId(self.civilisation)
                                 createdBuild = Batiments.Base(self, newID, posX, posY)
                                 self.baseVivante = True
+
                             else:
                                 print("base already exist")
                                 return
@@ -145,6 +153,7 @@ class Joueur:
                         self.model.carte.matrice[posX][posY + 1].type = 5  # batiments
                         self.model.carte.matrice[posX + 1][posY + 1].type = 5  # batiments
 
+
     def destroyBuilding(self, bId):
         """ Détruit un bâtiment 
         """
@@ -158,3 +167,24 @@ class Joueur:
         """
         # TODO Ajouter Méthode Update dans les bâtiments
         [b.miseAJour() for b in self.buildings.values()]
+
+    def cheat(self):
+
+        posBaseX,posBaseY = 30,30
+        cmd = Command(self.civilisation, Command.BUILDING_CREATE)
+        cmd.addData('ID', Batiment.generateId(self.civilisation))
+        cmd.addData('X', posBaseX)
+        cmd.addData('Y', posBaseY)
+        cmd.addData('CIV', self.civilisation)
+        cmd.addData('BTYPE', Batiment.BASE)
+        self.model.controller.sendCommand(cmd)
+
+        posUnitX,posUnitY = 120,120
+        for i in range(0,20):
+            cmd = Command(self.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.civilisation)
+            cmd.addData('CLASSE', "soldatLance")
+            self.model.controller.sendCommand(cmd)

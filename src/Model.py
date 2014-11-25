@@ -10,7 +10,8 @@ import Batiments
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-from Units import Paysan
+from Units import *
+from AI import AI
 
 
 class Model:
@@ -57,9 +58,9 @@ class Model:
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
         """
-        print(self.joueurs)
+        #print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
-                                                     command.data['CIV'])
+                                                     command.data['CIV'], command.data['CLASSE'])
 
     def executeMoveUnit(self, command):
         """ Execute la commande pour DÉPLACER UNE UNITÉ selon ses paramètres 
@@ -110,7 +111,7 @@ class Model:
             self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
             self.controller.view.update(self.getUnits(), self.getBuildings(),
                                         self.carte.matrice)
-        print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
+       #print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
             #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
             #TODO: Mettre mini map à jour !!!
 
@@ -232,6 +233,27 @@ class Model:
         self.joueurs[clientId] = Joueur(clientId, self)
         self.joueurs[clientId].ressources['bois'] += 100
 
+    def creerAI(self, clientId):
+        """  Permet de crééer un joueur et de l'ajouter à la liste des joueurs
+        :param clientId: L'id du client
+        """
+        self.joueurs[clientId] = AI(clientId, self)
+        self.joueurs[clientId].ressources['bois'] += 100
+    def creerbaseAI(self, clientId):
+        idBase = Batiment.generateId(clientId)
+
+        cmd = Command(clientId, Command.BUILDING_CREATE)
+        cmd.addData('ID', idBase)
+        cmd.addData('X', 400)
+        cmd.addData('Y', 400)
+        cmd.addData('CIV', clientId)
+        cmd.addData('BTYPE', Batiment.BASE)
+        self.controller.sendCommand(cmd)
+
+        self.joueurs[clientId].base = self.getBuilding(idBase)
+
+        self.joueurs[4].cheat()
+
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations
         """
@@ -241,3 +263,5 @@ class Model:
         """ Retoune la totalité des bâtiments de toutes les civilisations
         """
         return {bId: b for civ in self.joueurs.values() for bId, b in civ.buildings.items()}
+
+

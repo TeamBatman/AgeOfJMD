@@ -116,8 +116,17 @@ class Controller:
         #TIMERS
         self.displayTimer.start()
 
+
+
+
+
         # FRAMES
         self.currentFrame = 0
+
+        #Ajout de l'AI
+        self.model.creerAI(6)
+        self.model.creerbaseAI(6)
+
 
         self.mainLoop()
         self.view.show()
@@ -207,7 +216,7 @@ class EventListener:
             cmd.addData('LEADER', 1)
             if posFin:
                 posLeader = posFin.pop(0)
-                print("leader KOMBAT!", posLeader)
+                #print("leader KOMBAT!", posLeader)
                 cmd.addData('FIN',posLeader)
             else:
                 cmd.addData('FIN', None)
@@ -278,7 +287,7 @@ class EventListener:
             for b in buildings:
                 print(b.id)
                 if b.estBatimentDe(clientId):
-                    if b.type == "base":
+                    if b.type == Batiment.BASE:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 

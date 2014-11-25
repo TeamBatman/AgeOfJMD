@@ -233,7 +233,7 @@ class BaseView():
 
     def onCreateUnit(self):
         self.base.creer1()
-        print("created unit")
+        #print("created unit")
 
     def destroy(self):
         attr = self.__dict__
@@ -643,9 +643,9 @@ class CarteView():
         self.canvas.delete("ferme")
         self.canvas.delete("base")
         for building in buildings.values():
-            print("buildings", building)
+            #print("buildings", building)
             if self.isBuildingShown(building):
-                print("create")
+                #print("create")
                 img = building.image
                 posX = (building.posX * 48) - (self.cameraX * self.item)
                 posY = (building.posY * 48) - (self.cameraY * self.item)
@@ -870,14 +870,14 @@ class View(GWindow):
             if allTags[0] == "base":
                 building = buildings[allTags[1]]
                 if building.estBatimentDe(self.eventListener.controller.network.getClientId()):
-                    print(building.type + ": " + building.id)
+                    #print(building.type + ": " + building.id)
                     building.estSelectionne = True
                     return
 
             elif allTags[0] == "ferme":
                 building = buildings[allTags[1]]
                 if building.estBatimentDe(self.eventListener.controller.network.getClientId()):
-                    print(building.type + ": " + building.id)
+                    #print(building.type + ": " + building.id)
                     building.estSelectionne = True
                     return
             elif allTags[0] == "unit":
