@@ -11,6 +11,7 @@ from GraphicsManagement import GraphicsManager
 # TODO le FOW pour la tour de guet
 from Units import Unit
 from Units import Noeud
+from src.Civilisations import Civilisation
 
 
 class Batiment:
@@ -47,6 +48,7 @@ class Batiment:
         self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.determineImage()
 
     def getClientId(self):
         """ Returns the Id of the client using the id of the unit
@@ -68,6 +70,9 @@ class Batiment:
         gId = "%s_%s" % (clientId, Batiment.COUNT)
         Batiment.COUNT += 1
         return gId
+
+    def determineImage(self):
+        raise Exception("La méthode determineImage doit être surchargée par tous les sous-classes de Unit et doit ")
 
 
     def detruire(self):
@@ -175,7 +180,7 @@ class TourDeGuet(Batiment):
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
-                    #TODO Decouverir comment le FOW fonctionnera
+                    # TODO Decouverir comment le FOW fonctionnera
                     self.enRecherche = False
                     self.joueur.recherche.append("Tour1")
 
@@ -190,7 +195,7 @@ class TourDeGuet(Batiment):
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
-                    #TODO Decouverir comment le FOW fonctionnera
+                    # TODO Decouverir comment le FOW fonctionnera
                     self.enRecherche = False
                     self.joueur.recherche.append("Tour2")
 
@@ -211,7 +216,7 @@ class Hopital(Batiment):
 
     def healing(self, unite):
         # TODO decouvrir comment le healing va se faire
-        #TODO ajouter le temps de recherche
+        # TODO ajouter le temps de recherche
         pass
 
     def recherche1(self):  # Amélioration du healing
@@ -228,7 +233,7 @@ class Hopital(Batiment):
             elif time.time() - self.tempsDepartRecherche <= 60:
                 self.enRecherche = False
                 self.joueur.recherche.append("Hopital")
-                #TODO decouvrir comment la regeneration va se faire
+                # TODO decouvrir comment la regeneration va se faire
 
     def miseAJour(self):
         if self.enRecherche:
@@ -239,9 +244,7 @@ class Base(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = "base"
-        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
-        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
+        self.determineImage()
         self.vitesseDeCreation = 3
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
@@ -250,6 +253,36 @@ class Base(Batiment):
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
+
+
+    def determineImage(self):
+        #self.image = GraphicsManager.getPhotoImage('Graphics/Buildings/Age_I/Base.png')
+        """self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)"""
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        baseImages = {
+            Civilisation.BLANC: 'Buildings/%s/Base/base_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Base/base_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Base/base_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Base/base_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Base/base_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Base/base_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Base/base_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Base/base_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Base/base_rose.png' % age
+        }
+        img = GraphicsManager.getImage(baseImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
+
+
+
 
 
     def creer1(self):  # création des paysans
@@ -262,7 +295,7 @@ class Base(Batiment):
 
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             print("creating lalala")
-            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            posUnitX, posUnitY = self.joueur.model.trouverCentreCase(self.posX - 1, self.posY - 1)
             cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
             cmd.addData('X', posUnitX)
@@ -519,10 +552,30 @@ class Ferme(Batiment):
         self.production = 10
         self.tempsProduction = 10
         self.type = "ferme"
-        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
-        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
         self.coutRecherche1['bois'] = 50
+
+    def determineImage(self):
+        """ Permet de déterminer l'image du bâtiment
+        """
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        fermesImages = {
+            Civilisation.BLANC: 'Buildings/%s/Ferme/ferme_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Ferme/ferme_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Ferme/ferme_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Ferme/ferme_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Ferme/ferme_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Ferme/ferme_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Ferme/ferme_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Ferme/ferme_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Ferme/ferme_rose.png' % age
+        }
+        img = GraphicsManager.getImage(fermesImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production

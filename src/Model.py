@@ -50,7 +50,6 @@ class Model:
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
 
-
             Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation
         }
 

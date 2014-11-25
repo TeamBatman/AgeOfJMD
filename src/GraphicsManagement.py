@@ -420,7 +420,7 @@ def detectGraphics():
     for root, dirs, files in os.walk("Graphics/"):
         for file in files:
             if file.endswith('.png') or file.endswith('.jpg') or file.endswith('.jpeg'):
-                path = os.path.join(root, file).replace('\\', '/').replace('Graphics/', '')
+                path = os.path.join(root, file).replace('\\', '/')
                 graphics.append(path)
     return graphics
 

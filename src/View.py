@@ -519,9 +519,23 @@ class CarteView():
             Tuile.FORET: GraphicsManager.getPhotoImage('World/foret.png'),  # jaune
             Tuile.MINERAI: GraphicsManager.getPhotoImage('World/foret.png'),  # gris pale
             Tuile.CHARBON: GraphicsManager.getPhotoImage('World/foret.png'),  # gris fonce
-            Tuile.EAU: GraphicsManager.getPhotoImage('World/water.png')  # bleu
+            Tuile.EAU: GraphicsManager.getPhotoImage('World/water.png'),  # bleu
+            Tuile.BATIMENT: GraphicsManager.getPhotoImage('World/grass.png'),
         }
 
+        foretImage = {
+
+        }
+
+
+
+
+
+        for x in range(x1, x1 + self.nbCasesX+1):
+            for y in range(y1, y1 + self.nbCasesY):
+                posX1 = 0 + (x - x1) * self.item
+                posY1 = 0 + (y - y1) * self.item
+                self.canvas.create_image(posX1, posY1, anchor=NW, image=images[Tuile.GAZON], tags=self.tagName)
 
         for x in range(x1, x1 + self.nbCasesX+1):
             for y in range(y1, y1 + self.nbCasesY):
@@ -529,18 +543,24 @@ class CarteView():
                 posY1 = 0 + (y - y1) * self.item
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
-
-                if not carte[x][y].revealed:
+                tuile = carte[x][y]
+                
+                """if not carte[x][y].revealed:
                     img = GraphicsManager.getPhotoImage('World/fog.png')
                     self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
-                    continue
-                elif not carte[x][y].type == 5:#bâtiment
-                    img = images[carte[x][y].type]
-                else:
-                    img = images[Tuile.GAZON]
+                    continue"""
 
-                self.canvas.create_image(posX1, posY1, anchor=NW, image=images[Tuile.GAZON], tags=self.tagName)
-                self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
+                if tuile.type != Tuile.GAZON:
+                    img = images[tuile.type]
+                    tag = self.tagName
+                    if carte[x][y].type == Tuile.FORET:
+
+                        tag = 'foret'
+
+
+
+
+                    self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=tag)
 
                 # TODO raise Fog and Forest
 
@@ -551,13 +571,11 @@ class CarteView():
 
 
 
-                    # else:
-                    # couleur = "#333"
-                    #self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=1, fill=couleur, tags=self.tagName)
 
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
-        self.canvas.tag_raise('foret')
+        self.canvas.tag_raise('foret', self.tagName)
+        self.canvas.tag_raise('fog')
 
     def drawUnits(self, units, selectedUnits):
         """ Dessine les unités dans la map
@@ -615,8 +633,15 @@ class CarteView():
                 if unit.hp != unit.hpMax or unit in selectedUnits:
                     tailleBarre = unit.grandeur  # en pixels
                     hp = int(unit.hp * tailleBarre / unit.hpMax)
-                    self.canvas.create_rectangle(posX, posY - 7, posX + 32, posY - 4, fill='black', tags='unitHP')
-                    self.canvas.create_rectangle(posX, posY - 7, posX + hp, posY - 4, fill='red', tags='unitHP')
+
+                    bx1 = posX - unit.grandeur / 2
+                    by1 = posY - unit.grandeur / 2 - 8
+                    bx2 = bx1 + tailleBarre
+                    by2 = by1 + 4
+
+
+                    self.canvas.create_rectangle(bx1, by1, bx2, by2, fill='black', tags='unitHP')
+                    self.canvas.create_rectangle(bx1, by1, bx1 + hp, by2, fill='red', tags='unitHP')
 
 
                 # ICÔNE MODE COMBAT

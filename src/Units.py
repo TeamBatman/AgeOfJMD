@@ -103,8 +103,7 @@ class Unit():
         """ permet de déterminer le spritesheet à utiliser
         selon la civilisation de l'unité
         """
-        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit "
-                        "retourner la sprite sheet")
+        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit ")
 
     @staticmethod
     def generateId(clientId):
@@ -947,6 +946,7 @@ class Paysan(Unit):
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
         self.compteurRessource = 0
+        self.posRessource = Noeud(None, 0, 0, None, None)
 
     def determineSpritesheet(self):
 
