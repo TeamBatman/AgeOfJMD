@@ -1,7 +1,0 @@
-Une civilisation peu changer de l'âge I à l'age II lors du cas suivant:
-	
-	- Possède une base
-	- Nb Unités min: 30 unités
-	- Nb Fermes min: 1
-	- Nb bois: 500
-	

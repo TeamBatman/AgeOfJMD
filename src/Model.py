@@ -45,7 +45,6 @@ class Model:
             Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
             Command.BUILDING_CREATE: self.executeCreateBuilding,
-            Command.BUILDING_DESTROY: self.executeDestroyBuilding,
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
         }
@@ -71,7 +70,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -130,14 +129,6 @@ class Model:
         if command['BTYPE'] == 0: #Base TEMPORAIRE !
             self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
-
-    def executeDestroyBuilding(self, command):
-        blupid = command.data['ABID']
-        print("Le batiment "+blupid+" vient de mourrir!")
-        civ = command.data['CIV']
-        self.joueurs[civ].destroyBuilding(blupid)
-        unitId = command.data['ATTID']
-        self.getUnit(unitId).mode = 0
 
     def executeCreateCivilisation(self, command):
         self.creerJoueur(command['ID'])

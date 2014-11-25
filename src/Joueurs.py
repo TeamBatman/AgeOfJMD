@@ -28,7 +28,6 @@ class Joueur:
             self.ressources['minerai'] += nbRessources
         elif typeRessource == 3:
             self.ressources['charbon'] += nbRessources
-        self.model.controller.view.frameBottom.updateResources(self.ressources)
 
 
     def update(self):

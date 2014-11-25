@@ -14,9 +14,9 @@ class Command():
 
     # COMMANDES POUR CIVILISATIONS
     CIVILISATION_CREATE = 'cc'          # Utilisée lorsqu'un joueur se joint à la partie
-    CIVILISATION_EVOLVE = 'ce'          # Utilisée lorsqu'une unité change d'âge (évolue)
+    CIVILISATION_PROMOTE = 'cp'         # Utilisée lorsqu'une unité change d'âge (évolue)
     CIVILISATION_ANNIHILATE = 'ca'      # Utilisée lorsque civilisation quitte partie pour tuer détruire ses effectifs
-    CIVILISATION_INVOKE_GOD = 'cig'     # Utilisée lorsque civilisation invoque les dieux augmentant son morale++
+    CIVILISATION_INVOKE_GOD = 'cig'      # Utilisée lorsque civilisation invoque les dieux augmentant son morale++
 
     # COMMANDES POUR UNITÉS
     UNIT_CREATE = 'uc'          # Utilisée lorsqu'on veut créer une unité
@@ -30,6 +30,8 @@ class Command():
 
     UNIT_ENTER_BUILDING = 'ueb'      # Utilisée lorsqu'une unité entre dans un bâtiment
     UNIT_LEAVE_BUILDING = 'ulb'      # Utilisée lorsqu'une unité sort d'un bâtiment
+
+
 
     #  COMMANDE POUR BÂTIMENTS
     BUILDING_CREATE = 'bc'     # Utilisée lorsqu'on désire créer un bâtiment

@@ -38,16 +38,15 @@ class Carte(object):
                     self.matrice[x][y].isWalkable = False
 
                 elif self.matrice[x][y].type < 72:
+                    self.matrice[x][y].type = Tuile.MINERAI
+                    self.matrice[x][y].isWalkable = False
+
+                elif self.matrice[x][y].type < 100:
                     self.matrice[x][y].type = Tuile.CHARBON
                     self.matrice[x][y].isWalkable = False
 
-
-                elif self.matrice[x][y].type < 100:
-                    self.matrice[x][y].type = Tuile.FORET
-                    self.matrice[x][y].isWalkable = False
-
                 else:
-                    self.matrice[x][y].type = Tuile.MINERAI
+                    self.matrice[x][y].type = Tuile.EAU
                     self.matrice[x][y].isWalkable = False
 
 
