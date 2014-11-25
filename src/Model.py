@@ -10,8 +10,8 @@ import Batiments
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-from Units import *
-from AI import AI
+from Units import Paysan
+from Units import Noeud
 
 
 class Model:
@@ -40,6 +40,7 @@ class Model:
             Command.UNIT_CREATE: self.executeCreateUnit,
             Command.UNIT_MOVE: self.executeMoveUnit,
             Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_ATTACK_BUILDING: self.executeAttackBuilding,
             Command.UNIT_DIE: self.executeKillUnit,
             Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
@@ -58,9 +59,9 @@ class Model:
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
         """
-        #print(self.joueurs)
+        print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
-                                                     command.data['CIV'], command.data['CLASSE'])
+                                                     command.data['CIV'])
 
     def executeMoveUnit(self, command):
         """ Execute la commande pour DÉPLACER UNE UNITÉ selon ses paramètres 
@@ -69,7 +70,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -80,6 +81,14 @@ class Model:
         attacker = self.getUnit(command['SOURCE_ID'])
         target = self.getUnit(command['TARGET_ID'])
         target.recevoirAttaque(self, attacker, command['DMG'])
+
+    def executeAttackBuilding(self, command):
+        """ Execute la commande ATTAQUER UN BATIMENT  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        attacker = self.getUnit(command['SOURCE_ID'])
+        targetBuilding = self.getBuilding(command['TARGET_ID'])
+        targetBuilding.recevoirAttaque(self, attacker, command['DMG'])
 
     def executeKillUnit(self, command):
         """ Execute la commande TUER UNE UNITÉ
@@ -100,10 +109,10 @@ class Model:
         if nbRessources >= command['NB_RESSOURCES']:
             self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
             
-            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
+            if self.joueur.civilisation == civId:
                 self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
         else:
-            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
+            if self.joueur.civilisation == civId:
                 self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
             self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
         if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
@@ -111,12 +120,14 @@ class Model:
             self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
             self.controller.view.update(self.getUnits(), self.getBuildings(),
                                         self.carte.matrice)
-       #print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
+        print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
             #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
             #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
-        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
+        print("batient reseaux...")
+        if command['BTYPE'] == 0: #Base TEMPORAIRE !
+            self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
     def executeCreateCivilisation(self, command):
@@ -203,6 +214,26 @@ class Model:
 
         return centreX, centreY
 
+    def validPosBuilding(self, caseX, caseY):
+        """Regarde si on peut construire à cette endroit un building
+        :param caseX: la case en X du bâtiment
+        :param caseY: la case en Y du bâtiment
+        """
+        if not self.carte.matrice[caseX][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        
+        return True
+
     # ## JOUEURS ###
     def getUnit(self, uId):
         """ Retourne une unite selon son ID
@@ -233,27 +264,6 @@ class Model:
         self.joueurs[clientId] = Joueur(clientId, self)
         self.joueurs[clientId].ressources['bois'] += 100
 
-    def creerAI(self, clientId):
-        """  Permet de crééer un joueur et de l'ajouter à la liste des joueurs
-        :param clientId: L'id du client
-        """
-        self.joueurs[clientId] = AI(clientId, self)
-        self.joueurs[clientId].ressources['bois'] += 100
-    def creerbaseAI(self, clientId):
-        idBase = Batiment.generateId(clientId)
-
-        cmd = Command(clientId, Command.BUILDING_CREATE)
-        cmd.addData('ID', idBase)
-        cmd.addData('X', 400)
-        cmd.addData('Y', 600)
-        cmd.addData('CIV', clientId)
-        cmd.addData('BTYPE', Batiment.BASE)
-        self.controller.sendCommand(cmd)
-
-        self.joueurs[clientId].base = self.getBuilding(idBase)
-
-        self.joueurs[4].cheat()
-
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations
         """
@@ -263,5 +273,3 @@ class Model:
         """ Retoune la totalité des bâtiments de toutes les civilisations
         """
         return {bId: b for civ in self.joueurs.values() for bId, b in civ.buildings.items()}
-
-

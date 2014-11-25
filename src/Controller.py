@@ -8,6 +8,7 @@ from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
 from Units import Unit
+from Units import Noeud
 from View import View, FrameSide
 from SimpleTimer import Timer
 
@@ -24,7 +25,7 @@ class Controller:
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View(self.eventListener)
+        self.view = View( self.eventListener)
 
 
 
@@ -116,17 +117,8 @@ class Controller:
         #TIMERS
         self.displayTimer.start()
 
-
-
-
-
         # FRAMES
         self.currentFrame = 0
-
-        #Ajout de l'AI
-        self.model.creerAI(6)
-        self.model.creerbaseAI(6)
-
 
         self.mainLoop()
         self.view.show()
@@ -168,21 +160,35 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-    def onMapRClick(self, event, groupe=None, pos2=None):
+    def onMapRClick(self, event, groupe=None, building = None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
+        :param event: Tkinter Event
+        :param groupe: l'ensemble des unités qui veulent se déplacer
+        :param building: le building à construire
         """
         try:
-            if pos2:
-                x2 = pos2[0]
-                y2 = pos2[1]
-            else:
-                x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-                y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             if not groupe:
                 groupe = self.controller.view.selected[:]
+                if isinstance(groupe[0], Batiment):
+                    print("batiment")
+                    return
                 print(groupe)
             leaderUnit = self.controller.model.trouverPlusProche(groupe, (x2, y2))
-            posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
+
+            #Pour aller sur un batiment
+            posFin = None
+            carte = self.model.carte.matrice
+            cases = self.model.trouverCaseMatrice(x2,y2)
+            if not carte[cases[0]][cases[1]].isWalkable and carte[cases[0]][cases[1]].type == 5:
+                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings())[0]
+                if buildingDetected.peutEtreOccupe:
+                    posFin = []
+                    for i in range(len(groupe)-1):
+                        posFin.append((x2,y2))
+            if posFin == None:
+                posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupe) - 1,
                                                                     groupe[0].grandeur)
 
             groupeSansLeader = groupe[:]
@@ -193,11 +199,11 @@ class EventListener:
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building)
 
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:])  # Faire le leader en dernier
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building)  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None):
         """Pour la fonction onMapRClick !!!"""
         #print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
@@ -206,7 +212,7 @@ class EventListener:
         cmd.addData('Y1', unitSelected.y)
         cmd.addData('X2', x2)
         cmd.addData('Y2', y2)
-
+        cmd.addData('BTYPE', building)
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -214,9 +220,10 @@ class EventListener:
         #print("leader selection", leaderUnit)
         if leaderUnit:
             cmd.addData('LEADER', 1)
+            
             if posFin:
                 posLeader = posFin.pop(0)
-                #print("leader KOMBAT!", posLeader)
+                print("leader KOMBAT!", posLeader)
                 cmd.addData('FIN',posLeader)
             else:
                 cmd.addData('FIN', None)
@@ -234,7 +241,6 @@ class EventListener:
                 print("changement leader")
             else:
                 print("pas changment leader",unitSelected.id, unitSelected.leader)
-
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
             cmd.addData('GROUPE', None)
@@ -244,36 +250,51 @@ class EventListener:
     def onMapLPress(self, event):
         """ Appelée lorsque le joueur appuie sur le bouton gauche de sa souris dans la regions de la map
         """
+        print("PRESS")
         self.leftClickPos = (event.x, event.y)
-        self.controller.view.resetSelection()
+        if not self.controller.view.modeConstruction:
+            self.controller.view.resetSelection()
+        else:
+            self.onMapLRelease(event) #QUICK FIX
 
 
     def onMapLRelease(self, event):
         """ Appelée lorsque le joueur lâche le bouton gauche de sa souris dans la regions de la map
         """
+        print("RELEASE")
         clientId = self.controller.network.getClientId()
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
-        self.controller.view.deleteSelectionSquare()
 
+        self.controller.view.deleteSelectionSquare()
+        
+        # SÉLECTION BUILDINGS
+        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
+        if buildings:
+            for b in buildings:
+                print(b.id)
+                if b.estBatimentDe(clientId):
+                    if b.type == "base":
+                        self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
+                    elif b.type == "ferme":
+                        self.controller.view.frameSide.changeView(FrameSide.FARMVIEW, b)
+            self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
+        print("modeConstruct", self.controller.view.modeConstruction)
         if self.controller.view.modeConstruction:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             currentY = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             clientId = self.controller.network.getClientId()
 
-            cmd = Command(clientId, Command.BUILDING_CREATE)
-            cmd.addData('ID', Batiment.generateId(clientId))
-            cmd.addData('X', currentX)
-            cmd.addData('Y', currentY)
-            cmd.addData('CIV', self.model.joueur.civilisation)
-            cmd.addData('BTYPE', self.controller.view.lastConstructionType)
-            self.controller.sendCommand(cmd)
+            idBatiment = Batiment.generateId(clientId)
+            civ =  self.model.joueur.civilisation
+            bType =  self.controller.view.lastConstructionType
+            self.envoyerCommandBatiment(idBatiment, currentX, currentY, self.controller.view.selected[:], bType,civ)
 
 
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             return
-
+        
         # SÉLECTION UNITÉS
         units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.getUnits())
         if units:
@@ -281,16 +302,22 @@ class EventListener:
             self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
             return
 
-        # SÉLECTION BUILDINGS
-        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
-        if buildings:
-            for b in buildings:
-                print(b.id)
-                if b.estBatimentDe(clientId):
-                    if b.type == Batiment.BASE:
-                        self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
-            self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
 
+    def envoyerCommandBatiment(self,idBatiment, posX, posY, unitsSelected, bType, civ = None):
+        caseX, caseY = self.model.trouverCaseMatrice(posX, posY)
+        if self.model.validPosBuilding(caseX, caseY) and unitsSelected:
+            self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
+            
+        if bType == 0: #Base TEMPORAIRE !
+            clientId = self.controller.network.getClientId()
+            cmd = Command(clientId, Command.BUILDING_CREATE)
+            cmd.addData('ID', idBatiment)
+            cmd.addData('X', posX)
+            cmd.addData('Y', posY)
+            cmd.addData('CIV', civ)
+            cmd.addData('UNITS', [])
+            cmd.addData('BTYPE', bType)
+            self.controller.sendCommand(cmd)
 
     def onUnitRClick(self, event, groupeSansLeader=None):
         """
@@ -371,7 +398,21 @@ class EventListener:
         # TODO REMOVE C'EST JUSTE POUR DES TEST
 
 
+    def onBuildingRClick(self, event):
+        """
+        Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
+        :param event: Tkinter Event
+        """
+        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if not building.estBatimentDe(self.model.joueur.civilisation):
+            print("click sur building ennemi")
+            self.onMapRClick(event, building=building)
 
+
+        if building.type == "ferme":
+            print("batiment")
+            self.onMapRClick(event)
+            
 
     def onMapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la map

@@ -1,6 +1,6 @@
 import Batiments
-from Units import *
-from Batiments import Batiment
+from Units import Paysan
+
 
 class Joueur:
     """docstring for Joueur"""
@@ -10,7 +10,7 @@ class Joueur:
         self.civilisation = civilisation  # Couleur de la civilisation
         self.base = None  # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
         self.baseVivante = False  # À modifier, doit être true quand on commence une vraie partie
-        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture': 0}
         self.morale = 0
         self.nbNourriture = 0
         self.epoque = 1
@@ -48,20 +48,13 @@ class Joueur:
 
 
     # ## UNITS ###
-    def createUnit(self, uId, x, y, civilisation, classe):
+    def createUnit(self, uId, x, y, civilisation):
         """ Crée et ajoute une nouvelle unité à la liste des unités
         :param uId: ID que l'on souhaite attribuer à l'unité
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
-        if classe == "paysan":
-            self.units[uId] = Paysan(uId, x, y, self, civilisation)
-        elif classe == "soldatEpee":
-            self.units[uId] = GuerrierEpee(uId, x, y, self, civilisation)
-        elif classe == "soldatLance":
-            self.units[uId] = GuerrierLance(uId, x, y, self, civilisation)
-        else:
-            self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
+        self.units[uId] = Paysan(uId, x, y, self, civilisation)
 
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
@@ -102,7 +95,7 @@ class Joueur:
                 print("remove", paysan.id)
                 self.enRessource.remove(paysan)
 
-    ### BUILDINGS ###
+    ### BUILDINGS ###    
     def createBuilding(self, bId, posX, posY, btype):  # TODO CLEAN UP
         """ Crée et ajoute un nouveaue bâtiment à la liste des bâtiments
         :param bId: ID que l'on souhaite attribuer au bâtiment
@@ -110,76 +103,34 @@ class Joueur:
         :param posY: position Y du bâtiment
         :param btype: Type de bâtiment à construire
         """
-        print("help1 ", posX, posY)
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
-        print("help2 ", posX, posY)
-        if not self.model.carte.matrice[posX][posY].isWalkable:
-            print("not walkable")
-        else:
-            if not self.model.carte.matrice[posX + 1][posY].isWalkable:
-                print("not walkable")
+        if btype == Batiments.Batiment.FERME:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Ferme(self, newID, posX, posY)
+        elif btype == Batiments.Batiment.BARAQUE:
+            pass
+        elif btype == Batiments.Batiment.HOPITAL:
+            pass
+        elif btype == Batiments.Batiment.BASE:
+            if not self.baseVivante:
+                newID = Batiments.Batiment.generateId(self.civilisation)
+                createdBuild = Batiments.Base(self, newID, posX, posY)
+                self.baseVivante = True
             else:
-                if not self.model.carte.matrice[posX][posY + 1].isWalkable:
-                    print("not walkable")
-                else:
-                    if not self.model.carte.matrice[posX + 1][posY + 1].isWalkable:
-                        print("not walkable")
-                    else:
-                        print(posX, posY)
-                        print(posX, posY)
-                        if btype == Batiments.Batiment.FERME:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Ferme(self, newID, posX, posY)
+                print("base already exist")
+                return
 
-                        elif btype == Batiments.Batiment.BARAQUE:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Baraque(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.HOPITAL:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Hopital(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.LIEU_CULTE:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Eglise(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.FONDERIE:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Fonderie(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.SCIERIE:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Scierie(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.TOUR_GUET:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.TourDeGuet(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.GARAGE:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Garage(self, newID, posX, posY)
-
-                        elif btype == Batiments.Batiment.BASE:
-                            if not self.baseVivante:
-                                newID = Batiments.Batiment.generateId(self.civilisation)
-                                createdBuild = Batiments.Base(self, newID, posX, posY)
-                                self.baseVivante = True
-
-                            else:
-                                print("base already exist")
-                                return
-                        self.buildings[newID] = createdBuild
-                        print(newID)
-                        self.model.controller.view.carte.drawSpecificBuilding(createdBuild)
-                        self.model.carte.matrice[posX][posY].isWalkable = False
-                        self.model.carte.matrice[posX + 1][posY].isWalkable = False
-                        self.model.carte.matrice[posX][posY + 1].isWalkable = False
-                        self.model.carte.matrice[posX + 1][posY + 1].isWalkable = False
-                        self.model.carte.matrice[posX][posY].type = 5  # batiments
-                        self.model.carte.matrice[posX + 1][posY].type = 5  # batiments
-                        self.model.carte.matrice[posX][posY + 1].type = 5  # batiments
-                        self.model.carte.matrice[posX + 1][posY + 1].type = 5  # batiments
-
+        self.buildings[newID] = createdBuild
+        print(newID)
+        self.model.controller.view.carte.drawSpecificBuilding(createdBuild)
+        self.model.carte.matrice[posX][posY].isWalkable = False
+        self.model.carte.matrice[posX + 1][posY].isWalkable = False
+        self.model.carte.matrice[posX][posY + 1].isWalkable = False
+        self.model.carte.matrice[posX + 1][posY + 1].isWalkable = False
+        self.model.carte.matrice[posX][posY].type = 5  # batiments
+        self.model.carte.matrice[posX + 1][posY].type = 5  # batiments
+        self.model.carte.matrice[posX][posY + 1].type = 5  # batiments
+        self.model.carte.matrice[posX + 1][posY + 1].type = 5  # batiments
 
     def destroyBuilding(self, bId):
         """ Détruit un bâtiment 
@@ -194,24 +145,3 @@ class Joueur:
         """
         # TODO Ajouter Méthode Update dans les bâtiments
         [b.miseAJour() for b in self.buildings.values()]
-
-    def cheat(self):
-
-        posBaseX,posBaseY = 30,30
-        cmd = Command(self.civilisation, Command.BUILDING_CREATE)
-        cmd.addData('ID', Batiment.generateId(self.civilisation))
-        cmd.addData('X', posBaseX)
-        cmd.addData('Y', posBaseY)
-        cmd.addData('CIV', self.civilisation)
-        cmd.addData('BTYPE', Batiment.BASE)
-        self.model.controller.sendCommand(cmd)
-
-        posUnitX,posUnitY = 120,120
-        for i in range(0,20):
-            cmd = Command(self.civilisation, Command.UNIT_CREATE)
-            cmd.addData('ID', Unit.generateId(self.civilisation))
-            cmd.addData('X', posUnitX)
-            cmd.addData('Y', posUnitY)
-            cmd.addData('CIV', self.civilisation)
-            cmd.addData('CLASSE', "soldatLance")
-            self.model.controller.sendCommand(cmd)
