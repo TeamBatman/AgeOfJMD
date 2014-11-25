@@ -514,12 +514,12 @@ class CarteView():
         x2 = self.width
         y2 = self.height
 
-        couleurs = {
-            Tuile.GAZON: "#0B610B",  # vert
-            Tuile.FORET: "#BFBF00",  # jaune
-            Tuile.MINERAI: "#1C1C1C",  # gris pale
-            Tuile.CHARBON: "#BDBDBD",  # gris fonce
-            Tuile.EAU: "#2E9AFE"  # bleu
+        images = {
+            Tuile.GAZON: GraphicsManager.getPhotoImage('World/grass.png'),  # vert
+            Tuile.FORET: GraphicsManager.getPhotoImage('World/foret.png'),  # jaune
+            Tuile.MINERAI: GraphicsManager.getPhotoImage('World/foret.png'),  # gris pale
+            Tuile.CHARBON: GraphicsManager.getPhotoImage('World/foret.png'),  # gris fonce
+            Tuile.EAU: GraphicsManager.getPhotoImage('World/water.png')  # bleu
         }
 
 
@@ -531,26 +531,24 @@ class CarteView():
                 posY2 = posY1 + self.item
 
                 if not carte[x][y].revealed:
-                    couleur = "#333"
+                    img = GraphicsManager.getPhotoImage('World/fog.png')
+                    self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
+                    continue
                 elif not carte[x][y].type == 5:#bâtiment
-                    couleur = couleurs[carte[x][y].type]
+                    img = images[carte[x][y].type]
                 else:
-                    couleur = couleurs[0]
-                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur, tags=self.tagName)
-                if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
-                    self.canvas.create_image(posX1, posY1, anchor=NW,
-                                            image=GraphicsManager.getPhotoImage('World/grass.png'),
-                                            tags=self.tagName)
+                    img = images[Tuile.GAZON]
 
-                if carte[x][y].type == Tuile.FORET:
-                    self.canvas.create_image(posX1, posY1, anchor=NW,
-                                            image=GraphicsManager.getPhotoImage('World/foret.png'),
-                                            tags=(self.tagName, 'foret'))
+                self.canvas.create_image(posX1, posY1, anchor=NW, image=images[Tuile.GAZON], tags=self.tagName)
+                self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
 
-                if carte[x][y].type == Tuile.EAU:
+                # TODO raise Fog and Forest
+
+                """if carte[x][y].revealed and (carte[x][y].type == Tuile.GAZON or carte[x][y].type == Tuile.BATIMENT):
                     self.canvas.create_image(posX1, posY1, anchor=NW,
-                                            image=GraphicsManager.getPhotoImage('World/water.png'),
-                                            tags=self.tagName)
+                                            image=,
+                                            tags=self.tagName)"""
+
 
 
                     # else:
