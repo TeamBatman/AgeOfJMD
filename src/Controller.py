@@ -26,18 +26,13 @@ class Controller:
         self.eventListener = EventListener(self)
         self.view = View(self.eventListener)
 
-
-
         self.gameMode = Controller.MULTIPLAYER
 
         self.currentFrame = -1
         self.nbFramesPerSecond = 15
-        self.refreshRate = int(1000/self.nbFramesPerSecond)
+        self.refreshRate = int(1000 / self.nbFramesPerSecond)
 
-        self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
-
-
-
+        self.displayTimer = Timer(1000 / 60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
 
 
     def mainLoop(self):
@@ -52,7 +47,6 @@ class Controller:
         self.renderGraphics()
 
         self.view.after(self.refreshRate, self.mainLoop)
-
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
@@ -70,9 +64,8 @@ class Controller:
 
         if doUpdate:
             self.model.update()
-            #print("Finnished %s" % self.currentFrame)
+            # print("Finnished %s" % self.currentFrame)
             self.currentFrame += 1
-
 
     def renderGraphics(self):
         """ Méthode principale d'affichage des Graphics
@@ -80,13 +73,11 @@ class Controller:
         """
         if self.displayTimer.isDone():
 
-            if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
+            if self.view.needUpdateCarte() == 4:
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), self.model.carte.matrice)
             else:
                 self.view.update(self.model.getUnits(), self.model.getBuildings())
             self.displayTimer.reset()
-
-
 
 
     def start(self):
@@ -97,7 +88,6 @@ class Controller:
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
-
         # INITIALISATION MODEL
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
@@ -107,13 +97,12 @@ class Controller:
 
         self.model.civNumber = self.network.getClientId()
 
-
         # INITIALISATION AFFICHAGE
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
 
-        #TIMERS
+        # TIMERS
         self.displayTimer.start()
 
         # FRAMES
@@ -131,7 +120,6 @@ class Controller:
         sys.exit(0)
 
 
-
     def sendCommand(self, command):
         """ Raccourci permettant d'envoyer une commande au serveur
         en passant par le network module
@@ -139,11 +127,6 @@ class Controller:
         if command.clientId == -1:
             command.clientId = self.network.client.id
         self.network.client.sendCommand(command, self.currentFrame)
-
-
-
-
-
 
 
 class EventListener:
@@ -188,9 +171,9 @@ class EventListener:
 
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:])  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2, groupe, targetUnit=None):
         """Pour la fonction onMapRClick !!!"""
-        #print("select", leaderUnit)
+        # print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
         cmd.addData('ID', unitSelected.id)
         cmd.addData('X1', unitSelected.x)
@@ -208,7 +191,7 @@ class EventListener:
             if posFin:
                 posLeader = posFin.pop(0)
                 print("leader KOMBAT!", posLeader)
-                cmd.addData('FIN',posLeader)
+                cmd.addData('FIN', posLeader)
             else:
                 cmd.addData('FIN', None)
             #groupe = self.controller.view.selected[:]
@@ -224,7 +207,7 @@ class EventListener:
             if unitSelected.leader == 1:
                 print("changement leader")
             else:
-                print("pas changment leader",unitSelected.id, unitSelected.leader)
+                print("pas changment leader", unitSelected.id, unitSelected.leader)
 
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
@@ -260,7 +243,6 @@ class EventListener:
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
             self.controller.sendCommand(cmd)
 
-
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             return
@@ -290,19 +272,19 @@ class EventListener:
         """
         print(event)
         clientId = self.controller.network.getClientId()
-        
+
         x1, y1 = event.x, event.y
-        #x2, y2 = event.x, event.y
+        # x2, y2 = event.x, event.y
         x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-       # print("dude!", x2, y2)
+        # print("dude!", x2, y2)
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
         #TODO: Merge avec onMapRClick !!!
         try:
             groupe = groupeSansLeader
             if not groupeSansLeader:
                 groupeSansLeader = self.controller.view.selected[:]
-                groupe =  None
+                groupe = None
 
             #x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             #y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
@@ -311,9 +293,9 @@ class EventListener:
                                                                     groupeSansLeader[0].grandeur)
             if groupe == None:
                 groupeSansLeader.remove(leaderUnit)
-                
-            #groupeSansLeader = self.controller.view.selected[:]
-            
+
+                #groupeSansLeader = self.controller.view.selected[:]
+
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index 2 !")
             groupeSansLeader = None
@@ -321,18 +303,19 @@ class EventListener:
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
             unitSelected.ennemiCible = targetUnit
-            unitSelected.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+            unitSelected.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
             unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
             self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
 
         leaderUnit.ennemiCible = targetUnit
-        leaderUnit.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+        leaderUnit.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
         leaderUnit.mode = 3
         #print("posFIn leader", posFin)
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2,groupeSansLeader, leaderUnit.ennemiCible )  # Faire le leader en dernier
-        
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupeSansLeader,
+                              leaderUnit.ennemiCible)  # Faire le leader en dernier
+
 
         # if not targetUnit.estUniteDe(clientId):
         #leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
@@ -359,9 +342,7 @@ class EventListener:
         if unit.estUniteDe(clientId):
             self.controller.view.selected.append(unit)
             self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
-        # TODO REMOVE C'EST JUSTE POUR DES TEST
-
-
+            # TODO REMOVE C'EST JUSTE POUR DES TEST
 
 
     def onMapMouseMotion(self, event):
@@ -479,7 +460,7 @@ class EventListener:
         self.controller.view.update(self.controller.model.getUnits(), self.controller.model.getBuildings(),
                                     self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
-        if redo == 0:  #QUICK FIX
+        if redo == 0:  # QUICK FIX
             #print("cam",self.controller.view.carte.cameraX , self.controller.view.carte.cameraY)
             self.onMinimapLPress(event, -1)
 
