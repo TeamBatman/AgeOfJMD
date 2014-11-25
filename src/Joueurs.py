@@ -1,5 +1,5 @@
 import Batiments
-from Units import Paysan
+from Units import *
 
 
 class Joueur:
@@ -48,13 +48,20 @@ class Joueur:
 
 
     # ## UNITS ###
-    def createUnit(self, uId, x, y, civilisation):
+    def createUnit(self, uId, x, y, civilisation, classe):
         """ Crée et ajoute une nouvelle unité à la liste des unités
         :param uId: ID que l'on souhaite attribuer à l'unité
         :param x: position x de l'unité
         :param y: position y de l'unité
         """
-        self.units[uId] = Paysan(uId, x, y, self, civilisation)
+        if classe == "paysan":
+            self.units[uId] = Paysan(uId, x, y, self, civilisation)
+        elif classe == "soldatEpee":
+            self.units[uId] = GuerrierEpee(uId, x, y, self, civilisation)
+        elif classe == "soldatLance":
+            self.units[uId] = GuerrierLance(uId, x, y, self, civilisation)
+        else:
+            self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
 
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
@@ -145,3 +152,13 @@ class Joueur:
         """
         # TODO Ajouter Méthode Update dans les bâtiments
         [b.miseAJour() for b in self.buildings.values()]
+
+    def cheat(self):
+        posUnitX,posUnitY = self.model.trouverCentreCase(5,5)
+        cmd = Command(self.civilisation, Command.UNIT_CREATE)
+        cmd.addData('ID', Unit.generateId(self.civilisation))
+        cmd.addData('X', posUnitX)
+        cmd.addData('Y', posUnitY)
+        cmd.addData('CIV', self.civilisation)
+        cmd.addData('CLASSE', "soldatEpee")
+        self.model.controller.sendCommand(cmd)

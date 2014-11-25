@@ -117,6 +117,10 @@ class Controller:
         #TIMERS
         self.displayTimer.start()
 
+        #creation AI
+        self.model.creerAI(6)
+        self.model.creerbaseAI(6)
+
         # FRAMES
         self.currentFrame = 0
 
@@ -274,7 +278,7 @@ class EventListener:
             for b in buildings:
                 print(b.id)
                 if b.estBatimentDe(clientId):
-                    if b.type == "base":
+                    if b.type == Batiment.BASE:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
                     elif b.type == "ferme":
                         self.controller.view.frameSide.changeView(FrameSide.FARMVIEW, b)

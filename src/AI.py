@@ -18,7 +18,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {'bois' : -95, 'minerai' : 0, 'charbon' : 0}
+        self.ressources = {'bois' : 1000, 'minerai' : 100000, 'charbon' : 100000, 'nourriture' : 100000}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
@@ -37,7 +37,7 @@ class AI(Joueur):
         self.lastCheck = 0
         self.departEpoque = time.time()
         self.cooldownAutomatisation = 60
-        self.cooldownEpoque = 60
+        self.cooldownEpoque = 60#60
         self.cooldownAttaque = 60
         self.derniereAttaque = 0
         self.cooldownRecherche = 120
@@ -52,7 +52,7 @@ class AI(Joueur):
         self.derniereBase = 0
         self.cooldownBatiment = 60
         self.derniereAction = 0
-        self.tempsDepart = time.time()
+        self.tempsDepart = time.time() - 55
         self.nombrePaysans = 0
 
         self.epoque = 1
@@ -87,7 +87,7 @@ class AI(Joueur):
                         self.chercherRessource("minerais")
                         return
                 elif self.ressourceManquante == "nourriture":
-                    if self.qteRessourceManquante <= self.nbNourriture:
+                    if self.qteRessourceManquante <= self.ressources['nourriture']:
                         self.manqueRessource = False
                     else:
                         self.chercherRessource("nourriture")
@@ -472,14 +472,16 @@ class AI(Joueur):
 
 
     def update(self):
+
+        self.updateUnits()
+        self.updatePaysans()
+        self.updateBuildings()
+
         if time.time() > self.tempsDepart + 1:
             if time.time() - self.derniereAction >= 5:
                 self.derniereAction = time.time()
                 self.penser()
 
-        self.updateUnits()
-        self.updatePaysans()
-        self.updateBuildings()
 
     def deplacerUnite(self, butX, butY, unite):
         print(butX, butY, unite.x, unite.y)
@@ -498,13 +500,10 @@ class AI(Joueur):
             return
         else:
             position = self.trouverZoneLibrePourBatir(unite)
-            cmd = Command(self.civilisation, Command.BUILDING_CREATE)
-            cmd.addData('ID', Batiment.generateId(self.civilisation))
-            cmd.addData('X', position['x'])
-            cmd.addData('Y', position['y'])
-            cmd.addData('CIV', self.model.joueur.civilisation)
-            cmd.addData('BTYPE', type)
-            self.model.controller.sendCommand(cmd)
+            unite.building[0] = Batiment.generateId(self.civilisation)
+            unite.building[1] = type
+
+            self.deplacerUnite(position["x"], position["y"], unite)
 
     def trouverBatiment(self, type, raison, civilisation):
         if civilisation == self.civilisation:
@@ -594,20 +593,16 @@ class AI(Joueur):
 
     def trouverZoneLibrePourBatir(self, unit):
 
-        print("cherche zone building")
+        position = {'x' : 0, 'y' : 0}
 
-        position = {"x" : 0 , "y" : 0}
-        if unit == None:
-            self.creerPaysan()
-            return
 
         minX = int(unit.x)
         minY = int(unit.y)
         maxX = int(unit.x)
         maxY = int(unit.y)
         found = False
-
         while not found:
+
             print("start check")
             minX = minX - 144
             minY = minY - 144
@@ -643,10 +638,9 @@ class AI(Joueur):
                     caseCibleX = casesCible[0]
                     caseCibleY = casesCible[1]
                     if self.model.carte.matrice[caseCibleX][caseCibleY].type == Tuile.GAZON:
-                        if self.model.carte.matrice[caseCibleX+1][caseCibleY].type == Tuile.GAZON:
-                            if self.model.carte.matrice[caseCibleX][caseCibleY+1].type == Tuile.GAZON:
-                                if self.model.carte.matrice[caseCibleX+1][caseCibleY+1].type == Tuile.GAZON:
-                                    position["x"] = x
-                                    position["y"] = y
-                                    print("!", x,y)
-                                    return position
+                        if self.model.validPosBuilding(caseCibleX, caseCibleY):
+
+                            position["x"] = x
+                            position["y"] = y
+                            print("!", x,y)
+                            return position

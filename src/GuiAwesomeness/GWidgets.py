@@ -262,17 +262,18 @@ class GProgressBar(GWidget):
 
 
 class GLabel(GWidget):
-    def __init__(self, parent, text="", x=0, y=0):
+    def __init__(self, parent, text="", color="", x=0, y=0):
         """ Permet d'afficher du texte (Label)
         :param parent: le parent de l'objet
         :param text:
         :param color:
         """
         super(GLabel, self).__init__(parent, x, y)
+        self.color = color
         self.text = text
 
 
     def draw(self, x, y):
         super(GLabel, self).draw(x, y)
-        self.getCanvas().create_text(self.x, self.y, text=self.text, anchor=NW, font="Helvetica", fill="#575246",
+        self.getCanvas().create_text(self.x, self.y, text=self.text, anchor=NW, font="Helvetica", fill=self.color,
                                 tags=self.id)
