@@ -20,6 +20,9 @@ class Batiment:
     HOPITAL = 3
     TOUR_GUET = 4
     LIEU_CULTE = 5
+    SCIERIE = 6
+    FONDERIE = 7
+
 
 
     def __init__(self, parent, bid, posX, posY):
@@ -40,11 +43,11 @@ class Batiment:
         self.enCreation = False  # booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
-        self.coutRecherche1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutRecherche2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.coutRecherche1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutRecherche2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
 
         self.oneTimeAnimations = []
 
@@ -140,7 +143,7 @@ class Batiment:
 class Eglise(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.type = "eglise"
+        self.type = Batiment.LIEU_CULTE
         self.tempsDerniereFete = 0
         self.coutRecherche1['bois'] = 50
 
@@ -177,7 +180,7 @@ class Eglise(Batiment):
 class TourDeGuet(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.type = "tour"
+        self.type = Batiment.TOUR_GUET
         self.coutRecherche1['bois'] = 50
 
     def recherche1(self):  # Meilleure vue du Fog of war
@@ -222,7 +225,7 @@ class TourDeGuet(Batiment):
 class Hopital(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.type = "hopital"
+        self.type = Batiment.HOPITAL
         self.peutEtreOccupe = True
         self.vitesseDeCreation = 30
         self.coutRecherche1['bois'] = 50
@@ -264,7 +267,7 @@ class Base(Batiment):
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-        self.coutCreer1['bois'] = 5
+        self.coutCreer1['nourriture'] = 5
         self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
@@ -274,9 +277,9 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
+        if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
             print("in creation 1", self.paysanAFaire)
-            self.joueur.ressources['bois'] -= self.coutCreer1['bois']
+            self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
             self.paysanAFaire += 1
             self.joueur.model.controller.view.frameBottom.updateResources(self.joueur.ressources)
             if not self.enCreation:
@@ -413,15 +416,15 @@ class Baraque(Batiment):
         self.typeRecherche = ""
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
-        self.coutCreer1['bois'] = 50
-        self.coutCreer2['bois'] = 50
-        self.coutCreer3['bois'] = 50
+        self.coutCreer1['nourriture'] = 50
+        self.coutCreer2['nourriture'] = 50
+        self.coutCreer3['nourriture'] = 50
 
 
     def creer1(self):  # création de soldats avec épée
         if self.enCreation == False:
-            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-                self.joueur.ressources['bois'] -= self.coutCreer1['bois']
+            if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
                 self.enCreation = True
                 self.typeCreation = "Epee"
                 self.tempsDepartCreation = time.time()
@@ -439,8 +442,8 @@ class Baraque(Batiment):
 
     def creer2(self):  # création de soldats avec lances
         if self.enCreation == False:
-            if self.joueur.ressources['bois'] >= self.coutCreer2['bois']:
-                self.joueur.ressources['bois'] -= self.coutCreer2['bois']
+            if self.joueur.ressources['nourriture'] >= self.coutCreer2['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer2['nourriture']
                 self.enCreation = True
                 self.typeCreation = "Lance"
                 self.tempsDepartCreation = time.time()
@@ -458,8 +461,8 @@ class Baraque(Batiment):
 
     def creer3(self):  # création de soldats avec boucliers
         if self.enCreation == False:
-            if self.joueur.ressources['bois'] >= self.coutCreer3['bois']:
-                self.joueur.ressources['bois'] -= self.coutCreer3['bois']
+            if self.joueur.ressources['nourriture'] >= self.coutCreer3['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer3['nourriture']
                 self.enCreation = True
                 self.typeCreation = "Bouclier"
                 self.tempsDepartCreation = time.time()
@@ -576,9 +579,9 @@ class Ferme(Batiment):
         self.tailleY = 96
         self.peutEtreOccupe = True
         self.unitInBuilding = [] # Les unités dans la ferme
-        self.production = 5
+        self.production = 1
         self.tempsProduction = 10
-        self.type = "ferme"
+        self.type = Batiment.FERME
         self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
         self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
@@ -674,6 +677,7 @@ class Scierie(Batiment):
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
+        self.type = Batiment.SCIERIE
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
@@ -730,6 +734,7 @@ class Fonderie(Batiment):
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
+        self.type = Batiment.FONDERIE
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production

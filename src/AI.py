@@ -18,7 +18,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {'bois' : 1000, 'minerai' : 100000, 'charbon' : 100000, 'nourriture' : 100000}
+        self.ressources = {'bois' : 1000, 'minerai' : 100000, 'charbon' : 100000, 'nourriture' : 10}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
@@ -164,7 +164,6 @@ class AI(Joueur):
         if unit != None:
             if self.epoque >= 2:
                 if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
-                    position = self.trouverRessourcePlusPres(unit, Tuile.FORET)
                     self.batirBatiment(Batiment.SCIERIE, unit)
                     print("scierie créée?")
                     return
@@ -184,7 +183,6 @@ class AI(Joueur):
         if unit != None:
             if self.epoque >= 3:
                 if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
-                    position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                     self.batirBatiment(Batiment.FONDERIE, unit)
                     print("fonderie créée?")
                     return
@@ -210,12 +208,18 @@ class AI(Joueur):
 
     def chercherNourriture(self):
         unit = self.trouverUniteLibre("")
+        ferme = self.trouverBatiment(Batiment.FERME, "", self.civilisation)
+
         if unit != None:
-            if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
-                position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-                self.batirBatiment(Batiment.FERME, unit)
-                print("ferme créée?")
-                return
+            if not ferme:
+                if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
+                    self.batirBatiment(Batiment.FERME, unit)
+                    print("ferme créée?")
+                    self.derniereFerme = time.time()
+                    return
+            else:
+                batiment = self.model.trouverCentreCase(ferme.posX, ferme.posY)
+                self.deplacerUnite(batiment[0], batiment[1], unit, None)
 
         self.creerPaysan()
 
@@ -258,14 +262,14 @@ class AI(Joueur):
         print("creer Paysan")
         base = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
         if base != None:
-            if self.ressources['bois'] >= base.coutCreer1['bois']:
+            if self.ressources['nourriture'] >= base.coutCreer1['nourriture']:
                 base.creer1()
                 print("départ création")
                 return
             else:
                 self.manqueRessource = True
-                self.qteRessourceManquante = base.coutCreer1['bois']
-                self.ressourceManquante = 'bois'
+                self.qteRessourceManquante = base.coutCreer1['nourriture']
+                self.ressourceManquante = 'nourriture'
                 print("il manque" + " " + str(self.qteRessourceManquante) + ":" + str(self.ressourceManquante))
                 return
 
@@ -314,13 +318,13 @@ class AI(Joueur):
         if baraque != None:
             if isinstance(baraque, Baraque):
                 if not baraque.enCreation:
-                    if  self.ressources['bois'] >= baraque.coutCreer1['bois']:
+                    if  self.ressources['nourriture'] >= baraque.coutCreer1['nourriture']:
                         baraque.creer1()
                         return
                     else:
                         self.manqueRessource = True
-                        self.qteRessourceManquante = baraque.coutCreer1['bois']
-                        self.ressourceManquante = 'bois'
+                        self.qteRessourceManquante = baraque.coutCreer1['nourriture']
+                        self.ressourceManquante = 'nourriture'
                         print("en création soldat")
                         return
 
@@ -328,7 +332,6 @@ class AI(Joueur):
         unit = self.trouverUniteLibre("")
         if self.epoque >= 2:
             if time.time() - self.derniereBarraque >= self.cooldownBatiment:
-                position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
                 self.batirBatiment(Batiment.BARAQUE, unit)
                 print("Baraque créée")
                 return
@@ -499,6 +502,7 @@ class AI(Joueur):
     def batirBatiment(self, type, unite):
         if unite == None:
             self.creerPaysan()
+            print("no unit selected for build")
             return
         else:
             position = self.trouverZoneLibrePourBatir(unite)
@@ -554,6 +558,7 @@ class AI(Joueur):
         bois = True
         minerai = True
         charbon = True
+        nourriture = True
 
         if self.ressources['bois'] >= 150:
             bois = False
@@ -561,6 +566,8 @@ class AI(Joueur):
             minerai = False
         if self.ressources['charbon'] >= 50:
             charbon = False
+        if self.ressources['nourriture'] >= 200:
+            nourriture = False
         #ensuite cherche une unité que amasse des ressources non requises
         for unitID in self.units:
             unit = self.model.getUnit(unitID)
