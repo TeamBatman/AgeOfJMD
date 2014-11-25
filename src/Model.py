@@ -40,6 +40,7 @@ class Model:
             Command.UNIT_CREATE: self.executeCreateUnit,
             Command.UNIT_MOVE: self.executeMoveUnit,
             Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_ATTACK_BUILDING: self.executeAttackBuilding,
             Command.UNIT_DIE: self.executeKillUnit,
             Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
@@ -80,6 +81,12 @@ class Model:
         attacker = self.getUnit(command['SOURCE_ID'])
         target = self.getUnit(command['TARGET_ID'])
         target.recevoirAttaque(self, attacker, command['DMG'])
+
+    def executeAttackBuilding(self):
+        """ Execute la commande ATTAQUER UN BATIMENT  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        attacker = self.
 
     def executeKillUnit(self, command):
         """ Execute la commande TUER UNE UNITÉ

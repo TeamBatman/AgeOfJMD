@@ -964,6 +964,16 @@ class Unit():
             model.controller.sendCommand(cmd)
             self.timerAttack.reset()
 
+    def attaquerBuilding(self, model, building):
+        if not building.estBatimentDe(self.joueur.civilisation):
+            attack = random.randint(self.attackMin, self.attackMax)
+            cmd = Command(cmdType=Command.UNIT_ATTACK_BUILDING)
+            cmd.addData('SOURCE_ID', self.id)
+            cmd.addData('TARGET_ID', building.id)
+            cmd.addData('DMG', attack)
+            model.controller.sendCommand(cmd)
+
+
     def recevoirAttaque(self, model, attaquant, attack):
         """ Permet d'affaiblir une unité
         :param attack: Force d'attaque (int)

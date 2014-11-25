@@ -69,6 +69,11 @@ class Batiment:
         Batiment.COUNT += 1
         return gId
 
+    def recevoirAttaque(self):
+        """ Execute la commande ATTAQUER UNE UNITÉ  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+
 
     def detruire(self):
         self.sortirUnites()
