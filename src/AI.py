@@ -580,7 +580,7 @@ class AI(Joueur):
             unit = self.model.getUnit(unitID)
             if isinstance(unit, Paysan):
                 if unit.typeRessource == typeRessource:
-                    unit.typeRessource == 0
+                    unit.typeRessource = 0
 
         #cherche d'abord une unité libre
         for unitID in self.units:
