@@ -54,8 +54,7 @@ class AI(Joueur):
         self.derniereAction = 0
         self.tempsDepart = time.time() - 55
         self.nombrePaysans = 0
-
-        self.epoque = 1
+        self.epoque = 2
 
     def penser(self):
         #fais des test requis pour savoir quel mode prendre
@@ -172,7 +171,7 @@ class AI(Joueur):
             if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
                 print("not cd")
                 position = self.trouverRessourcePlusPres(unit,Tuile.FORET)
-                self.deplacerUnite(position["x"], position["y"], unit)
+                self.deplacerUnite(position["x"], position["y"], unit, None)
                 self.derniereRessourceBois = time.time()
                 return
             else:
@@ -191,7 +190,7 @@ class AI(Joueur):
                     return
             if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
                 position = self.trouverRessourcePlusPres(unit, Tuile.MINERAI)
-                self.deplacerUnite(position["x"], position["y"], unit)
+                self.deplacerUnite(position["x"], position["y"], unit, None)
                 self.derniereRessourceBois = time.time()
                 return
         self.creerPaysan()
@@ -204,7 +203,7 @@ class AI(Joueur):
                     for y in range(unit.y, unit.y+20):
                         if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
                             position = self.trouverRessourcePlusPres(unit, Tuile.CHARBON)
-                            self.deplacerUnite(position["x"], position["y"], unit)
+                            self.deplacerUnite(position["x"], position["y"], unit, None)
                             self.derniereRessourceBois = time.time()
                             return
         self.creerPaysan()
@@ -315,12 +314,12 @@ class AI(Joueur):
         if baraque != None:
             if isinstance(baraque, Baraque):
                 if not baraque.enCreation:
-                    if  self.ressources['bois'] >= baraque.coutCreer1[0]:
+                    if  self.ressources['bois'] >= baraque.coutCreer1['bois']:
                         baraque.creer1()
                         return
                     else:
                         self.manqueRessource = True
-                        self.qteRessourceManquante = baraque.coutCreer1[0]
+                        self.qteRessourceManquante = baraque.coutCreer1['bois']
                         self.ressourceManquante = 'bois'
                         print("en création soldat")
                         return
@@ -346,7 +345,8 @@ class AI(Joueur):
             unit = self.model.getUnit(unitID)
             if isinstance(unit, Soldat):
                 unit.modeAttack = Unit.ACTIF
-                self.deplacerUnite(destination.posX, destination.posY, unit)
+                batiment = self.model.trouverCentreCase(destination.posX, destination.posY)
+                self.deplacerUnite(batiment[0], batiment[1], unit, None)
 
 
     def retraite(self):
@@ -361,7 +361,8 @@ class AI(Joueur):
             unit = self.model.getUnit(unitID)
             if isinstance(unit, Soldat):
                 unit.modeAttack = Unit.PASSIF
-                self.deplacerUnite(destination.posX, destination.posY, unit)
+                batiment = self.model.trouverCentreCase(destination.posX, destination.posY)
+                self.deplacerUnite(batiment[0], batiment[1], unit, None)
 
     def rechercher(self):
         print("rechercher")
@@ -371,6 +372,7 @@ class AI(Joueur):
 
     def blackboard(self):
         #fais des test 1 fois au 30 sec pour éviter de trop répéter des taches
+
         if time.time() - self.lastCheck >= 30:
 
 
@@ -483,7 +485,7 @@ class AI(Joueur):
                 self.penser()
 
 
-    def deplacerUnite(self, butX, butY, unite):
+    def deplacerUnite(self, butX, butY, unite, building):
         print(butX, butY, unite.x, unite.y)
         self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite])
         #cmd = Command(self.civilisation, Command.MOVE_UNIT)
@@ -500,10 +502,11 @@ class AI(Joueur):
             return
         else:
             position = self.trouverZoneLibrePourBatir(unite)
-            unite.building[0] = Batiment.generateId(self.civilisation)
-            unite.building[1] = type
+            unite.building = []
+            unite.building.append(Batiment.generateId(self.civilisation))
+            unite.building.append(type)
 
-            self.deplacerUnite(position["x"], position["y"], unite)
+            self.deplacerUnite(position["x"], position["y"], unite, type)
 
     def trouverBatiment(self, type, raison, civilisation):
         if civilisation == self.civilisation:

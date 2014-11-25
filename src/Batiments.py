@@ -269,6 +269,8 @@ class Base(Batiment):
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
+        self.typeRecherche = ""
+
 
 
     def creer1(self):  # création des paysans
@@ -310,6 +312,7 @@ class Base(Batiment):
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche <= 60:
                     self.enRecherche = False
                     self.vitesseDeCreation *= 0.9
@@ -326,6 +329,7 @@ class Base(Batiment):
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
                     self.vitesseDeCreation *= 0.9
@@ -342,6 +346,7 @@ class Base(Batiment):
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.rechercheCompletee = False
                     self.enRecherche = False
@@ -349,7 +354,6 @@ class Base(Batiment):
                     self.joueur.recherche.append("Paysan Vitesse 3")
 
     def recherche2(self):  # changer d'époque
-        print(self.enRecherche)
         self.rechercheCompletee = False
         if self.joueur.epoque == 1:
             for recherche in self.joueur.recherche:
@@ -362,7 +366,7 @@ class Base(Batiment):
                         self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
-                        print(self.enRecherche)
+                        self.typeRecherche = 2
                 #TODO ne pas oublier de changer le temps pour changer d'époque
                 elif time.time() - self.tempsDepartRecherche >= 0: #60:
                     self.enRecherche = False
@@ -380,6 +384,7 @@ class Base(Batiment):
                         self.joueur.ressources['minerai'] -= self.coutRecherche2['minerai']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 2
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
                     self.joueur.epoque = 2
@@ -389,12 +394,19 @@ class Base(Batiment):
         if self.enCreation:
             self.updateCreer1()
         if self.enRecherche:
-            self.recherche1()
+           if self.typeRecherche == 1:
+               self.recherche1()
+           else:
+               self.recherche2()
+
 
 
 class Baraque(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
+        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Bawefse.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)
         self.type = Batiment.BARAQUE
         self.vitesseDeCreation = 40
         self.typeCreation = ""

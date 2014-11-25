@@ -115,7 +115,8 @@ class Joueur:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Ferme(self, newID, posX, posY)
         elif btype == Batiments.Batiment.BARAQUE:
-            pass
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Baraque(self, newID, posX, posY)
         elif btype == Batiments.Batiment.HOPITAL:
             pass
         elif btype == Batiments.Batiment.BASE:
