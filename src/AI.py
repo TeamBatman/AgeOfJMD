@@ -55,12 +55,21 @@ class AI(Joueur):
         self.tempsDepart = time.time()
         self.nombrePaysans = 0
 
+        self.epoque = 1
+
     def penser(self):
         #fais des test requis pour savoir quel mode prendre
         self.blackboard()
         #premier test pour savoir si on est en paix
         if self.paix:
             #print("paix")
+            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
+            if time.time() - self.dernierPaysan >= self.cooldownUnite and (self.paysansOccupes or self.nombrePaysans < 10):
+                print("besoin Paysan")
+                self.creerPaysan()
+                self.dernierPaysan = time.time()
+                return
+            #print("paysans libres")
             #si on manque de ressources, aller les miner
             if self.manqueRessource:
                 print("manque ressource")
@@ -129,13 +138,7 @@ class AI(Joueur):
                 #return
             #print("cooldown recherche")
 
-            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
-            if (self.paysansOccupes and time.time() - self.dernierPaysan >= self.cooldownUnite) or self.nombrePaysans < 10:
-                print("besoin Paysan")
-                self.creerPaysan()
-                self.dernierPaysan = time.time()
-                return
-            #print("paysans libres")
+
         #sinon on est en guerre
         else:
             if self.hpMoyen < 50 :
@@ -163,7 +166,7 @@ class AI(Joueur):
             if self.epoque >= 2:
                 if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
                     position = self.trouverRessourcePlusPres(unit, Tuile.FORET)
-                    self.batirBatiment(position["x"], position["y"], Batiment.SCIERIE, unit)
+                    self.batirBatiment(Batiment.SCIERIE, unit)
                     print("scierie créée?")
                     return
             if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
@@ -183,7 +186,7 @@ class AI(Joueur):
             if self.epoque >= 3:
                 if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
                     position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-                    self.batirBatiment(position["x"], position["y"], Batiment.FONDERIE, unit)
+                    self.batirBatiment(Batiment.FONDERIE, unit)
                     print("fonderie créée?")
                     return
             if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
@@ -211,7 +214,7 @@ class AI(Joueur):
         if unit != None:
             if time.time() - self.derniereFerme >= self.cooldownAutomatisation:
                 position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-                self.batirBatiment(position["x"], position["y"], Batiment.FERME, unit)
+                self.batirBatiment(Batiment.FERME, unit)
                 print("ferme créée?")
                 return
 
@@ -248,7 +251,7 @@ class AI(Joueur):
         if time.time() - self.derniereBase >= self.cooldownBatiment:
             unit = self.trouverUniteLibre("")
             position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-            self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
+            self.batirBatiment(Batiment.BASE, unit)
 
             print("base créée poel")
 
@@ -270,10 +273,14 @@ class AI(Joueur):
         print("pas de base")
         if time.time() - self.derniereBase >= self.cooldownBatiment:
             unit = self.trouverUniteLibre("")
-            position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-            self.batirBatiment(position["x"], position["y"], Batiment.BASE, unit)
+            if unit == None:
+                print("AI DEAD")
+                return
+            else:
+                position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
+                self.batirBatiment(Batiment.BASE, unit)
 
-            print("base créée poel")
+                print("base créée poel")
 
                         
 
@@ -296,7 +303,7 @@ class AI(Joueur):
         if self.epoque >= 2:
             if time.time() - self.derniereEglise >= self.cooldownBatiment:
                 position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-                self.batirBatiment(position["x"], position["y"], Batiment.LIEU_CULTE, unit)
+                self.batirBatiment(Batiment.LIEU_CULTE, unit)
                 print("Eglise créée")
                 return
         else:
@@ -323,7 +330,7 @@ class AI(Joueur):
         if self.epoque >= 2:
             if time.time() - self.derniereBarraque >= self.cooldownBatiment:
                 position = self.trouverRessourcePlusPres(unit, Tuile.GAZON)
-                self.batirBatiment(position["x"], position["y"], Batiment.BARAQUE, unit)
+                self.batirBatiment(Batiment.BARAQUE, unit)
                 print("Baraque créée")
                 return
         else:
@@ -409,6 +416,9 @@ class AI(Joueur):
 
     def trouverRessourcePlusPres(self, unit, typeRessource):
         ressource = {"x" : 0 , "y" : 0}
+        if unit == None:
+            self.creerPaysan()
+            return
 
         minX = int(unit.x)
         minY = int(unit.y)
@@ -482,14 +492,19 @@ class AI(Joueur):
         #cmd.addData('Y2', butY)
         #self.model.controller.network.client.sendCommand(cmd)
 
-    def batirBatiment(self, posX, posY, type, unite):
-        cmd = Command(self.civilisation, Command.BUILDING_CREATE)
-        cmd.addData('ID', Batiment.generateId(self.civilisation))
-        cmd.addData('X', posX)
-        cmd.addData('Y', posY)
-        cmd.addData('CIV', self.model.joueur.civilisation)
-        cmd.addData('BTYPE', type)
-        self.model.controller.sendCommand(cmd)
+    def batirBatiment(self, type, unite):
+        if unite == None:
+            self.creerPaysan()
+            return
+        else:
+            position = self.trouverZoneLibrePourBatir(unite)
+            cmd = Command(self.civilisation, Command.BUILDING_CREATE)
+            cmd.addData('ID', Batiment.generateId(self.civilisation))
+            cmd.addData('X', position['x'])
+            cmd.addData('Y', position['y'])
+            cmd.addData('CIV', self.model.joueur.civilisation)
+            cmd.addData('BTYPE', type)
+            self.model.controller.sendCommand(cmd)
 
     def trouverBatiment(self, type, raison, civilisation):
         if civilisation == self.civilisation:
@@ -526,6 +541,7 @@ class AI(Joueur):
                     return self.model.getBuilding(batimentID)
 
     def trouverUniteLibre(self, typeRessource):
+        #cherche d'abord une unité libre
         for unitID in self.units:
             unit = self.model.getUnit(unitID)
             if isinstance(unit, Paysan):
@@ -543,7 +559,7 @@ class AI(Joueur):
             minerai = False
         if self.ressources['charbon'] >= 50:
             charbon = False
-
+        #ensuite cherche une unité que amasse des ressources non requises
         for unitID in self.units:
             unit = self.model.getUnit(unitID)
             if isinstance(unit, Paysan):
@@ -557,5 +573,80 @@ class AI(Joueur):
                     elif unit.typeRessource == Tuile.CHARBON and not charbon:
                         print("found coal for nothing")
                         return unit
-        print("none free and willing")
+        print("none doing something else unless stuck from empty ressource")
+
+        #reset toutes les unités avec la ressource voulue à type 0 pour unstick
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
+            if isinstance(unit, Paysan):
+                if unit.typeRessource == typeRessource:
+                    unit.typeRessource == 0
+
+        #cherche d'abord une unité libre
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
+            if isinstance(unit, Paysan):
+                if unit.typeRessource == 0:
+                    print("found libre")
+                    return unit
+
         return None
+
+    def trouverZoneLibrePourBatir(self, unit):
+
+        print("cherche zone building")
+
+        position = {"x" : 0 , "y" : 0}
+        if unit == None:
+            self.creerPaysan()
+            return
+
+        minX = int(unit.x)
+        minY = int(unit.y)
+        maxX = int(unit.x)
+        maxY = int(unit.y)
+        found = False
+
+        while not found:
+            print("start check")
+            minX = minX - 144
+            minY = minY - 144
+            maxX += 144
+            maxY += 144
+            print(minX, minY)
+            #si le minimum des X à vérifier est va à moins de 0, mettre à 0
+            if minX < 0:
+                minX = 0
+
+            #si le minimum des Y à vérifier est va à moins de 0, mettre à 0
+            if minY < 0:
+                minY = 0
+
+            #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxX > self.model.carte.size * 48:
+                maxX = self.model.carte.size * 48
+
+            #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxY > self.model.carte.size * 48:
+                maxY = self.model.carte.size * 48
+
+            print(maxX)
+            print(maxY)
+            print(minX)
+            print(minY)
+
+            for x in range (minX, maxX, 48):
+                for y in range (minY, maxY, 48):
+                    casesCible = self.model.trouverCaseMatrice(x, y)
+                    caseCibleX = casesCible[0]
+                    caseCibleY = casesCible[1]
+                    if self.model.carte.matrice[caseCibleX][caseCibleY].type == Tuile.GAZON:
+                        if self.model.carte.matrice[caseCibleX+1][caseCibleY].type == Tuile.GAZON:
+                            if self.model.carte.matrice[caseCibleX][caseCibleY+1].type == Tuile.GAZON:
+                                if self.model.carte.matrice[caseCibleX+1][caseCibleY+1].type == Tuile.GAZON:
+                                    position["x"] = x
+                                    position["y"] = y
+                                    print("!", x,y)
+                                    return position

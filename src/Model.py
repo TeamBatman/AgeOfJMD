@@ -100,10 +100,10 @@ class Model:
         if nbRessources >= command['NB_RESSOURCES']:
             self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
             
-            if self.joueur.civilisation == civId:
+            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
         else:
-            if self.joueur.civilisation == civId:
+            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
             self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
         if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
@@ -245,7 +245,7 @@ class Model:
         cmd = Command(clientId, Command.BUILDING_CREATE)
         cmd.addData('ID', idBase)
         cmd.addData('X', 400)
-        cmd.addData('Y', 400)
+        cmd.addData('Y', 600)
         cmd.addData('CIV', clientId)
         cmd.addData('BTYPE', Batiment.BASE)
         self.controller.sendCommand(cmd)

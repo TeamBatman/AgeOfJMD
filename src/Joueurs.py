@@ -110,7 +110,9 @@ class Joueur:
         :param posY: position Y du bâtiment
         :param btype: Type de bâtiment à construire
         """
+        print("help1 ", posX, posY)
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
+        print("help2 ", posX, posY)
         if not self.model.carte.matrice[posX][posY].isWalkable:
             print("not walkable")
         else:
@@ -128,10 +130,35 @@ class Joueur:
                         if btype == Batiments.Batiment.FERME:
                             newID = Batiments.Batiment.generateId(self.civilisation)
                             createdBuild = Batiments.Ferme(self, newID, posX, posY)
+
                         elif btype == Batiments.Batiment.BARAQUE:
-                            pass
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Baraque(self, newID, posX, posY)
+
                         elif btype == Batiments.Batiment.HOPITAL:
-                            pass
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Hopital(self, newID, posX, posY)
+
+                        elif btype == Batiments.Batiment.LIEU_CULTE:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Eglise(self, newID, posX, posY)
+
+                        elif btype == Batiments.Batiment.FONDERIE:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Fonderie(self, newID, posX, posY)
+
+                        elif btype == Batiments.Batiment.SCIERIE:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Scierie(self, newID, posX, posY)
+
+                        elif btype == Batiments.Batiment.TOUR_GUET:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.TourDeGuet(self, newID, posX, posY)
+
+                        elif btype == Batiments.Batiment.GARAGE:
+                            newID = Batiments.Batiment.generateId(self.civilisation)
+                            createdBuild = Batiments.Garage(self, newID, posX, posY)
+
                         elif btype == Batiments.Batiment.BASE:
                             if not self.baseVivante:
                                 newID = Batiments.Batiment.generateId(self.civilisation)
