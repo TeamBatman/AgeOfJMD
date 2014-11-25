@@ -6,6 +6,8 @@ from __future__ import division
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
+from Units import Paysan
+from Units import Noeud
 
 
 class Model:
@@ -43,10 +45,12 @@ class Model:
             Command.UNIT_CREATE: self.executeCreateUnit,
             Command.UNIT_MOVE: self.executeMoveUnit,
             Command.UNIT_ATTACK_UNIT: self.executeAttackUnit,
+            Command.UNIT_ATTACK_BUILDING: self.executeAttackBuilding,
             Command.UNIT_DIE: self.executeKillUnit,
             Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
             Command.BUILDING_CREATE: self.executeCreateBuilding,
+            Command.BUILDING_DESTROY: self.executeDestroyBuilding,
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
 
@@ -74,7 +78,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -85,6 +89,14 @@ class Model:
         attacker = self.getUnit(command['SOURCE_ID'])
         target = self.getUnit(command['TARGET_ID'])
         target.recevoirAttaque(self, attacker, command['DMG'])
+
+    def executeAttackBuilding(self, command):
+        """ Execute la commande ATTAQUER UN BATIMENT  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        attacker = self.getUnit(command['SOURCE_ID'])
+        targetBuilding = self.getBuilding(command['TARGET_ID'])
+        targetBuilding.recevoirAttaque(self, attacker, command['DMG'])
 
     def executeKillUnit(self, command):
         """ Execute la commande TUER UNE UNITÉ selon ses paramètres
@@ -123,8 +135,18 @@ class Model:
         """ Execute la commande CRÉER UN BÂTIMENT  selon ses paramètres
         :param command: la commande à exécuter [Objet Commande]
         """
-        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
+        print("batient reseaux...")
+        if command['BTYPE'] == 0: #Base TEMPORAIRE !
+            self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
+
+    def executeDestroyBuilding(self, command):
+        blupid = command.data['ABID']
+        print("Le batiment "+blupid+" vient de mourrir!")
+        civ = command.data['CIV']
+        self.joueurs[civ].destroyBuilding(blupid)
+        unitId = command.data['ATTID']
+        self.getUnit(unitId).mode = 0
 
     def executeCreateCivilisation(self, command):
         """ Execute la commande CRÉER UNE CIVILISATION  selon ses paramètres
@@ -229,6 +251,26 @@ class Model:
         centreY = (grandeurCase * caseY) + grandeurCase / 2
 
         return centreX, centreY
+
+    def validPosBuilding(self, caseX, caseY):
+        """Regarde si on peut construire à cette endroit un building
+        :param caseX: la case en X du bâtiment
+        :param caseY: la case en Y du bâtiment
+        """
+        if not self.carte.matrice[caseX][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        if not self.carte.matrice[caseX + 1][caseY + 1].isWalkable:
+            print("not walkable")
+            return False
+        
+        return True
 
     # ## JOUEURS ###
     def getUnit(self, uId):

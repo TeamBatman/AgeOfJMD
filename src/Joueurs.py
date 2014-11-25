@@ -7,6 +7,7 @@ class Ressources:   # TODO appliquer à toutes les références de ressources
     BOIS = 'bois'
     MINERAI = 'minerai'
     CHARBON = 'charbon'
+    NOURRITURE = 'nourriture'
 
 
 class Joueur:
@@ -17,7 +18,8 @@ class Joueur:
         self.civilisation = civilisation  # Couleur de la civilisation
         self.base = None  # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
         self.baseVivante = False  # À modifier, doit être true quand on commence une vraie partie
-        self.ressources = {Ressources.BOIS: 0, Ressources.MINERAI: 0, Ressources.CHARBON: 0}
+        #self.ressources = {Ressources.BOIS: 0, Ressources.MINERAI: 0, Ressources.CHARBON: 0}
+        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture': 0}
         self.morale = 0
         self.nbNourriture = 0
         self.epoque = 1
@@ -28,13 +30,17 @@ class Joueur:
 
 
     def ajouterRessource(self, typeRessource, nbRessources):
-        print("type", typeRessource)
-        if typeRessource == 1:
+        print("type", typeRessource, self.civilisation)
+        if typeRessource == 1 or typeRessource == Ressources.BOIS:
             self.ressources['bois'] += nbRessources
-        elif typeRessource == 2:
+        elif typeRessource == 2 or typeRessource == Ressources.MINERAI:
             self.ressources['minerai'] += nbRessources
-        elif typeRessource == 3:
+        elif typeRessource == 3 or typeRessource == Ressources.CHARBON:
             self.ressources['charbon'] += nbRessources
+        elif typeRessource == Ressources.NOURRITURE:
+            self.ressources['nourriture'] += nbRessources
+        civ = self.civilisation
+        self.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.model.joueurs[civ])
 
 
     def update(self):
@@ -132,7 +138,7 @@ class Joueur:
                 print("remove", paysan.id)
                 self.enRessource.remove(paysan)
 
-    # ## BUILDINGS ###
+    ### BUILDINGS ###
     def createBuilding(self, bId, posX, posY, btype):  # TODO CLEAN UP
         """ Crée et ajoute un nouveaue bâtiment à la liste des bâtiments
         :param bId: ID que l'on souhaite attribuer au bâtiment
@@ -141,46 +147,33 @@ class Joueur:
         :param btype: Type de bâtiment à construire
         """
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
-        if not self.model.carte.matrice[posX][posY].isWalkable:
-            print("not walkable")
-        else:
-            if not self.model.carte.matrice[posX + 1][posY].isWalkable:
-                print("not walkable")
+        if btype == Batiments.Batiment.FERME:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Ferme(self, newID, posX, posY)
+        elif btype == Batiments.Batiment.BARAQUE:
+            pass
+        elif btype == Batiments.Batiment.HOPITAL:
+            pass
+        elif btype == Batiments.Batiment.BASE:
+            if not self.baseVivante:
+                newID = Batiments.Batiment.generateId(self.civilisation)
+                createdBuild = Batiments.Base(self, newID, posX, posY)
+                self.baseVivante = True
             else:
-                if not self.model.carte.matrice[posX][posY + 1].isWalkable:
-                    print("not walkable")
-                else:
-                    if not self.model.carte.matrice[posX + 1][posY + 1].isWalkable:
-                        print("not walkable")
-                    else:
-                        print(posX, posY)
-                        print(posX, posY)
-                        if btype == Batiments.Batiment.FERME:
-                            newID = Batiments.Batiment.generateId(self.civilisation)
-                            createdBuild = Batiments.Ferme(self, newID, posX, posY)
-                        elif btype == Batiments.Batiment.BARAQUE:
-                            pass
-                        elif btype == Batiments.Batiment.HOPITAL:
-                            pass
-                        elif btype == Batiments.Batiment.BASE:
-                            if not self.baseVivante:
-                                newID = Batiments.Batiment.generateId(self.civilisation)
-                                createdBuild = Batiments.Base(self, newID, posX, posY)
-                                self.baseVivante = True
-                            else:
-                                print("base already exist")
-                                return
-                        self.buildings[newID] = createdBuild
-                        print(newID)
-                        self.model.controller.view.carte.drawSpecificBuilding(createdBuild)
-                        self.model.carte.matrice[posX][posY].isWalkable = False
-                        self.model.carte.matrice[posX + 1][posY].isWalkable = False
-                        self.model.carte.matrice[posX][posY + 1].isWalkable = False
-                        self.model.carte.matrice[posX + 1][posY + 1].isWalkable = False
-                        self.model.carte.matrice[posX][posY].type = 5  # batiments
-                        self.model.carte.matrice[posX + 1][posY].type = 5  # batiments
-                        self.model.carte.matrice[posX][posY + 1].type = 5  # batiments
-                        self.model.carte.matrice[posX + 1][posY + 1].type = 5  # batiments
+                print("base already exist")
+                return
+
+        self.buildings[newID] = createdBuild
+        print(newID)
+        self.model.controller.view.carte.drawSpecificBuilding(createdBuild)
+        self.model.carte.matrice[posX][posY].isWalkable = False
+        self.model.carte.matrice[posX + 1][posY].isWalkable = False
+        self.model.carte.matrice[posX][posY + 1].isWalkable = False
+        self.model.carte.matrice[posX + 1][posY + 1].isWalkable = False
+        self.model.carte.matrice[posX][posY].type = 5  # batiments
+        self.model.carte.matrice[posX + 1][posY].type = 5  # batiments
+        self.model.carte.matrice[posX][posY + 1].type = 5  # batiments
+        self.model.carte.matrice[posX + 1][posY + 1].type = 5  # batiments
 
     def destroyBuilding(self, bId):
         """ Détruit un bâtiment 

@@ -33,6 +33,7 @@ class FrameSide():
     UNITVIEW = 0
     CONSTRUCTIONVIEW = 1
     BASEVIEW = 2
+    FARMVIEW = 3
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -92,6 +93,11 @@ class FrameSide():
             self.baseView = BaseView(self.canvas, building, self, self.eventListener)
             self.baseView.draw()
             self.childView = self.baseView
+
+        elif selectedView == FrameSide.FARMVIEW:
+            self.farmView = FarmView(self.canvas, building, self, self.eventListener)
+            self.farmView.draw()
+            self.childView = self.farmView
 
 
     def destroy(self):
@@ -244,6 +250,32 @@ class BaseView():
             if isinstance(value, GButton):
                 value.destroy()
 
+class FarmView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.farm = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonReleaseUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
+
+    def draw(self):
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onRemoveUnit(self):
+        self.farm.sortir()
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
 
 class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
     def __init__(self, canvas, eventListener):
@@ -382,23 +414,27 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
             if 0 <= x <= 106:
                 for y in range(caseY - radius, caseY + radius):
                     if 0 <= y <= 106:
-                        if not carte[x][y].revealed:
-                            posX1 = self.miniMapX + x * self.tailleTuile
-                            posY1 = self.miniMapY + y * self.tailleTuile
-                            posX2 = posX1 + self.tailleTuile
-                            posY2 = posY1 + self.tailleTuile
+                        try:
+                            if not carte[x][y].revealed:
+                                posX1 = self.miniMapX + x * self.tailleTuile
+                                posY1 = self.miniMapY + y * self.tailleTuile
+                                posX2 = posX1 + self.tailleTuile
+                                posY2 = posY1 + self.tailleTuile
 
-                            if not carte[x][y].type == 5:  # bâtiment
-                                couleur = couleurs[carte[x][y].type]
-                            else:
-                                couleur = couleurs[0]
+                                if not carte[x][y].type == 5:  # bâtiment
+                                    couleur = couleurs[carte[x][y].type]
+                                else:
+                                    couleur = couleurs[0]
 
-                            self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
+                                self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
                                                          tags=self.miniMapTag)
 
-                            self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
+                                self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
 
-                            self.canvas.tag_raise('rectMiniMap')
+                                self.canvas.tag_raise('rectMiniMap')
+                        except IndexError:
+                            pass
+                            #print("index map fog!")
 
 
     def drawRectMiniMap(self, clicX=0, clicY=0, nbCasesX=16, nbCasesY=14):
@@ -448,6 +484,7 @@ class FrameBottom():
         self.width = int(self.canvas.cget('width')) - largeurMinimap
         self.height = 100
 
+
         self.x = 0
         self.y = int(self.canvas.cget('height')) - self.height
 
@@ -457,12 +494,31 @@ class FrameBottom():
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         self.moraleProg.setProgression(63)
 
+        self.texteNourriture = GLabel(self.canvas,text="Nourriture: "+str(0))
+        self.texteBois = GLabel(self.canvas,text="Bois: "+str(100))
+        self.texteMinerai = GLabel(self.canvas,text="Minerai: "+str(0))
+        self.texteCharbon = GLabel(self.canvas,text="Charbon: "+str(0))
+
+
 
     def draw(self):
         """ Dessine le cadre
         """
         self.frame.draw(self.x, self.y)
-        self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        #self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        self.texteNourriture.draw(x=self.frame.x + 225, y=self.frame.y + 35)
+        self.texteBois.draw(x=self.frame.x + 375, y=self.frame.y + 35)
+        self.texteMinerai.draw(x=self.frame.x + 500, y=self.frame.y + 35)
+        self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
+
+    def updateResources(self, joueur):
+        ressources = joueur.ressources
+        print("civ", joueur.civilisation, "   " , ressources)
+        self.texteNourriture.text = "Nourriture: "+str(ressources['nourriture'])
+        self.texteBois.text = "Bois: "+str(ressources['bois'])
+        self.texteMinerai.text = "Minerai: "+str(ressources['minerai'])
+        self.texteCharbon.text = "Charbon: "+str(ressources['charbon'])
+        self.draw()
 
 
 class CarteView():
@@ -507,6 +563,7 @@ class CarteView():
 
         self.canvas.tag_bind('building', '<ButtonPress-1>', self.eventListener.onMapLRelease)
         self.canvas.tag_bind('building', '<ButtonRelease-1>', self.eventListener.onMapLRelease)
+        self.canvas.tag_bind('building', '<Button-3>', self.eventListener.onBuildingRClick)
 
 
     def draw(self, carte):
@@ -663,9 +720,7 @@ class CarteView():
         self.canvas.delete("ferme")
         self.canvas.delete("base")
         for building in buildings.values():
-            print("buildings", building)
             if self.isBuildingShown(building):
-                print("create")
                 img = building.image
                 posX = (building.posX * 48) - (self.cameraX * self.item)
                 posY = (building.posY * 48) - (self.cameraY * self.item)
@@ -675,6 +730,11 @@ class CarteView():
                                          image=img,
                                          tags=('building', building.type, building.id))
                 # self.lowerAllItemsOnMap()
+
+            # ANIMATION BLESSURES ET AUTRES
+                for anim in building.oneTimeAnimations:
+                    imgAnim = anim.activeFrame
+                    self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('building', building.id))
 
 
     def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING
@@ -704,7 +764,7 @@ class CarteView():
         unitX2 = unit.x + unit.grandeur / 2
         unitY2 = unit.y + unit.grandeur / 2
 
-        if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2:
+        if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2 and not unit.inBuilding:
             return True
 
         return False
@@ -933,16 +993,17 @@ class View(GWindow):
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.onCloseWindow)
 
 
-    def update(self, units, buildings, carte=None):  # CLEAN UP
+    def update(self, units, buildings, carte=None, joueur=None):  # CLEAN UP
         """ Met à jours la carte et la minimap (et leurs unités) (au besoin)"""
 
         if carte:
             self.drawMap(carte)
-            self.drawBuildings(buildings)  # TODO isBuilding Shown
 
+        self.drawBuildings(buildings)
         self.drawMiniUnits(units)
         self.drawUnits(units, self.eventListener.controller.model.carte.matrice)
         # self.drawBuildings
+        #self.frameBottom.updateResources(joueur.ressources)
 
     def needUpdateCarte(self):
         # print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))

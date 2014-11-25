@@ -3,7 +3,7 @@
 import time
 from PIL import Image, ImageTk
 from Commands import Command
-from GraphicsManagement import GraphicsManager
+from GraphicsManagement import GraphicsManager, OneTimeAnimation
 
 
 # TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
@@ -50,11 +50,13 @@ class Batiment:
         self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.determineImage()
 
+        self.oneTimeAnimations = []
+
     def getClientId(self):
-        """ Returns the Id of the client using the id of the unit
+        """ Returns the Id of the client using the id of the building
         :return: the id of the clients
         """
-        return self.id.split('_')[0]
+        return int(self.id.split('_')[0])
 
     def estBatimentDe(self, clientId):
         """ Vérifie si le batiment appartient au client ou non
@@ -73,6 +75,29 @@ class Batiment:
 
     def determineImage(self):
         raise Exception("La méthode determineImage doit être surchargée par tous les sous-classes de Unit et doit ")
+
+    def recevoirAttaque(self, model, attacker, dommage):
+        """ Recois les dommages d'une commande d'attaque
+        :param attacker: unité qui la attaquer
+        :param dommage:  dommage causé par l'attaquant
+        """
+        print(self.pointsDeVie)
+
+        self.pointsDeVie -= dommage
+
+        anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
+        self.oneTimeAnimations.append(anim)
+
+
+        if self.pointsDeVie <= 0:
+            self.pointsDeVie = 0  # building mort
+            cmd = Command(self.getClientId(), Command.BUILDING_DESTROY)
+
+            cmd.addData('ID', self.id)
+            cmd.addData('ABID', self.id)
+            cmd.addData('ATTID', attacker.id)
+            cmd.addData('CIV', self.getClientId())
+            model.controller.sendCommand(cmd)
 
 
     def detruire(self):
@@ -250,6 +275,7 @@ class Base(Batiment):
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
         self.coutCreer1['bois'] = 5
+        self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
@@ -286,24 +312,33 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        if not self.enCreation:
-            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-                print("in creation 1")
-                self.joueur.ressources['bois'] -= self.coutCreer1['bois']
-                self.enCreation = True
+        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
+            print("in creation 1", self.paysanAFaire)
+            self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
+            #self.joueur.ressources['bois'] -= self.coutCreer1['bois']
+            self.paysanAFaire += 1
+            civ = self.getClientId()
+            if self.joueur.civilisation == civ:
+                self.joueur.model.controller.view.frameBottom.updateResources(self.joueur)
+            if not self.enCreation:
                 self.tempsDepartCreation = time.time()
+                self.enCreation = True
 
-        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-            print("creating lalala")
-            posUnitX, posUnitY = self.joueur.model.trouverCentreCase(self.posX - 1, self.posY - 1)
+    def updateCreer1(self):
+        if self.enCreation and time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            print("creating lalala", self.paysanAFaire)
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
             cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
             cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
             cmd.addData('X', posUnitX)
             cmd.addData('Y', posUnitY)
             cmd.addData('CIV', self.joueur.civilisation)
             self.joueur.model.controller.sendCommand(cmd)
-            self.enCreation = False
-
+            self.paysanAFaire -= 1
+            if self.paysanAFaire > 0:
+                self.tempsDepartCreation = time.time()
+            else:
+                self.enCreation = False
 
     def recherche1(self):  # meilleure vitesse de création de paysans
         self.rechercheCompletee = False
@@ -389,8 +424,7 @@ class Base(Batiment):
 
     def miseAJour(self):
         if self.enCreation:
-            print("wassup")
-            self.creer1()
+            self.updateCreer1()
         if self.enRecherche:
             self.recherche1()
 
@@ -407,10 +441,6 @@ class Baraque(Batiment):
         self.coutCreer1['bois'] = 50
         self.coutCreer2['bois'] = 50
         self.coutCreer3['bois'] = 50
-
-
-0
-
 
 def creer1(self):  # création de soldats avec épée
     if self.enCreation == False:
@@ -546,13 +576,18 @@ def miseAJour(self):
 class Ferme(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.tailleX = 128
-        self.tailleY = 128
+        self.tailleX = 96
+        self.tailleY = 96
         self.peutEtreOccupe = True
-        self.production = 10
+        self.unitInBuilding = [] # Les unités dans la ferme
+        self.production = 5
         self.tempsProduction = 10
         self.type = "ferme"
+        #self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
+        #self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
+        #self.image = ImageTk.PhotoImage(self.resized)
         self.coutRecherche1['bois'] = 50
+        self.determineImage()
 
     def determineImage(self):
         """ Permet de déterminer l'image du bâtiment
@@ -579,11 +614,31 @@ class Ferme(Batiment):
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
-        if self.estOccupe:
+        if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.nourriture += self.production
+                self.joueur.ajouterRessource('nourriture',self.production * len(self.unitInBuilding) )
+                #self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
+                civ = self.getClientId()
+                self.joueur.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.joueur.model.joueurs[civ])
                 self.tempsProduction = time.time()
 
+    def sortir(self):
+        for unit in self.unitInBuilding:
+            unit.inBuilding = False
+        unitExit = self.unitInBuilding
+        self.unitInBuilding = []
+
+        #trouve une case pour mettre les units
+        if unitExit:
+            cases = self.joueur.model.trouverCentreCase(self.posX, self.posY)
+            posFin = self.joueur.model.trouverFinMultiSelection(cases[0],cases[1],1, unitExit[0].grandeur)[0]
+            print("fin exit", posFin)
+            self.joueur.model.controller.eventListener.onMapRClick(Noeud(None, posFin[0], posFin[1], None, None), unitExit)
+            
+        #for i in listeI:
+        #    for j in listeJ:
+                
+        
 
     def recherche1(self):  # meilleure vitesse de production
         self.rechercheCompletee = False
