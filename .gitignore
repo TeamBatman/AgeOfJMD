@@ -55,6 +55,3 @@ docs/_build/
 
 # PyCharm COnfig files
 .idea/*
-
-src/Model.py
-src/Batiments.py
