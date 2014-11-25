@@ -19,16 +19,18 @@ class Command():
     CIVILISATION_INVOKE_GOD = 'cig'      # Utilisée lorsque civilisation invoque les dieux augmentant son morale++
 
     # COMMANDES POUR UNITÉS
-    UNIT_CREATE = 'uc'         # Utilisée lorsqu'on veut créer une unité
-    UNIT_DIE = 'ud'           # Utilisée lorsqu'on veut tuer une unité
-    UNIT_MOVE = 'um'           # Utilisée lorsqu'on veut déplacer une unité
-    UNIT_ATTACK_UNIT = 'uau'         # Utilisée lorsqu'on veut attaquer une unité
+    UNIT_CREATE = 'uc'          # Utilisée lorsqu'on veut créer une unité
+    UNIT_DIE = 'ud'             # Utilisée lorsqu'on veut tuer une unité
+    UNIT_MOVE = 'um'            # Utilisée lorsqu'on veut déplacer une unité
+    UNIT_ATTACK_UNIT = 'uau'    # Utilisée lorsqu'on veut attaquer une unité
+    UNIT_TAKE_RESSOURCES = 'utr'      # Utilisée lorsqu'on veut prendre des ressources
 
     # TODO Vérfier pertinence de la commande
     UNIT_ATTACK_BUILDING = 'uab'     # Utilisée lorsqu'une unité attaque un bâtiment
 
     UNIT_ENTER_BUILDING = 'ueb'      # Utilisée lorsqu'une unité entre dans un bâtiment
     UNIT_LEAVE_BUILDING = 'ulb'      # Utilisée lorsqu'une unité sort d'un bâtiment
+
 
 
     #  COMMANDE POUR BÂTIMENTS

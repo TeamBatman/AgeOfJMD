@@ -267,7 +267,7 @@ class Client:
         self.host = None  # L'hôte auquel on tente de se connecte
         self.id = -1  # L'identifiant logique auprès du serveur
 
-    def connect(self, host='127.0.0.1', port=3333, hostName='RTS'):
+    def connect(self, host='127.0.0.1', port=3333, hostName='RTS', playerName='Batman'):
         """ Connecte le client à son hôte
         :param host: L'addresse IP de l'hôte
         :param port: Le port ouvert de l'hôte
@@ -275,7 +275,7 @@ class Client:
 
         self.uri = "PYRO:%s@%s:%s" % (hostName, host, port)
         self.host = Pyro4.Proxy(self.uri)
-        self.id = self.host.join(detectIP())  # TODO Ajouter le nom
+        self.id = self.host.join(detectIP(), playerName)  # TODO Ajouter le nom
 
         Client.outputDebug("Connecté à %s avec ID: %s" % (self.uri, self.id))
 
@@ -347,7 +347,7 @@ class NetworkController:
         self.server = None  # Instance du serveur (Seulement lorsque le joueur décide de hoster une partie)
         self.serverThread = None  # Le Fil d'éxécution du serveur
 
-    def connectClient(self, ipAddress, port):
+    def connectClient(self, ipAddress, port, playerName):
         """ Connecte le
         :param ipAddress: L'adresse IP du serveur auquel on veut se connecter
         :param port: Le port du serveur
@@ -355,7 +355,7 @@ class NetworkController:
         if self.serverThread:
             ipAddress = detectIP()
         try:
-            self.client.connect(ipAddress, port)
+            self.client.connect(ipAddress, port, playerName=playerName)
         except Pyro4.errors.CommunicationError:
             raise ClientConnectionError("IMPOSSIBLE DE SE CONNECTER À L'HOTE AUCUN OBJET PYRO DÉTECTER À L'ADRESSE"
                                         "ET AU PORT SPÉCIFIÉ")
