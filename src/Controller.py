@@ -79,12 +79,13 @@ class Controller:
         """ Méthode principale d'affichage des Graphics
         :return:
         """
+        joueur = self.model.joueurs[self.model.civNumber]
         if self.displayTimer.isDone():
 
             if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
+                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
             else:
-                self.view.update(self.model.getUnits(), self.model.getBuildings())
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
             self.displayTimer.reset()
 
 
@@ -164,7 +165,7 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-    def onMapRClick(self, event, groupe=None, building = None):
+    def onMapRClick(self, event, groupe=None, building = None, attackedBuildingId = None):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         :param event: Tkinter Event
         :param groupe: l'ensemble des unités qui veulent se déplacer
@@ -203,11 +204,11 @@ class EventListener:
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building, attackedBuildingId)
 
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building)  # Faire le leader en dernier
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building, attackedBuildingId)  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None, attackedBuildingId = None):
         """Pour la fonction onMapRClick !!!"""
         #print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
@@ -217,6 +218,7 @@ class EventListener:
         cmd.addData('X2', x2)
         cmd.addData('Y2', y2)
         cmd.addData('BTYPE', building)
+        cmd.addData('ABID', attackedBuildingId)
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -401,7 +403,6 @@ class EventListener:
             self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
         # TODO REMOVE C'EST JUSTE POUR DES TEST
 
-
     def onBuildingRClick(self, event):
         """
         Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
@@ -410,7 +411,7 @@ class EventListener:
         building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
         if not building.estBatimentDe(self.model.joueur.civilisation):
             print("click sur building ennemi")
-            self.onMapRClick(event, building=building)
+            self.onMapRClick(event, attackedBuildingId=building.id)
 
 
         if building.type == "ferme":

@@ -499,13 +499,17 @@ class FrameBottom():
         """ Dessine le cadre
         """
         self.frame.draw(self.x, self.y)
-        self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        #self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
         self.texteNourriture.draw(x=self.frame.x + 225, y=self.frame.y + 35)
         self.texteBois.draw(x=self.frame.x + 375, y=self.frame.y + 35)
         self.texteMinerai.draw(x=self.frame.x + 500, y=self.frame.y + 35)
         self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
 
     def updateResources(self, ressources):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GLabel):
+                value.destroy()
         self.texteNourriture.text = "Nourriture: "+str(ressources['nourriture'])
         self.texteBois.text = "Bois: "+str(ressources['bois'])
         self.texteMinerai.text = "Minerai: "+str(ressources['minerai'])
@@ -971,7 +975,7 @@ class View(GWindow):
         self.root.protocol("WM_DELETE_WINDOW", self.eventListener.onCloseWindow)
 
 
-    def update(self, units, buildings, carte=None):  # CLEAN UP
+    def update(self, units, buildings, carte=None, joueur=None):  # CLEAN UP
         """ Met à jours la carte et la minimap (et leurs unités) (au besoin)"""
 
         if carte:
@@ -981,6 +985,7 @@ class View(GWindow):
         self.drawMiniUnits(units)
         self.drawUnits(units)
         # self.drawBuildings
+        #self.frameBottom.updateResources(joueur.ressources)
 
     def needUpdateCarte(self):
         #print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))
