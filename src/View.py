@@ -373,6 +373,8 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
             Tuile.EAU: "#2E9AFE"  # bleu
         }
 
+
+
         for x in range(caseX - radius, caseX + radius):
             if 0 <= x <= 106:
                 for y in range(caseY - radius, caseY + radius):
@@ -390,6 +392,7 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
 
                             self.canvas.create_rectangle(posX1, posY1, posX2, posY2, width=0, fill=couleur,
                                                          tags=self.miniMapTag)
+
                             self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
 
                             self.canvas.tag_raise('rectMiniMap')
@@ -546,7 +549,7 @@ class CarteView():
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
 
 
-    def drawUnits(self, units, selectedUnits):
+    def drawUnits(self, units, selectedUnits, carte):
         """ Dessine les unités dans la map
         :param selectedUnits: une liste des unités sélectionnées
         :param units: une liste d'unités
@@ -570,7 +573,8 @@ class CarteView():
         }
 
         for unit in units.values():
-            if self.isUnitShown(unit):
+            x, y = self.eventListener.controller.model.trouverCaseMatrice(unit.x, unit.y)
+            if self.isUnitShown(unit) and carte[x][y].revealed == 1:
                 unitImage = unit.animation.activeFrame
                 posX = (unit.x ) - (self.cameraX * self.item)
                 posY = (unit.y ) - (self.cameraY * self.item)
@@ -766,10 +770,10 @@ class View(GWindow):
         """
         self.carte.draw(carte)
 
-    def drawUnits(self, units):
+    def drawUnits(self, units, carte):
         """ Affiche les unités sur la carte 
         """
-        self.carte.drawUnits(units, self.selected)
+        self.carte.drawUnits(units, self.selected, carte)
 
     def drawMinimap(self, carte):
         """ Permet de dessiner la carte
@@ -919,7 +923,7 @@ class View(GWindow):
             self.drawBuildings(buildings)  # TODO isBuilding Shown
 
         self.drawMiniUnits(units)
-        self.drawUnits(units)
+        self.drawUnits(units, self.eventListener.controller.model.carte.matrice)
         # self.drawBuildings
 
     def needUpdateCarte(self):
