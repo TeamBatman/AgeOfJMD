@@ -166,8 +166,7 @@ class GProgressBar(GWidget):
         self._buildFullImage()
 
     def setProgression(self, progress):
-        """
-        Completion sur 100
+        """ Completion sur 100
         :param pourcentage:
         """
         if progress <= 100:
@@ -256,9 +255,16 @@ class GProgressBar(GWidget):
 
     def draw(self, x, y):
         GWidget.draw(self, x, y)
+        self.getCanvas().delete(self.id)
         self.parent.create_text(x, y, text=self.text, anchor=NW, font="Helvetica",
                                 fill="#575246", tags=self.id)
         self.parent.create_image(x, y + self.height / 2 + 5, image=self.graphImage, anchor=NW, tags=self.id)
+
+    def update(self):
+        """ Met la progress bar à jour (redessine la progress bar)
+        """
+        self.getCanvas().delete(self.id)
+        self.draw(self.x, self.y)
 
 
 class GLabel(GWidget):

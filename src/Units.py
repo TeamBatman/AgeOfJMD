@@ -5,7 +5,7 @@ import math
 from Commands import Command
 from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
-from SimpleTimer import Timer
+from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation
 
 
@@ -61,12 +61,13 @@ class Unit():
         self.inBuilding = False # Si l'unité est dans un bâtiment
 
 
-        self.timerDeplacement = Timer(60)
+        self.timerDeplacement = FrameTimer(1)
         self.timerDeplacement.start()
 
         # ANIMATION
-        self.spriteSheet = None
-        self.animation = SpriteAnimation(self.determineSpritesheet(), 333)  # 1000/333 = 3 fois par secondes
+        self.animation = None
+        self.determineSpritesheet()
+
 
         # Kombat
         # Health Points, Points de Vie
@@ -80,7 +81,7 @@ class Unit():
         self.ennemiCible = None
 
         self.modeAttack = Unit.PASSIF
-        self.timerAttack = Timer(900)
+        self.timerAttack = FrameTimer(8)
         self.timerAttack.start()
 
         self.oneTimeAnimations = []
@@ -104,8 +105,7 @@ class Unit():
         """ permet de déterminer le spritesheet à utiliser
         selon la civilisation de l'unité
         """
-        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit "
-                        "retourner la sprite sheet")
+        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit ")
 
     @staticmethod
     def generateId(clientId):
@@ -1021,27 +1021,33 @@ class Paysan(Unit):
 
     def __init__(self, clientId, x, y, model, civilisation):
         super(Paysan, self).__init__(clientId, x, y, model, civilisation)
-        self.vitesseRessource = 0.1 #0.01  # La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.1  # 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 2
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
         self.compteurRessource = 0
+        self.posRessource = Noeud(None, 0, 0, None, None)
 
     def determineSpritesheet(self):
+
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/%s/paysan_blanc.png' % age,
+            Civilisation.BLEU: 'Units/%s/paysan_bleu.png' % age,
+            Civilisation.JAUNE: 'Units/%s/paysan_jaune.png' % age,
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/%s/paysan_mauve.png' % age,
+            Civilisation.NOIR: 'Units/%s/paysan_noir.png' % age,
+            Civilisation.ORANGE: 'Units/%s/paysan_orange.png' % age,
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/%s/paysan_rouge.png' % age,
+            Civilisation.VERT: 'Units/%s/paysan_vert.png' % age,
+            Civilisation.ROSE: 'Units/%s/paysan_rose.png' % age
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 
     def chercherRessources(self):
