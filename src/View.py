@@ -511,7 +511,7 @@ class CarteView():
 
     def draw(self, carte):
         """ Dessine la carte à l'écran
-        :param carte: la carte
+        :param carte: la carte 
         """
         self.canvas.delete(self.tagName)
         # TODO OPTIMISER C'EST TROP LONG
@@ -547,10 +547,10 @@ class CarteView():
                 posY2 = posY1 + self.item
                 tuile = carte[x][y]
 
-                """if not carte[x][y].revealed:
+                if not carte[x][y].revealed:
                     img = GraphicsManager.getPhotoImage('World/fog.png')
                     self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
-                    continue"""
+                    continue
 
                 if tuile.type != Tuile.GAZON:
                     img = images[tuile.type]
