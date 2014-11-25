@@ -30,8 +30,8 @@ class Color:
 
 
 class FrameSide():
-    UNITVIEW      = 0
-    CONSTRUCTIONVIEW  = 1
+    UNITVIEW = 0
+    CONSTRUCTIONVIEW = 1
     BASEVIEW = 2
 
 
@@ -49,7 +49,7 @@ class FrameSide():
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
 
         self.baseButton = GMediumButton(self.canvas, text=None, command=self.createBuildingBase,
-                                         iconPath="Graphics/Buildings/Age_I/Base.png")
+                                        iconPath="Graphics/Buildings/Age_I/Base.png")
 
         self.childView = None  # La vue à afficher sur ce menu
         self.unitView = None
@@ -70,7 +70,7 @@ class FrameSide():
         self.eventListener.createBuilding(Batiment.BASE)
         self.destroy()
 
-    def changeView(self,selectedView, building=None):
+    def changeView(self, selectedView, building=None):
         if self.childView:
             self.childView.destroy()
 
@@ -174,7 +174,7 @@ class ConstructionView():
         self.y = parent.y
 
         self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFerme,
-                                         iconPath="Graphics/Buildings/Age_I/Farm.png")
+                                         iconPath="Graphics/Buildings/Age_I/Ferme/Ferme_noire.png")
 
         self.buttonBaraque = GMediumButton(self.canvas, 'Baraque', self.onCreateBuildingBaraque, GButton.GREY)
         self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
@@ -227,6 +227,9 @@ class BaseView():
         self.x = parent.x
         self.y = parent.y
         self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
+        self.boutonCreateUnit.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysan_noir.png').frames[
+            'DOWN_1']
+
 
     def draw(self):
         self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
@@ -307,7 +310,7 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
         # 1: "#BFBF00",  # jaune
         # 2: "#1C1C1C",  # gris pale
         # 3: "#BDBDBD",  # gris fonce
-        #    4: "#2E9AFE"  # bleu
+        # 4: "#2E9AFE"  # bleu
         #}
 
         for x in range(size):
@@ -517,8 +520,8 @@ class CarteView():
         images = {
             Tuile.GAZON: GraphicsManager.getPhotoImage('World/grass.png'),  # vert
             Tuile.FORET: GraphicsManager.getPhotoImage('World/foret.png'),  # jaune
-            Tuile.MINERAI: GraphicsManager.getPhotoImage('World/foret.png'),  # gris pale
-            Tuile.CHARBON: GraphicsManager.getPhotoImage('World/foret.png'),  # gris fonce
+            Tuile.MINERAI: GraphicsManager.getPhotoImage('World/minerai.png'),  # gris pale
+            Tuile.CHARBON: GraphicsManager.getPhotoImage('World/charbon.png'),  # gris fonce
             Tuile.EAU: GraphicsManager.getPhotoImage('World/water.png'),  # bleu
             Tuile.BATIMENT: GraphicsManager.getPhotoImage('World/grass.png'),
         }
@@ -527,24 +530,20 @@ class CarteView():
 
         }
 
-
-
-
-
-        for x in range(x1, x1 + self.nbCasesX+1):
+        for x in range(x1, x1 + self.nbCasesX + 1):
             for y in range(y1, y1 + self.nbCasesY):
                 posX1 = 0 + (x - x1) * self.item
                 posY1 = 0 + (y - y1) * self.item
                 self.canvas.create_image(posX1, posY1, anchor=NW, image=images[Tuile.GAZON], tags=self.tagName)
 
-        for x in range(x1, x1 + self.nbCasesX+1):
+        for x in range(x1, x1 + self.nbCasesX + 1):
             for y in range(y1, y1 + self.nbCasesY):
                 posX1 = 0 + (x - x1) * self.item
                 posY1 = 0 + (y - y1) * self.item
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
                 tuile = carte[x][y]
-                
+
                 """if not carte[x][y].revealed:
                     img = GraphicsManager.getPhotoImage('World/fog.png')
                     self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
@@ -553,13 +552,6 @@ class CarteView():
                 if tuile.type != Tuile.GAZON:
                     img = images[tuile.type]
                     tag = self.tagName
-                    if carte[x][y].type == Tuile.FORET:
-
-                        tag = 'foret'
-
-
-
-
                     self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=tag)
 
                 # TODO raise Fog and Forest
@@ -568,10 +560,6 @@ class CarteView():
                     self.canvas.create_image(posX1, posY1, anchor=NW,
                                             image=,
                                             tags=self.tagName)"""
-
-
-
-
 
         self.canvas.tag_lower(self.tagName)  # Pour que ce soit derrière le HUD
         self.canvas.tag_raise('foret', self.tagName)
@@ -586,7 +574,6 @@ class CarteView():
         self.canvas.delete('unitHP')
         self.canvas.delete('unitVision')
         self.canvas.delete('unitAttackMode')
-
 
         couleursCiv = {
             Civilisation.ROUGE: Color.ROUGE,
@@ -616,7 +603,7 @@ class CarteView():
                     vy2 = posY + unit.rayonVision
 
                     # TODO Mettre une couleur selon la civilisation
-                    #self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='blue', tags='unitVision')
+                    # self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='blue', tags='unitVision')
                     selColor = GraphicsManagement.hex_to_rgba(couleursCiv[unit.civilisation])
 
                     try:
@@ -638,7 +625,6 @@ class CarteView():
                     by1 = posY - unit.grandeur / 2 - 8
                     bx2 = bx1 + tailleBarre
                     by2 = by1 + 4
-
 
                     self.canvas.create_rectangle(bx1, by1, bx2, by2, fill='black', tags='unitHP')
                     self.canvas.create_rectangle(bx1, by1, bx1 + hp, by2, fill='red', tags='unitHP')
@@ -667,12 +653,6 @@ class CarteView():
                 """
 
                 self.canvas.tag_raise('unit')
-
-
-
-
-
-
 
 
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
@@ -961,8 +941,9 @@ class View(GWindow):
         # self.drawBuildings
 
     def needUpdateCarte(self):
-        #print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))
-        for unite in self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units.values():
+        # print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))
+        for unite in self.eventListener.controller.model.joueurs[
+            self.eventListener.controller.model.civNumber].units.values():
             if self.carte.isUnitShown(unite):
                 if unite.enDeplacement:
                     return True

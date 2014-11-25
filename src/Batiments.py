@@ -11,7 +11,7 @@ from GraphicsManagement import GraphicsManager
 # TODO le FOW pour la tour de guet
 from Units import Unit
 from Units import Noeud
-from src.Civilisations import Civilisation
+from Civilisations import Civilisation
 
 
 class Batiment:
