@@ -76,6 +76,8 @@ class Batiment:
         :param attacker: unité qui la attaquer
         :param dommage:  dommage causé par l'attaquant
         """
+        print(self.pointsDeVie)
+
         self.pointsDeVie -= dommage
 
         anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
@@ -83,10 +85,13 @@ class Batiment:
 
 
         if self.pointsDeVie <= 0:
-            self.pointsDeVie = 0  # UNITÉ MORTE
+            self.pointsDeVie = 0  # building mort
             cmd = Command(self.getClientId(), Command.BUILDING_DESTROY)
 
             cmd.addData('ID', self.id)
+            cmd.addData('ABID', self.id)
+            cmd.addData('ATTID', attacker.id)
+            cmd.addData('CIV', self.getClientId())
             model.controller.sendCommand(cmd)
 
 

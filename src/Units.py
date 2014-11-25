@@ -39,7 +39,7 @@ class Unit():
         self.cibleXTrace = y
         self.cibleXDeplacement = x
         self.cibleYDeplacement = y
-        self.mode = 0  # 1=ressource, 2 = batiment 3 = attack
+        self.mode = 0  # 1=ressource, 2 = batiment 3 = attack, 5=attack batiment
 
         self.trouver = True  # pour le pathfinding
 
@@ -127,6 +127,13 @@ class Unit():
                 self.oneTimeAnimations.remove(anim)
 
         self.determineCombatBehaviour(model)
+        try:
+            civDuBuilding = int(self.attackedBuildingId.split('_')[0])
+            buildingViser = self.model.joueurs[civDuBuilding].buildings[self.attackedBuildingId]
+            self.attaquerBuilding(self.model, buildingViser)
+
+        except:
+            pass
 
         #print(len(self.groupeID))
         if self.enDeplacement:
@@ -144,7 +151,7 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
@@ -161,6 +168,11 @@ class Unit():
             if self.leader == 1:
                 self.building = building
             self.mode = 2
+
+        if attackedBuildingID:
+            print("JAI UN BUILDING A ATTAQUER")
+            self.mode = 5
+            self.attackedBuildingId = attackedBuildingID
             
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -226,7 +238,7 @@ class Unit():
             print("fix", self.x, self.cibleX, self.y, self.cibleY, self.cibleXDeplacement, self.cibleYDeplacement)
             #self.trouver = True
             return self.finDeplacementTraceVrai() #Quick Fix
-	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
+	    #ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!!
         self.posX = self.x
         self.posY = self.y
         if abs(self.cibleX - self.x) <= self.vitesse:
@@ -429,6 +441,11 @@ class Unit():
         else:
             print("JE VEUX PAS CONSTRUIRE!")
 
+        #if self.mode == 5:
+           # civDuBuilding = int(self.attackedBuildingId.split('_')[0])
+           # buildingViser = self.model.joueurs[civDuBuilding].buildings[self.attackedBuildingId]
+           #self.attaquerBuilding(self.model,buildingViser)
+
         if self.mode == 4: #Rentre dans un building
             buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
             if buildingDetected:
@@ -448,7 +465,7 @@ class Unit():
         cases = self.model.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
         caseY = cases[1]
-        if self.leader == 1:
+        if self.leader == 1 and self.typeRessource == 0 and not self.mode == 5:
             self.mode = 0
         if self.ennemiCible:
             self.mode = 3
@@ -496,7 +513,7 @@ class Unit():
                     return -1  # Ne peut pas aller sur un obstacle
             else:
                 print("MODE semi", self.mode)
-                if not self.mode == 1: #S'il ne retourne pas à la base (ressource)
+                if not self.mode == 1 and not self.mode == 5: #S'il ne retourne pas à la base (ressource)
                     self.mode = 4 #Rentre dans un building
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
@@ -830,7 +847,7 @@ class Unit():
         if noeud.x == caseCibleX and noeud.y == caseCibleY:
             return True
         elif abs(noeud.x - caseCibleX) <= 1 and abs(
-                        noeud.y - caseCibleY) <= 1 and (self.mode == 1 or self.mode == 4):  # pour les ressources
+                        noeud.y - caseCibleY) <= 1 and (self.mode == 1 or self.mode == 4 or self.mode == 5):  # pour les ressources
             #cases = self.parent.trouverCentreCase(noeud.x,noeud.y)
             #print("avant", self.posRessource.x, self.posRessource.y)
             #self.posRessource = Noeud(None, cases[0], cases[1], None, None)
@@ -965,12 +982,13 @@ class Unit():
             self.timerAttack.reset()
 
     def attaquerBuilding(self, model, building):
-        if not building.estBatimentDe(self.joueur.civilisation):
+        if not building.estBatimentDe(self.joueur.civilisation) and self.mode == 5 and not self.enDeplacement:
             if self.timerAttack.isDone():
                 attack = random.randint(self.attackMin, self.attackMax)
                 cmd = Command(cmdType=Command.UNIT_ATTACK_BUILDING)
                 cmd.addData('SOURCE_ID', self.id)
                 cmd.addData('TARGET_ID', building.id)
+                print("commande dattaque envoyer vers : "+building.id)
                 cmd.addData('DMG', attack)
                 model.controller.sendCommand(cmd)
                 self.timerAttack.reset()
