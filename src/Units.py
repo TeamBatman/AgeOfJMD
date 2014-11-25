@@ -966,12 +966,14 @@ class Unit():
 
     def attaquerBuilding(self, model, building):
         if not building.estBatimentDe(self.joueur.civilisation):
-            attack = random.randint(self.attackMin, self.attackMax)
-            cmd = Command(cmdType=Command.UNIT_ATTACK_BUILDING)
-            cmd.addData('SOURCE_ID', self.id)
-            cmd.addData('TARGET_ID', building.id)
-            cmd.addData('DMG', attack)
-            model.controller.sendCommand(cmd)
+            if self.timerAttack.isDone():
+                attack = random.randint(self.attackMin, self.attackMax)
+                cmd = Command(cmdType=Command.UNIT_ATTACK_BUILDING)
+                cmd.addData('SOURCE_ID', self.id)
+                cmd.addData('TARGET_ID', building.id)
+                cmd.addData('DMG', attack)
+                model.controller.sendCommand(cmd)
+                self.timerAttack.reset()
 
 
     def recevoirAttaque(self, model, attaquant, attack):

@@ -404,6 +404,11 @@ class EventListener:
         :param event: Tkinter Event
         """
         building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if not building.estBatimentDe(self.model.joueur.civilisation):
+            print("click sur building ennemi")
+            self.onMapRClick(event, building=building)
+
+
         if building.type == "ferme":
             print("batiment")
             self.onMapRClick(event)

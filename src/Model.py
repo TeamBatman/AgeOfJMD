@@ -82,11 +82,13 @@ class Model:
         target = self.getUnit(command['TARGET_ID'])
         target.recevoirAttaque(self, attacker, command['DMG'])
 
-    def executeAttackBuilding(self):
+    def executeAttackBuilding(self, command):
         """ Execute la commande ATTAQUER UN BATIMENT  selon ses paramètres
         :param command: la commande à exécuter [Objet Commande]
         """
-        attacker = self.
+        attacker = self.getUnit(command['SOURCE_ID'])
+        targetBuilding = self.getBuilding(command['TARGET_ID'])
+        targetBuilding.recevoirAttaque(self, attacker, command['DMG'])
 
     def executeKillUnit(self, command):
         """ Execute la commande TUER UNE UNITÉ

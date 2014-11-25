@@ -3,7 +3,7 @@
 import time
 from PIL import Image, ImageTk
 from Commands import Command
-from GraphicsManagement import GraphicsManager
+from GraphicsManagement import GraphicsManager, OneTimeAnimation
 
 
 # TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
@@ -48,11 +48,13 @@ class Batiment:
         self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
         self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0}
 
+        self.oneTimeAnimations = []
+
     def getClientId(self):
-        """ Returns the Id of the client using the id of the unit
+        """ Returns the Id of the client using the id of the building
         :return: the id of the clients
         """
-        return self.id.split('_')[0]
+        return int(self.id.split('_')[0])
 
     def estBatimentDe(self, clientId):
         """ Vérifie si le batiment appartient au client ou non
@@ -69,10 +71,23 @@ class Batiment:
         Batiment.COUNT += 1
         return gId
 
-    def recevoirAttaque(self):
-        """ Execute la commande ATTAQUER UNE UNITÉ  selon ses paramètres
-        :param command: la commande à exécuter [Objet Commande]
+    def recevoirAttaque(self, model, attacker, dommage):
+        """ Recois les dommages d'une commande d'attaque
+        :param attacker: unité qui la attaquer
+        :param dommage:  dommage causé par l'attaquant
         """
+        self.pointsDeVie -= dommage
+
+        anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
+        self.oneTimeAnimations.append(anim)
+
+
+        if self.pointsDeVie <= 0:
+            self.pointsDeVie = 0  # UNITÉ MORTE
+            cmd = Command(self.getClientId(), Command.BUILDING_DESTROY)
+
+            cmd.addData('ID', self.id)
+            model.controller.sendCommand(cmd)
 
 
     def detruire(self):

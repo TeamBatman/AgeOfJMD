@@ -709,6 +709,11 @@ class CarteView():
                                          tags=('building', building.type, building.id))
                 # self.lowerAllItemsOnMap()
 
+            # ANIMATION BLESSURES ET AUTRES
+                for anim in building.oneTimeAnimations:
+                    imgAnim = anim.activeFrame
+                    self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('building', building.id))
+
 
     def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING
         img = building.image
@@ -971,8 +976,8 @@ class View(GWindow):
 
         if carte:
             self.drawMap(carte)
-            self.drawBuildings(buildings)  # TODO isBuilding Shown
 
+        self.drawBuildings(buildings)
         self.drawMiniUnits(units)
         self.drawUnits(units)
         # self.drawBuildings
