@@ -18,7 +18,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {'bois' : 1000, 'minerai' : 100000, 'charbon' : 100000, 'nourriture' : 10}
+        self.ressources = {'bois' : 100, 'minerai' : 100, 'charbon' : 100, 'nourriture' : 10}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
@@ -54,7 +54,7 @@ class AI(Joueur):
         self.derniereAction = 0
         self.tempsDepart = time.time() - 55
         self.nombrePaysans = 0
-        self.epoque = 2
+        self.epoque = 1
 
     def penser(self):
         #fais des test requis pour savoir quel mode prendre

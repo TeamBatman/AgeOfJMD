@@ -3,16 +3,13 @@
 
 from __future__ import division
 
-from datetime import datetime
-
-from Batiments import Batiment
-import Batiments
 from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
 from Units import Paysan
 from Units import Noeud
 from AI import AI
+from Batiments import *
 
 class Model:
     def __init__(self, controller):
@@ -23,9 +20,18 @@ class Model:
         self.carte = Carte(self.grandeurMat)
         self.enRessource = []  # TODO ?À mettre dans Joueur?
 
+        self.civNumber = -1  # Numéro de civilisation du joueur représentant le client
+
     def update(self):
         """ Permet de lancer les commande updates importantes
         """
+        # On verifie si la civilisation du client peut évoluer
+        if self.joueurs[self.civNumber].canEvolve():
+            cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
+            cmd.addData('AGE', self.joueurs[self.civNumber].epoque + 1)
+            cmd.addData('CIV', self.civNumber)
+            self.controller.sendCommand(cmd)
+
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
 
@@ -45,8 +51,11 @@ class Model:
             Command.UNIT_TAKE_RESSOURCES: self.executeTakeRessources,
 
             Command.BUILDING_CREATE: self.executeCreateBuilding,
+            Command.BUILDING_DESTROY: self.executeDestroyBuilding,
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
+
+            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation
         }
 
         try:
@@ -61,7 +70,7 @@ class Model:
         """
         print(self.joueurs)
         self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
-                                                     command.data['CIV'], command.data['CLASSE'])
+                                                     command.data['CIV'])
 
     def executeMoveUnit(self, command):
         """ Execute la commande pour DÉPLACER UNE UNITÉ selon ses paramètres 
@@ -70,7 +79,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -91,48 +100,79 @@ class Model:
         targetBuilding.recevoirAttaque(self, attacker, command['DMG'])
 
     def executeKillUnit(self, command):
-        """ Execute la commande TUER UNE UNITÉ
-          selon ses paramètres 
+        """ Execute la commande TUER UNE UNITÉ selon ses paramètres
         :param command: la commande à exécuter [Objet Commande]
         """
-
         try:
             civId = self.getUnit(command['ID']).getClientId()
             self.joueurs[civId].killUnit(command['ID'])
-        except AttributeError:    # On a essayé de tuer Une unité déjà morte
+        except AttributeError:  # On a essayé de tuer Une unité déjà morte
             print("UNIT DÉJÀ MORTE?")  # TODO Comprendre pourquoi
 
     def executeTakeRessources(self, command):
         civId = self.getUnit(command['ID']).getClientId()
         nbRessources = self.carte.matrice[command['X1']][command['Y1']].nbRessources
-        
+
         if nbRessources >= command['NB_RESSOURCES']:
             self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
-            
+
             if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
         else:
             if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
-                self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][command['Y1']].nbRessources
+                self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][
+                    command['Y1']].nbRessources
             self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
         if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
-            self.carte.matrice[command['X1']][command['Y1']].type = 0 #Gazon -> n'est plus une ressource
+            self.carte.matrice[command['X1']][command['Y1']].type = 0  # Gazon -> n'est plus une ressource
             self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
             self.controller.view.update(self.getUnits(), self.getBuildings(),
                                         self.carte.matrice)
         print("reste", self.carte.matrice[command['X1']][command['Y1']].nbRessources, self.getUnit(command['ID']).mode)
-            #self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
-            #TODO: Mettre mini map à jour !!!
+        # self.controller.view.frameMinimap.updateMinimap(self.carte.matrice)
+        #TODO: Mettre mini map à jour !!!
 
     def executeCreateBuilding(self, command):
+        """ Execute la commande CRÉER UN BÂTIMENT  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
         print("batient reseaux...")
         if command['BTYPE'] == 0: #Base TEMPORAIRE !
             self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
+    def executeDestroyBuilding(self, command):
+        blupid = command.data['ABID']
+        print("Le batiment "+blupid+" vient de mourrir!")
+        civ = command.data['CIV']
+        self.joueurs[civ].destroyBuilding(blupid)
+        unitId = command.data['ATTID']
+        self.getUnit(unitId).mode = 0
+
     def executeCreateCivilisation(self, command):
+        """ Execute la commande CRÉER UNE CIVILISATION  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
         self.creerJoueur(command['ID'])
         # TODO CRÉER BASE
+
+
+
+    def executeEvolveCivilisation(self, command):
+        """ Execute la commande CHANGER AGE CIVILISATION  selon ses paramètres
+        :param command: la commande à exécuter [Objet Commande]
+        """
+        self.joueurs[command.data['CIV']].changerAge(command['AGE'])
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -154,7 +194,7 @@ class Model:
     def trouverFinMultiSelection(self, cibleX, cibleY, nbUnits, contact):  # cible en x,y
         posFin = []
         liste = [0, -contact, contact]
-        #TODO TROUVER PAR CADRAN...
+        # TODO TROUVER PAR CADRAN...
         #TODO TROUVER TOUT LE TEMPS UNE RÉPONSE
         #Marche si pas plus de 9 unités
         for multi in range(1, self.grandeurMat):
@@ -164,8 +204,8 @@ class Model:
                         #print(multi*i,multi*j)
                         posX = cibleX + multi * i
                         posY = cibleY + multi * j
-                        if(posX == cibleX and posY == cibleY):
-                            break #Même position que le leader
+                        if (posX == cibleX and posY == cibleY):
+                            break  #Même position que le leader
                         deplacementPossible = True
                         try:
                             casesPossibles = [self.trouverCaseMatrice(posX, posY),
@@ -178,7 +218,7 @@ class Model:
                             #Gestion des obstacles
                             for case in casesPossibles:
                                 if not self.carte.matrice[case[0]][case[1]].isWalkable or case[0] < 0 or case[1] < 0 or \
-                                   case[0] > self.grandeurMat or case[1] > self.grandeurMat:
+                                                case[0] > self.grandeurMat or case[1] > self.grandeurMat:
                                     deplacementPossible = False
                                     break
 
@@ -191,7 +231,6 @@ class Model:
                             pass  #Hors de la matrice
         print(len(posFin))
         return -1  #FAIL
-
 
 
     def trouverCaseMatrice(self, x, y):
@@ -262,8 +301,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = Joueur(clientId, self)
-        self.joueurs[clientId].ressources['nourriture'] += 100
-        #self.joueurs[clientId].cheat()
+        self.joueurs[clientId].ressources['bois'] += 100
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations
@@ -280,7 +318,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = AI(clientId, self)
-        self.joueurs[clientId].ressources['bois'] += 100
+
     def creerbaseAI(self, clientId):
         idBase = Batiment.generateId(clientId)
 
@@ -293,3 +331,18 @@ class Model:
         self.controller.sendCommand(cmd)
 
         self.joueurs[clientId].base = self.getBuilding(idBase)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

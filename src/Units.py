@@ -5,7 +5,7 @@ import math
 from Commands import Command
 from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
-from SimpleTimer import Timer
+from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation
 
 
@@ -39,7 +39,7 @@ class Unit():
         self.cibleXTrace = y
         self.cibleXDeplacement = x
         self.cibleYDeplacement = y
-        self.mode = 0  # 1=ressource, 2 = batiment 3 = attack
+        self.mode = 0  # 1=ressource, 2 = batiment 3 = attack, 5=attack batiment
 
         self.trouver = True  # pour le pathfinding
 
@@ -61,12 +61,13 @@ class Unit():
         self.inBuilding = False # Si l'unité est dans un bâtiment
 
 
-        self.timerDeplacement = Timer(60)
+        self.timerDeplacement = FrameTimer(1)
         self.timerDeplacement.start()
 
         # ANIMATION
-        self.spriteSheet = None
-        self.animation = SpriteAnimation(self.determineSpritesheet(), 333)  # 1000/333 = 3 fois par secondes
+        self.animation = None
+        self.determineSpritesheet()
+
 
         # Kombat
         # Health Points, Points de Vie
@@ -80,7 +81,7 @@ class Unit():
         self.ennemiCible = None
 
         self.modeAttack = Unit.PASSIF
-        self.timerAttack = Timer(900)
+        self.timerAttack = FrameTimer(8)
         self.timerAttack.start()
 
         self.oneTimeAnimations = []
@@ -104,8 +105,7 @@ class Unit():
         """ permet de déterminer le spritesheet à utiliser
         selon la civilisation de l'unité
         """
-        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit "
-                        "retourner la sprite sheet")
+        raise Exception("La méthode determineSprite doit être surchargée par tous les sous-classes de Unit et doit ")
 
     @staticmethod
     def generateId(clientId):
@@ -127,6 +127,13 @@ class Unit():
                 self.oneTimeAnimations.remove(anim)
 
         self.determineCombatBehaviour(model)
+        try:
+            civDuBuilding = int(self.attackedBuildingId.split('_')[0])
+            buildingViser = self.model.joueurs[civDuBuilding].buildings[self.attackedBuildingId]
+            self.attaquerBuilding(self.model, buildingViser)
+
+        except:
+            pass
 
         #print(len(self.groupeID))
         if self.enDeplacement:
@@ -144,7 +151,7 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
@@ -161,6 +168,11 @@ class Unit():
             if self.leader == 1:
                 self.building = building
             self.mode = 2
+
+        if attackedBuildingID:
+            print("JAI UN BUILDING A ATTAQUER")
+            self.mode = 5
+            self.attackedBuildingId = attackedBuildingID
             
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -226,7 +238,7 @@ class Unit():
             print("fix", self.x, self.cibleX, self.y, self.cibleY, self.cibleXDeplacement, self.cibleYDeplacement)
             #self.trouver = True
             return self.finDeplacementTraceVrai() #Quick Fix
-	#ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!! 
+	    #ATTENTION: POSX EST LE 1er ancien et ancien le 2ieme !!!
         self.posX = self.x
         self.posY = self.y
         if abs(self.cibleX - self.x) <= self.vitesse:
@@ -429,6 +441,11 @@ class Unit():
         else:
             print("JE VEUX PAS CONSTRUIRE!")
 
+        #if self.mode == 5:
+           # civDuBuilding = int(self.attackedBuildingId.split('_')[0])
+           # buildingViser = self.model.joueurs[civDuBuilding].buildings[self.attackedBuildingId]
+           #self.attaquerBuilding(self.model,buildingViser)
+
         if self.mode == 4: #Rentre dans un building
             buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
             if buildingDetected:
@@ -448,7 +465,7 @@ class Unit():
         cases = self.model.trouverCaseMatrice(self.x, self.y)
         caseX = cases[0]
         caseY = cases[1]
-        if self.leader == 1:
+        if self.leader == 1 and self.typeRessource == 0 and not self.mode == 5:
             self.mode = 0
         if self.ennemiCible:
             self.mode = 3
@@ -496,7 +513,7 @@ class Unit():
                     return -1  # Ne peut pas aller sur un obstacle
             else:
                 print("MODE semi", self.mode)
-                if not self.mode == 1: #S'il ne retourne pas à la base (ressource)
+                if not self.mode == 1 and not self.mode == 5: #S'il ne retourne pas à la base (ressource)
                     self.mode = 4 #Rentre dans un building
         caseCibleX = casesCible[0]
         caseCibleY = casesCible[1]
@@ -830,7 +847,7 @@ class Unit():
         if noeud.x == caseCibleX and noeud.y == caseCibleY:
             return True
         elif abs(noeud.x - caseCibleX) <= 1 and abs(
-                        noeud.y - caseCibleY) <= 1 and (self.mode == 1 or self.mode == 4):  # pour les ressources
+                        noeud.y - caseCibleY) <= 1 and (self.mode == 1 or self.mode == 4 or self.mode == 5):  # pour les ressources
             #cases = self.parent.trouverCentreCase(noeud.x,noeud.y)
             #print("avant", self.posRessource.x, self.posRessource.y)
             #self.posRessource = Noeud(None, cases[0], cases[1], None, None)
@@ -965,12 +982,13 @@ class Unit():
             self.timerAttack.reset()
 
     def attaquerBuilding(self, model, building):
-        if not building.estBatimentDe(self.joueur.civilisation):
+        if not building.estBatimentDe(self.joueur.civilisation) and self.mode == 5 and not self.enDeplacement:
             if self.timerAttack.isDone():
                 attack = random.randint(self.attackMin, self.attackMax)
                 cmd = Command(cmdType=Command.UNIT_ATTACK_BUILDING)
                 cmd.addData('SOURCE_ID', self.id)
                 cmd.addData('TARGET_ID', building.id)
+                print("commande dattaque envoyer vers : "+building.id)
                 cmd.addData('DMG', attack)
                 model.controller.sendCommand(cmd)
                 self.timerAttack.reset()
@@ -1003,27 +1021,33 @@ class Paysan(Unit):
 
     def __init__(self, clientId, x, y, model, civilisation):
         super(Paysan, self).__init__(clientId, x, y, model, civilisation)
-        self.vitesseRessource = 0.1 #0.01  # La vitesse à ramasser des ressources
+        self.vitesseRessource = 0.1  # 0.01  # La vitesse à ramasser des ressources
         self.nbRessourcesMax = 2
         self.nbRessources = 0
         self.typeRessource = 0  # 0 = Rien 1 à 4 = Ressources
         self.compteurRessource = 0
+        self.posRessource = Noeud(None, 0, 0, None, None)
 
     def determineSpritesheet(self):
+
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/%s/paysan_blanc.png' % age,
+            Civilisation.BLEU: 'Units/%s/paysan_bleu.png' % age,
+            Civilisation.JAUNE: 'Units/%s/paysan_jaune.png' % age,
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/%s/paysan_mauve.png' % age,
+            Civilisation.NOIR: 'Units/%s/paysan_noir.png' % age,
+            Civilisation.ORANGE: 'Units/%s/paysan_orange.png' % age,
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/%s/paysan_rouge.png' % age,
+            Civilisation.VERT: 'Units/%s/paysan_vert.png' % age,
+            Civilisation.ROSE: 'Units/%s/paysan_rose.png' % age
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 
     def chercherRessources(self):

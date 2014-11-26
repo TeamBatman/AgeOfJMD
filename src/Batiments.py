@@ -9,7 +9,10 @@ from GraphicsManagement import GraphicsManager, OneTimeAnimation
 # TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
 # TODO L'hopital ne fait rien avec le healing
 # TODO le FOW pour la tour de guet
+
 from Units import *
+from Civilisations import Civilisation
+
 
 class Batiment:
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque batiment
@@ -22,8 +25,6 @@ class Batiment:
     LIEU_CULTE = 5
     SCIERIE = 6
     FONDERIE = 7
-
-
 
     def __init__(self, parent, bid, posX, posY):
         self.posX = posX
@@ -48,6 +49,7 @@ class Batiment:
         self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.determineImage()
 
         self.oneTimeAnimations = []
 
@@ -72,11 +74,16 @@ class Batiment:
         Batiment.COUNT += 1
         return gId
 
+    def determineImage(self):
+        raise Exception("La méthode determineImage doit être surchargée par tous les sous-classes de Unit et doit ")
+
     def recevoirAttaque(self, model, attacker, dommage):
         """ Recois les dommages d'une commande d'attaque
         :param attacker: unité qui la attaquer
         :param dommage:  dommage causé par l'attaquant
         """
+        print(self.pointsDeVie)
+
         self.pointsDeVie -= dommage
 
         anim = OneTimeAnimation(GraphicsManager.getAnimationSheet('Animations/mayoche.png', 1, 3), 50)
@@ -84,10 +91,13 @@ class Batiment:
 
 
         if self.pointsDeVie <= 0:
-            self.pointsDeVie = 0  # UNITÉ MORTE
+            self.pointsDeVie = 0  # building mort
             cmd = Command(self.getClientId(), Command.BUILDING_DESTROY)
 
             cmd.addData('ID', self.id)
+            cmd.addData('ABID', self.id)
+            cmd.addData('ATTID', attacker.id)
+            cmd.addData('CIV', self.getClientId())
             model.controller.sendCommand(cmd)
 
 
@@ -176,7 +186,6 @@ class Eglise(Batiment):
         if self.enRecherche:
             self.recherche1()
 
-
 class TourDeGuet(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
@@ -260,28 +269,57 @@ class Base(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = Batiment.BASE
-        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
-        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
+        self.determineImage()
         self.vitesseDeCreation = 3
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-        self.coutCreer1['nourriture'] = 5
+        self.coutCreer1['bois'] = 5
         self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
         self.typeRecherche = ""
 
+    def determineImage(self):
+        #self.image = GraphicsManager.getPhotoImage('Graphics/Buildings/Age_I/Base.png')
+        """self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)"""
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        baseImages = {
+            Civilisation.BLANC: 'Buildings/%s/Base/base_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Base/base_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Base/base_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Base/base_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Base/base_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Base/base_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Base/base_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Base/base_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Base/base_rose.png' % age
+        }
+        img = GraphicsManager.getImage(baseImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
+
+
+
 
 
     def creer1(self):  # création des paysans
-        if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
+        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
             print("in creation 1", self.paysanAFaire)
-            self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
+            self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
+            #self.joueur.ressources['bois'] -= self.coutCreer1['bois']
             self.paysanAFaire += 1
-            self.joueur.model.controller.view.frameBottom.updateResources(self.joueur.ressources)
+            civ = self.getClientId()
+            if self.joueur.civilisation == civ:
+                self.joueur.model.controller.view.frameBottom.updateResources(self.joueur)
             if not self.enCreation:
                 self.tempsDepartCreation = time.time()
                 self.enCreation = True
@@ -579,20 +617,46 @@ class Ferme(Batiment):
         self.tailleY = 96
         self.peutEtreOccupe = True
         self.unitInBuilding = [] # Les unités dans la ferme
-        self.production = 1
+        self.production = 5
         self.tempsProduction = 10
-        self.type = Batiment.FERME
-        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
-        self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
+        self.type = "ferme"
+        #self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
+        #self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
+        #self.image = ImageTk.PhotoImage(self.resized)
         self.coutRecherche1['bois'] = 50
+        self.determineImage()
+
+    def determineImage(self):
+        """ Permet de déterminer l'image du bâtiment
+        """
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        fermesImages = {
+            Civilisation.BLANC: 'Buildings/%s/Ferme/ferme_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Ferme/ferme_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Ferme/ferme_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Ferme/ferme_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Ferme/ferme_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Ferme/ferme_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Ferme/ferme_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Ferme/ferme_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Ferme/ferme_rose.png' % age
+        }
+        img = GraphicsManager.getImage(fermesImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
         if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
-                self.joueur.model.controller.view.frameBottom.updateResources(self.joueur.ressources)
+                self.joueur.ajouterRessource('nourriture',self.production * len(self.unitInBuilding) )
+                #self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
+                civ = self.getClientId()
+                self.joueur.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.joueur.model.joueurs[civ])
                 self.tempsProduction = time.time()
 
     def sortir(self):
@@ -621,7 +685,7 @@ class Ferme(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
+                    if self.joueur.ressources >= self.coutRecherche1:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
@@ -637,7 +701,7 @@ class Ferme(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
+                    if self.joueur.ressources >= self.coutRecherche1:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
@@ -653,7 +717,7 @@ class Ferme(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
+                    if self.joueur.ressources >= self.coutRecherche1:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
