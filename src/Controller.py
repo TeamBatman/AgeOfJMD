@@ -25,7 +25,7 @@ class Controller:
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View( self.eventListener)
+        self.view = View(self.eventListener)
 
         self.gameMode = Controller.MULTIPLAYER
 

@@ -233,7 +233,7 @@ class BaseView():
         self.x = parent.x
         self.y = parent.y
         self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
-        self.boutonCreateUnit.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysan_noir.png').frames[
+        self.boutonCreateUnit.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysans/paysan_noir.png').frames[
             'DOWN_1']
 
 
