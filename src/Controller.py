@@ -5,12 +5,19 @@ import sys
 
 from Batiments import Batiment
 from Commands import Command
+from GameWindow import GameWindow
+import MenuDebut
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
+import NetworkModule
+from TitleScreen import TitleScreen
 from Units import Unit
-from View import View, FrameSide
+from View import FrameSide, GameView
 from SimpleTimer import Timer
 
+
+
+SKIP_MENU = False  # Permet de skipper les menus
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -24,19 +31,76 @@ class Controller:
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View(self.eventListener)
 
+        self.window = GameWindow()
 
+        # self.view = View(self.eventListener)
+        self.view = None
 
         self.gameMode = Controller.MULTIPLAYER
 
         self.currentFrame = -1
         self.nbFramesPerSecond = 15
-        self.refreshRate = int(1000/self.nbFramesPerSecond)
+        self.refreshRate = int(1000 / self.nbFramesPerSecond)
 
-        self.displayTimer = Timer(1000/60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
+        self.displayTimer = Timer(1000 / 60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
 
-        self.view.show()
+
+
+    def catchMenuEvent(self, event, additionalData=None):
+        """ Événement actionné par l'usager durant l'écran titre
+        :param event: L'évenement à gérer
+        :param additionalData: paramètre additionnel accompagnant l'action
+        """
+        # Affichage Menus
+        if event == MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL:
+            self.view.changerMenu(MenuDebut.MenuPrincipal(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR:
+            self.view.changerMenu(MenuDebut.MenuMultijoueur(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_CREER_SERVEUR:
+            self.view.changerMenu(MenuDebut.MenuServeur(self.window, self, NetworkModule.detectIP()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_REJOINDRE_SERVEUR:
+            self.view.changerMenu(MenuDebut.MenuRejoindreServeur(self.window, self))
+            self.view.drawMenu()
+
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_SOLO:
+            self.view.changerMenu(MenuDebut.MenuSolo(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.LANCER_PARTIE_SOLO:
+            pass
+
+        elif event == MenuDebut.TitleEvent.QUITTER_JEU:
+            self.shutdown()
+
+        elif event == MenuDebut.TitleEvent.CREER_SERVEUR:
+            nomJoueur = self.view.menuActif.nomJoueur
+            self.network.startServer(port=33333)
+            self.network.connectClient(ipAddress=NetworkModule.detectIP(), port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.REJOINDRE_SERVEUR:
+            IPJoueur = self.view.menuActif.IPJoueur
+            nomJoueur = self.view.menuActif.nomJoueur
+            self.network.connectClient(ipAddress=IPJoueur, port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+
+
+
+
+
+
+
 
 
 
@@ -52,7 +116,7 @@ class Controller:
 
         self.renderGraphics()
 
-        self.view.after(self.refreshRate, self.mainLoop)
+        self.window.after(self.refreshRate, self.mainLoop)
 
 
     def doLogic(self, commands):
@@ -71,9 +135,8 @@ class Controller:
 
         if doUpdate:
             self.model.update()
-            #print("Finnished %s" % self.currentFrame)
+            # print("Finnished %s" % self.currentFrame)
             self.currentFrame += 1
-
 
     def renderGraphics(self):
         """ Méthode principale d'affichage des Graphics
@@ -82,10 +145,22 @@ class Controller:
         if self.displayTimer.isDone():
 
             if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice)
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), self.model.carte.matrice)
             else:
                 self.view.update(self.model.getUnits(), self.model.getBuildings())
             self.displayTimer.reset()
+
+
+
+    def titleScreenLoop(self):
+        if self.displayTimer.isDone():
+            self.view.update()
+            if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
+                self.view.menuActif.update(self.network.client.host.getClients())
+            self.displayTimer.reset()
+
+
+        self.window.after(self.refreshRate, self.titleScreenLoop)
 
 
 
@@ -93,24 +168,23 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
+        if not SKIP_MENU:
+            # TIMERS
+            self.displayTimer.start()
 
-        # INITIALISATION AFFICHAGE
-        self.view.drawMinimap(self.model.carte.matrice)
-        self.view.drawRectMiniMap()
-        self.view.drawMap(self.model.carte.matrice)
+            # FRAMES
+            self.currentFrame = 0
 
-        #TIMERS
-        self.displayTimer.start()
+            self.view = TitleScreen(self.window, self)
+            self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+            self.titleScreenLoop()
+            self.window.show()
 
-        # FRAMES
-        self.currentFrame = 0
+            return
 
-        self.mainLoop()
-
-    def startServeur(self,nom):
         # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName=nom)
+        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
         # INITIALISATION MODEL
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
@@ -121,15 +195,28 @@ class Controller:
 
         self.model.civNumber = self.network.getClientId()
 
+        # INITIALISATION AFFICHAGE
+        self.view = GameView(self.window, self.eventListener)
+        self.view.drawMinimap(self.model.carte.matrice)
+        self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
+
+        # TIMERS
+        self.displayTimer.start()
+
+        # FRAMES
+        self.currentFrame = 0
+
+        self.mainLoop()
+        self.window.show()
 
     def shutdown(self):
         self.view.destroy()
-        if self.network.client:
+        if self.network.client is not None:
             self.network.disconnectClient()
-        if self.network.server:
+        if self.network.server is not None:
             self.network.stopServer()
         sys.exit(0)
-
 
 
     def sendCommand(self, command):
@@ -139,6 +226,25 @@ class Controller:
         if command.clientId == -1:
             command.clientId = self.network.client.id
         self.network.client.sendCommand(command, self.currentFrame)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -188,9 +294,9 @@ class EventListener:
 
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:])  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2, groupe, targetUnit=None):
         """Pour la fonction onMapRClick !!!"""
-        #print("select", leaderUnit)
+        # print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
         cmd.addData('ID', unitSelected.id)
         cmd.addData('X1', unitSelected.x)
@@ -202,16 +308,16 @@ class EventListener:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
             cmd.addData('ENNEMI', None)
-        #print("leader selection", leaderUnit)
+        # print("leader selection", leaderUnit)
         if leaderUnit:
             cmd.addData('LEADER', 1)
             if posFin:
                 posLeader = posFin.pop(0)
                 print("leader KOMBAT!", posLeader)
-                cmd.addData('FIN',posLeader)
+                cmd.addData('FIN', posLeader)
             else:
                 cmd.addData('FIN', None)
-            #groupe = self.controller.view.selected[:]
+            # groupe = self.controller.view.selected[:]
             groupeID = []
             for unit in groupe:
                 groupeID.append(unit.id)
@@ -224,7 +330,7 @@ class EventListener:
             if unitSelected.leader == 1:
                 print("changement leader")
             else:
-                print("pas changment leader",unitSelected.id, unitSelected.leader)
+                print("pas changment leader", unitSelected.id, unitSelected.leader)
 
             cmd.addData('LEADER', 2)
             cmd.addData('FIN', posFin.pop(0))
@@ -260,7 +366,6 @@ class EventListener:
             cmd.addData('BTYPE', self.controller.view.lastConstructionType)
             self.controller.sendCommand(cmd)
 
-
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             return
@@ -290,49 +395,50 @@ class EventListener:
         """
         print(event)
         clientId = self.controller.network.getClientId()
-        
+
         x1, y1 = event.x, event.y
-        #x2, y2 = event.x, event.y
+        # x2, y2 = event.x, event.y
         x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
         y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
-       # print("dude!", x2, y2)
+        # print("dude!", x2, y2)
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
-        #TODO: Merge avec onMapRClick !!!
+        # TODO: Merge avec onMapRClick !!!
         try:
             groupe = groupeSansLeader
             if not groupeSansLeader:
                 groupeSansLeader = self.controller.view.selected[:]
-                groupe =  None
+                groupe = None
 
-            #x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            # x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             #y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             leaderUnit = self.controller.model.trouverPlusProche(groupeSansLeader, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupeSansLeader),
                                                                     groupeSansLeader[0].grandeur)
             if groupe == None:
                 groupeSansLeader.remove(leaderUnit)
-                
-            #groupeSansLeader = self.controller.view.selected[:]
-            
+
+                #groupeSansLeader = self.controller.view.selected[:]
+
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index 2 !")
             groupeSansLeader = None
-        #    pass
+        # pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
             unitSelected.ennemiCible = targetUnit
-            unitSelected.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+            unitSelected.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
             unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
             self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
 
         leaderUnit.ennemiCible = targetUnit
-        leaderUnit.ancienPosEnnemi = (targetUnit.x,targetUnit.y)
+        leaderUnit.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
         leaderUnit.mode = 3
         #print("posFIn leader", posFin)
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2,groupeSansLeader, leaderUnit.ennemiCible )  # Faire le leader en dernier
-        
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupeSansLeader,
+                              leaderUnit.ennemiCible)  # Faire le leader en dernier
+
 
         # if not targetUnit.estUniteDe(clientId):
         #leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
@@ -359,9 +465,7 @@ class EventListener:
         if unit.estUniteDe(clientId):
             self.controller.view.selected.append(unit)
             self.controller.view.frameSide.changeView(FrameSide.UNITVIEW)
-        # TODO REMOVE C'EST JUSTE POUR DES TEST
-
-
+            # TODO REMOVE C'EST JUSTE POUR DES TEST
 
 
     def onMapMouseMotion(self, event):
@@ -479,8 +583,8 @@ class EventListener:
         self.controller.view.update(self.controller.model.getUnits(), self.controller.model.getBuildings(),
                                     self.controller.model.carte.matrice)
         self.controller.view.frameMinimap.drawRectMiniMap(event.x, event.y)
-        if redo == 0:  #QUICK FIX
-            #print("cam",self.controller.view.carte.cameraX , self.controller.view.carte.cameraY)
+        if redo == 0:  # QUICK FIX
+            # print("cam",self.controller.view.carte.cameraX , self.controller.view.carte.cameraY)
             self.onMinimapLPress(event, -1)
 
     def onMinimapMouseMotion(self, event):
@@ -523,6 +627,10 @@ class EventListener:
             else:
                 print("MODE CONSTRUCTION")
 
+    def launch(self):
+        pass
+
 
 if __name__ == '__main__':
     app = Controller()
+    app.start()

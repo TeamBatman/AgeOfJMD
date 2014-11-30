@@ -11,13 +11,12 @@ class Command():
     NEXT_FRAME = 'nf'      # Utilisée pour indiquer au client de changer de frame
     WAIT = 'w'             # Utilisée par le serveur pour indiquer à un client qu'il doit attendre
     DESYNC = 'dsc'         # Utilisée par le serveur pour indiquer à un client qu'il est totalement désynchronisé
-    START_LOADING = 'sl'   # Utilisée par l'hôte pour lancer le chargement de la partie
 
     # COMMANDES POUR CIVILISATIONS
     CIVILISATION_CREATE = 'cc'          # Utilisée lorsqu'un joueur se joint à la partie
-    CIVILISATION_PROMOTE = 'cp'         # Utilisée lorsqu'une unité change d'âge (évolue)
+    CIVILISATION_EVOLVE = 'ce'          # Utilisée lorsqu'une unité change d'âge (évolue)
     CIVILISATION_ANNIHILATE = 'ca'      # Utilisée lorsque civilisation quitte partie pour tuer détruire ses effectifs
-    CIVILISATION_INVOKE_GOD = 'cig'      # Utilisée lorsque civilisation invoque les dieux augmentant son morale++
+    CIVILISATION_INVOKE_GOD = 'cig'     # Utilisée lorsque civilisation invoque les dieux augmentant son morale++
 
     # COMMANDES POUR UNITÉS
     UNIT_CREATE = 'uc'          # Utilisée lorsqu'on veut créer une unité
@@ -31,8 +30,6 @@ class Command():
 
     UNIT_ENTER_BUILDING = 'ueb'      # Utilisée lorsqu'une unité entre dans un bâtiment
     UNIT_LEAVE_BUILDING = 'ulb'      # Utilisée lorsqu'une unité sort d'un bâtiment
-
-
 
     #  COMMANDE POUR BÂTIMENTS
     BUILDING_CREATE = 'bc'     # Utilisée lorsqu'on désire créer un bâtiment

@@ -1,73 +1,119 @@
 from View import *
-import socket
 
 from Commands import Command
 
-        
 
-class MenuInit:
-    def __init__(self,vue):
-        self.vue = vue
-        # position du depart pour draw
-        self.initX = 574
-        self.initY = 50
-        self.canevasInit = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasInit)
-        self.frameInit = GFrame(self.canevasInit, width=400, height=500)
-        self.boutSolo = GButton(self.canevasInit, text="Solo",command=self.vue.creationSolo,color=0)
-        self.boutMulti = GButton(self.canevasInit, text="Multijoueur",command=self.vue.menuMultijoueur,color=0)
-        self.boutQuitter = GButton(self.canevasInit, text="Quitter",command=self.vue.destroy,color=0)
-        self.draw(self.initX,self.initY)
 
-    def draw(self,x,y):
-        self.frameInit.draw(x+0, y+0)
-        self.canevasInit.create_text(x+200, y+70, text="Âge de l'Empire",fill="#B45F04",font="Arial 26")
-        self.canevasInit.create_text(x+100, y+130, text="Jouer",fill="#B45F04",font="Arial 14")
-        self.boutSolo.draw(x+100,y+150)
-        self.boutMulti.draw(x+100,y+210)
-        self.boutQuitter.draw(x+100,y+350)
+class TitleEvent:
+    """ Action pouvant être performée par l'utilisateur lors des menu d'avant partie
+    """
+
+    LANCER_PARTIE_MULTIJOUEUR = 'lpm'
+    VOIR_MENU_PRINCIPAL = 'vmp'
+    VOIR_MENU_MULTIJOUEUR = 'vmm'
+    VOIR_MENU_SOLO = 'vms'
+    VOIR_MENU_CREER_SERVEUR = 'vmcs'
+    VOIR_MENU_REJOINDRE_SERVEUR = 'vmrs'
+
+    CREER_SERVEUR = 'cs'
+    REJOINDRE_SERVEUR = 'rs'
+    QUITTER_JEU = 'qj'
+    LANCER_PARTIE_SOLO = 'lps'
+
+    SIGNALER_PRET = 'sp'    # Permet à un client de signaler qu'il est prêt dans le lobby à entamer la partie
+
+
+
+
+
+class MenuPrincipal:
+    """ Menu Permettant de quitter, d'accéder au menu Solo ou au menu Multijoueur
+    """
+    def __init__(self, window, controller):
+        self.window = window
+        self.controller = controller
+        self.x = 500
+        self.y = 270
+
+
+        self.frame = GFrame(self.window.canvas, 300, 250)
+        self.btnSolo = GButton(self.window.canvas, text="Jouer Solo", command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_SOLO))
+        self.btnMultijoueur = GButton(self.window.canvas, text="Jouer Multijoueur", command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_MULTIJOUEUR))
+        self.btnQuitter = GButton(self.window.canvas, text="Quitter", command=lambda: self.controller.catchMenuEvent(TitleEvent.QUITTER_JEU))
+
+
+    def draw(self):
+        self.frame.draw(500, 270)
+        self.btnSolo.draw(550, 320)
+        self.btnMultijoueur.draw(550, 380)
+        self.btnQuitter.draw(550, 440)
+
+    def destroy(self):
+        self.frame.destroy()
+        self.btnSolo.destroy()
+        self.btnMultijoueur.destroy()
+        self.btnQuitter.destroy()
+
+
 
 class MenuMultijoueur:
-    def __init__(self,vue):
-        self.vue = vue
+    """ Menu permettant de se connecter à un serveur
+    ou d'en crééer un
+    """
+    def __init__(self, window, controller):
+        self.window = window
+        self.controller = controller
         # position du depart pour draw
-        self.initX = 674
-        self.initY = 50
-        self.canevasMulti = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasMulti)
-        self.frameMultiJ = GFrame(self.canevasMulti, width=300, height=400)
-        self.boutCrServ = GButton(self.canevasMulti, text="Créer un serveur",command=self.vue.menuServeur,color=0)
-        self.boutRejServ = GButton(self.canevasMulti, text="Rejoindre un serveur",command=self.vue.menuRejoindreServeur,color=0)
-        self.boutRetour = GButton(self.canevasMulti, text="Retour",command=self.vue.afficheMenuInit,color=0)
-        self.draw(self.initX,self.initY)
+        self.x = 674
+        self.y = 50
+        self.frameMultiJ = GFrame(self.window.canvas, width=300, height=400)
+        self.boutCrServ = GButton(self.window.canvas, text="Créer un serveur",
+                                  command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_CREER_SERVEUR))
 
-    def draw(self,x,y):
-        self.frameMultiJ.draw(x+0,y+0)
-        self.canevasMulti.create_text(x+150, y+50, text="Multijoueur",fill="#B45F04",font="Arial 20")
-        self.boutCrServ.draw(x+50,y+100)
-        self.boutRejServ.draw(x+50,y+170)
-        self.boutRetour.draw(x+50,y+300)
+        self.boutRejServ = GButton(self.window.canvas, text="Rejoindre un serveur",
+                                   command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_REJOINDRE_SERVEUR))
+
+        self.boutRetour = GButton(self.window.canvas, text="Retour",
+                                  command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_PRINCIPAL))
+    # TODO Se fier à X et Y
+    def draw(self):
+        self.frameMultiJ.draw(self.x + 0, self.y + 0)
+        self.window.canvas.create_text(self.x + 150, self.y + 50, text="Multijoueur", fill="#B45F04", font="Arial 20",
+                                       tags='menuMultijoueur')
+        self.boutCrServ.draw(self.x + 50, self.y + 100)
+        self.boutRejServ.draw(self.x + 50, self.y + 170)
+        self.boutRetour.draw(self.x + 50, self.y + 300)
+
+
+    def destroy(self):
+        self.window.canvas.delete('menuMultijoueur')
+        self.frameMultiJ.destroy()
+        self.boutCrServ.destroy()
+        self.boutRejServ.destroy()
+        self.boutRetour.destroy()
 
 
 class MenuServeur:
-    def __init__(self,vue):
-        self.vue = vue
+    """ Menu permettant la création d'un serveur
+    """
+    def __init__(self, window, controller, adresseIP):
+        self.window = window
+        self.controller = controller
         # position du depart pour draw
-        self.initX = 374
-        self.initY = 50
-        self.canevasServeur = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasServeur)
-        self.frameServ = GFrame(self.canevasServeur, width=600, height=270)
-        self.vue.siServeur = True
-        #self.vue.eventListener.controller.startServeur()
-        self.ip = socket.gethostbyname(socket.gethostname())
-        self.inputNom = Entry(self.canevasServeur, bd=4, font="Courier 20")
-        #label "taille de la carte"
+        self.x = 374
+        self.y = 50
+        self.frameServ = GFrame(self.window.canvas, width=600, height=270)
+
+        self.ip = adresseIP
+        self.nomJoueur = ''
+
+        self.inputNom = Entry(self.window.canvas, bd=4, font="Courier 20")
+        # TODO label "taille de la carte"
         # à faire
 
-        self.boutFinalServ = GButton(self.canevasServeur, text="Finaliser serveur",command=self.lireNom,color=0)
-        self.boutRetour = GButton(self.canevasServeur, text="Retour",command=self.vue.menuMultijoueur,color=0)
-        self.draw(self.initX,self.initY)
+        self.boutFinalServ = GButton(self.window.canvas, text="Finaliser serveur", command=self.lireNom)
+        self.boutRetour = GButton(self.window.canvas, text="Retour",
+                                  command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_MULTIJOUEUR))
 
     def lireNom(self):
         # vérifie le nom du joueur
@@ -76,35 +122,55 @@ class MenuServeur:
             self.nomJoueur = "Batman"
         print(self.nomJoueur)
 
-        self.vue.eventListener.controller.startServeur(self.nomJoueur)
-        self.vue.menuLobby()
+        self.controller.catchMenuEvent(TitleEvent.CREER_SERVEUR)
 
-    def draw(self,x,y):
-        self.frameServ.draw(x+0, y+0)
-        self.canevasServeur.create_text(x+300, y+20, anchor='n',text="Création du serveur",fill="#B45F04",font="Arial 26")
-        self.canevasServeur.create_text(x+300, y+70, anchor='n',text="Votre adresse IP: " + self.ip,fill="#B45F04",font="Arial 20")
-        self.canevasServeur.create_text(x+300, y+150, anchor='e',text="Entrez votre nom: ",fill="#B45F04",font="Arial 20")
-        self.inputNom.place(x=x+300,y=y+130,width=200,height=40)
-        self.boutFinalServ.draw(x+370,y+195)
-        self.boutRetour.draw(x+30,y+195)
+
+
+
+    def draw(self):
+        self.frameServ.draw(self.x + 0, self.y + 0)
+        self.window.canvas.create_text(self.x + 300, self.y + 20, anchor='n', text="Création du serveur",
+                                       fill="#B45F04", font="Arial 26", tags='menuServeur')
+        self.window.canvas.create_text(self.x + 300, self.y + 70, anchor='n', text="Votre adresse IP: " + self.ip,
+                                       fill="#B45F04", font="Arial 20", tags='menuServeur')
+        self.window.canvas.create_text(self.x + 300, self.y + 150, anchor='e', text="Entrez votre nom: ",
+                                       fill="#B45F04", font="Arial 20", tags='menuServeur')
+        #self.inputNom.place(x=self.x + 300, y=self.y + 130, width=200, height=40)
+        self.window.canvas.create_window(self.x + 300, self.y + 130,  anchor=NW, width=200, height=40,
+                                         window=self.inputNom, tags='menuServeur')
+
+
+        self.boutFinalServ.draw(self.x + 370, self.y + 195)
+        self.boutRetour.draw(self.x + 30, self.y + 195)
+
+
+    def destroy(self):
+        self.window.canvas.delete('menuServeur')
+        self.frameServ.destroy()
+        self.boutFinalServ.destroy()
+        self.boutRetour.destroy()
 
 
 class MenuRejoindreServeur:
-    def __init__(self,vue):
-        self.vue = vue
+    """ Menu permettant de rejoindre un serveur en entrant son adresse IP
+    """
+    def __init__(self, window, controller):
+        self.window = window
+        self.controller = controller
         # position du depart pour draw
-        self.initX = 474
-        self.initY = 50
-        self.canevasRejServ = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasRejServ)
-        self.frameRejServ = GFrame(self.canevasRejServ, width=500, height=370)
-        self.vue.siServeur = False
-        self.inputIp = Entry(self.canevasRejServ, bd=4, font="Courier 30")
-        #self.inputIp.bind("<Return>",self.testIP)
-        self.inputNom = Entry(self.canevasRejServ, bd=4, font="Courier 20")
-        self.boutRejoindre = GButton(self.canevasRejServ, text="Rejoindre serveur",command=self.lireNom,color=0)
-        self.boutRetour = GButton(self.canevasRejServ, text="Retour",command=self.vue.menuMultijoueur,color=0)
-        self.draw(self.initX,self.initY)
+        self.x = 474
+        self.y = 50
+
+        self.frameRejServ = GFrame(self.window.canvas, width=500, height=370)
+
+        # self.vue.siServeur = False # TODO See this
+
+
+        self.inputIp = Entry(self.window.canvas, bd=4, font="Courier 30")
+        # self.inputIp.bind("<Return>",self.testIP)
+        self.inputNom = Entry(self.window.canvas, bd=4, font="Courier 20")
+        self.boutRejoindre = GButton(self.window.canvas, text="Rejoindre serveur", command=self.lireNom, color=0)
+        self.boutRetour = GButton(self.window.canvas, text="Retour", command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_MULTIJOUEUR), color=0)
 
     def lireNom(self):
         # vérifie le nom du joueur
@@ -112,239 +178,203 @@ class MenuRejoindreServeur:
         if len(self.nomJoueur) == 0:
             self.nomJoueur = "Batgirl"
         print(self.nomJoueur)
+        self.IPJoueur = self.inputIp.get()
+        self.controller.catchMenuEvent(TitleEvent.REJOINDRE_SERVEUR)
 
-        self.vue.eventListener.controller.startServeur(self.nomJoueur)
-        self.vue.menuLobby()
+    def draw(self):
+        self.frameRejServ.draw(self.x + 0, self.y + 0)
+        self.window.canvas.create_text(self.x + 250, self.y + 40, anchor='n', text="Entrez l’adresse IP du serveur",
+                                       fill="#B45F04", font="Arial 20", tags='menuRejoindreServeur')
 
-    def draw(self,x,y):
-        self.frameRejServ.draw(x+0, y+0)
-        self.canevasRejServ.create_text(x+250, y+40, anchor='n',text="Entrez l’adresse IP du serveur",fill="#B45F04",font="Arial 20")
-        self.inputIp.place(x=x+60,y=y+100,width=380,height=70)
-        self.canevasRejServ.create_text(x+250, y+220, anchor='e',text="Entrez votre nom: ",fill="#B45F04",font="Arial 20")
-        self.inputNom.place(x=x+250,y=y+200,width=200,height=40)
-        self.boutRejoindre.draw(x+270,y+295)
-        self.boutRetour.draw(x+30,y+295)
+        self.window.canvas.create_window(self.x + 60, self.y + 100, width=380, height=70, window=self.inputIp,
+                                         anchor=NW, tags='menuRejoindreServeur')
+
+        self.window.canvas.create_text(self.x + 250, self.y + 220, anchor='e', text="Entrez votre nom: ", fill="#B45F04",
+                                       font="Arial 20", tags='menuRejoindreServeur')
+
+
+        self.window.canvas.create_window(self.x + 250, self.y + 200, width=200, height=40, window=self.inputNom,
+                                         anchor=NW, tags='menuRejoindreServeur')
+
+        self.boutRejoindre.draw(self.x + 270, self.y + 295)
+        self.boutRetour.draw(self.x + 30, self.y + 295)
+
+
+    def destroy(self):
+        self.frameRejServ.destroy()
+        self.boutRejoindre.destroy()
+        self.boutRetour.destroy()
+        self.window.canvas.delete('menuRejoindreServeur')
+
 
 class MenuLobby:
-    def __init__(self,vue):
-        self.vue = vue
+    """ Lobby des joueurs lorsqu'ils entrent dans un serveur
+    """
+    def __init__(self, window, controller, isClientHost):
+        self.controller = controller
+        self.window = window
         # position du depart pour draw
-        self.initX = 174
-        self.initY = 50
-        self.canevasLobby = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasLobby)
-        self.frameLobby = GFrame(self.canevasLobby, width=800, height=550)
+        self.x = 174
+        self.y = 50
+        self.frameLobby = GFrame(self.window.canvas, width=800, height=550)
+        self.siServeur = isClientHost
         """
         # vérifie le nom du joueur
         self.nomJoueur = self.inputNom.get()
         if len(self.nomJoueur) == 0:
             self.nomJoueur = "Batman"
         """
-        #self.clientId = self.vue.eventListener.controller.network.client.id
-        #self.clientId = self.vue.eventListener.controller.network.getClientId()
+        # self.clientId = self.vue.eventListener.controller.network.client.id
+        # self.clientId = self.vue.eventListener.controller.network.getClientId()
         # TODO - chercher dans View - Color
         #                  ROUGE     BLEU        VERT       MAUVE    ORANGE      ROSE        NOIR      BLANC      JAUNE
-        self.couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF", "#F5F520"]
+        self.couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF",
+                         "#F5F520"]
 
-        self.boutPret = GButton(self.canevasLobby, text="Prêt",command=self.vue.pret,color=0)
-        self.boutQuitServ = GButton(self.canevasLobby, text="Quitter le serveur",command=self.vue.menuMultijoueur,color=0)
+        self.boutPret = GButton(self.window.canvas, text="Prêt",
+                                command=self.controller.catchMenuEvent(TitleEvent.SIGNALER_PRET))
+
+        self.boutQuitServ = GButton(self.window.canvas, text="Quitter le serveur",
+                                    command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_MULTIJOUEUR))
         #bouton "Lancer la partie" - si serveur
-        if self.vue.siServeur == True:
+
+        # TODO Completer
+        if self.siServeur:
             #self.boutLancerPartie = GButton(self.canevasLobby, text="Lancer la partie",command=self.vue.debutJeu,color=0)
-            self.boutLancerPartie = GButton(self.canevasLobby, text="Lancer la partie",command=self.envoiCommandeLancer,color=0)
+            self.boutLancerPartie = GButton(self.window.canvas, text="Lancer la partie",
+                                            command=lambda: self.controller.catchMenuEvent(TitleEvent.LANCER_PARTIE_MULTIJOUEUR))
             #scale "vitesse"
-            self.scaleVitesse = Scale(self.canevasLobby,orient=HORIZONTAL,length=250,
-                              from_=1, to=10,tickinterval=1, resolution=1,
-                              sliderlength=10,troughcolor="#B45F04",fg="#B45F04",
-                              width=10,bd=0,showvalue=0,bg="#D3BF8F")
-        self.draw()
-        
+            self.scaleVitesse = Scale(self.window.canvas, orient=HORIZONTAL, length=250,
+                                      from_=1, to=10, tickinterval=1, resolution=1,
+                                      sliderlength=10, troughcolor="#B45F04", fg="#B45F04",
+                                      width=10, bd=0, showvalue=0, bg="#D3BF8F")
+
     def envoiCommandeLancer(self):
         print("envoie")
         cmd = Command(self.vue.eventListener.controller.network.client.id, Command.START_LOADING)
-        #cmd.addData('ID', 'MOI')
+        # cmd.addData('ID', 'MOI')
         self.vue.eventListener.controller.sendCommand(cmd)
 
     def draw(self):
-        x = self.initX
-        y = self.initY
-        
-        self.frameLobby.draw(x+0, y+0)
-        self.canevasLobby.create_text(x+200, y+30, anchor='n',text="Joueurs",fill="#B45F04",font="Arial 22")
-        #couleur = Color()
-        
+        x = self.x
+        y = self.y
+
+        self.frameLobby.draw(x + 0, y + 0)
+        self.window.canvas.create_text(x + 200, y + 30, anchor='n', text="Joueurs", fill="#B45F04", font="Arial 22",
+                                       tags='lobby')
+        # couleur = Color()
+
         # fond pour les joueurs
-        self.canevasLobby.create_rectangle(x+30,y+75,x+400,y+350, fill="#E1F5A9")
-        
-        self.boutPret.draw(x+30,y+370)
-        self.boutQuitServ.draw(x+30,y+475)
-        if self.vue.siServeur == True:
-            self.boutLancerPartie.draw(x+570,y+475)
-            #self.canevasLobby.create_text(x+600, y+50, anchor='n',text="Vitesse du jeu",fill="#B45F04",font="Arial 20")
+        self.window.canvas.create_rectangle(x + 30, y + 75, x + 400, y + 350, fill="#E1F5A9", tags='lobby')
+
+        self.boutPret.draw(x + 30, y + 370)
+        self.boutQuitServ.draw(x + 30, y + 475)
+        if self.siServeur:
+            self.boutLancerPartie.draw(x + 570, y + 475)
+            # self.canevasLobby.create_text(x+600, y+50, anchor='n',text="Vitesse du jeu",fill="#B45F04",font="Arial 20")
             #self.scaleVitesse.place(x=x+470, y=y+80)
-        self.afficheClients()
-        
-    def afficheClients(self):
-        x = self.initX
-        y = self.initY
-        self.canevasLobby.delete("lobby")
-        self.clients = self.vue.eventListener.controller.network.client.host.getClients()
+
+    def update(self, dictClients):
+        x = self.x
+        y = self.y
+        self.window.canvas.delete("lobby")
+        self.clients = dictClients
         nb = len(self.clients)
         # afficher l'information des joueurs
         ligne = 1
         for i in range(nb):
             # ID de client
-            self.canevasLobby.create_text(x+35, y+50+30*ligne, anchor='nw',text=self.clients[i]["name"],fill="#B45F04",font="Arial 14",tag="lobby")
+            self.window.canvas.create_text(x + 35, y + 50 + 30 * ligne, anchor='nw', text=self.clients[i]["name"],
+                                          fill="#B45F04", font="Arial 14", tag="lobby")
             # couleur de client
-            self.canevasLobby.create_rectangle(x+345,y+55+30*ligne,x+395,y+75+30*ligne, fill=self.couleurs[self.clients[i]["civId"]-1],tag="lobby")
-            ligne+=1
+            self.window.canvas.create_rectangle(x + 345, y + 55 + 30 * ligne, x + 395, y + 75 + 30 * ligne,
+                                               fill=self.couleurs[self.clients[i]["civId"] - 1], tag="lobby")
+            ligne += 1
 
-        self.vue.after(1, self.afficheClients)
+
+    def destroy(self):
+        self.boutLancerPartie.destroy()
+        self.boutPret.destroy()
+        self.boutQuitServ.destroy()
+        self.window.canvas.delete('lobby')
+
+
+
 
 class MenuSolo:
-    def __init__(self,vue):
-        self.vue = vue
+    """ Menu permettant de lancer une partie en Solo
+    """
+    def __init__(self, window, controller):
+        self.window = window
+        self.controller = controller
         # position du depart pour draw
-        self.initX = 524
-        self.initY = 50
-        self.canevasSolo = Canvas(self.vue.root, width=self.vue.width, height=self.vue.height)
-        self.vue.changeCanevas(self.canevasSolo)
-        self.frameSolo = GFrame(self.canevasSolo, width=450, height=500)
+        self.x = 524
+        self.y = 50
+        self.frameSolo = GFrame(self.window.canvas, width=450, height=500)
         # AI - 1
         self.varDif1 = IntVar()
-        self.rBoutDiff1_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif1, value=0, bg="#D3BF8F")
-        self.rBoutDiff1_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif1, value=1, bg="#D3BF8F")
-        self.rBoutDiff1_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif1, value=2, bg="#D3BF8F")
-        self.rBoutDiff1_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif1, value=3, bg="#D3BF8F")
+        self.rBoutDiff1_0 = Radiobutton(self.window.canvas, anchor='n', variable=self.varDif1, value=0, bg="#D3BF8F")
+        self.rBoutDiff1_1 = Radiobutton(self.window.canvas, anchor='n', variable=self.varDif1, value=1, bg="#D3BF8F")
+        self.rBoutDiff1_2 = Radiobutton(self.window.canvas, anchor='n', variable=self.varDif1, value=2, bg="#D3BF8F")
+        self.rBoutDiff1_3 = Radiobutton(self.window.canvas, anchor='n', variable=self.varDif1, value=3, bg="#D3BF8F")
         self.rBoutDiff1_1.select()
-        # AI - 2
-        self.varDif2 = IntVar()
-        self.rBoutDiff2_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif2, value=0, bg="#D3BF8F")
-        self.rBoutDiff2_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif2, value=1, bg="#D3BF8F")
-        self.rBoutDiff2_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif2, value=2, bg="#D3BF8F")
-        self.rBoutDiff2_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif2, value=3, bg="#D3BF8F")
-        self.rBoutDiff2_0.select()
-        # AI - 3
-        self.varDif3 = IntVar()
-        self.rBoutDiff3_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif3, value=0, bg="#D3BF8F")
-        self.rBoutDiff3_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif3, value=1, bg="#D3BF8F")
-        self.rBoutDiff3_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif3, value=2, bg="#D3BF8F")
-        self.rBoutDiff3_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif3, value=3, bg="#D3BF8F")
-        self.rBoutDiff3_0.select()
-        # AI - 4
-        self.varDif4 = IntVar()
-        self.rBoutDiff4_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif4, value=0, bg="#D3BF8F")
-        self.rBoutDiff4_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif4, value=1, bg="#D3BF8F")
-        self.rBoutDiff4_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif4, value=2, bg="#D3BF8F")
-        self.rBoutDiff4_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif4, value=3, bg="#D3BF8F")
-        self.rBoutDiff4_0.select()
-        # AI - 5
-        self.varDif5 = IntVar()
-        self.rBoutDiff5_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif5, value=0, bg="#D3BF8F")
-        self.rBoutDiff5_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif5, value=1, bg="#D3BF8F")
-        self.rBoutDiff5_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif5, value=2, bg="#D3BF8F")
-        self.rBoutDiff5_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif5, value=3, bg="#D3BF8F")
-        self.rBoutDiff5_0.select()
-        # AI - 6
-        self.varDif6 = IntVar()
-        self.rBoutDiff6_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif6, value=0, bg="#D3BF8F")
-        self.rBoutDiff6_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif6, value=1, bg="#D3BF8F")
-        self.rBoutDiff6_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif6, value=2, bg="#D3BF8F")
-        self.rBoutDiff6_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif6, value=3, bg="#D3BF8F")
-        self.rBoutDiff6_0.select()
-        # AI - 7
-        self.varDif7 = IntVar()
-        self.rBoutDiff7_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif7, value=0, bg="#D3BF8F")
-        self.rBoutDiff7_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif7, value=1, bg="#D3BF8F")
-        self.rBoutDiff7_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif7, value=2, bg="#D3BF8F")
-        self.rBoutDiff7_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif7, value=3, bg="#D3BF8F")
-        self.rBoutDiff7_0.select()
-        # AI - 8
-        self.varDif8 = IntVar()
-        self.rBoutDiff8_0 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif8, value=0, bg="#D3BF8F")
-        self.rBoutDiff8_1 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif8, value=1, bg="#D3BF8F")
-        self.rBoutDiff8_2 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif8, value=2, bg="#D3BF8F")
-        self.rBoutDiff8_3 = Radiobutton(self.canevasSolo, anchor='n', variable=self.varDif8, value=3, bg="#D3BF8F")
-        self.rBoutDiff8_0.select()
-        #scale "vitesse"
-        self.scaleVitesse = Scale(self.canevasSolo,orient=HORIZONTAL,length=250,
-                          from_=1, to=10,tickinterval=1, resolution=1,
-                          sliderlength=10,troughcolor="#B45F04",fg="#B45F04",
-                          width=10,bd=0,showvalue=0,bg="#D3BF8F")
-        
-        self.boutAccept = GButton(self.canevasSolo, text="Lancer la partie",command=self.vue.debutJeu,color=0)
-        #bouton "retour"
-        self.boutRetour = GButton(self.canevasSolo, text="Retour",command=self.vue.afficheMenuInit,color=0)
-        self.draw(self.initX,self.initY)
-        
-        self.vue.eventListener.controller.startServeur()
 
-    def draw(self,x,y):
-        self.frameSolo.draw(x+0, y+0)
-        self.canevasSolo.create_text(x+420, y+20, anchor='ne',text="Solo",fill="#B45F04",font="Arial 40")
-        self.canevasSolo.create_text(x+100, y+30, anchor='nw',text="Ennemis",fill="#B45F04",font="Arial 20")
-        self.canevasSolo.create_text(x+50, y+60, anchor='n',text="Non",fill="#B45F04",font="Arial 14")
-        self.canevasSolo.create_text(x+110, y+60, anchor='n',text="Facile",fill="#B45F04",font="Arial 14")
-        self.canevasSolo.create_text(x+180, y+60, anchor='n',text="Moyen",fill="#B45F04",font="Arial 14")
-        self.canevasSolo.create_text(x+250, y+60, anchor='n',text="Difficile",fill="#B45F04",font="Arial 14")
+
+        # scale "vitesse"
+        self.scaleVitesse = Scale(self.window.canvas, orient=HORIZONTAL, length=250,
+                                  from_=1, to=10, tickinterval=1, resolution=1,
+                                  sliderlength=10, troughcolor="#B45F04", fg="#B45F04",
+                                  width=10, bd=0, showvalue=0, bg="#D3BF8F")
+
+        self.boutAccept = GButton(self.window.canvas, text="Lancer la partie", command=lambda: self.controller.catchMenuEvent(TitleEvent.LANCER_PARTIE_SOLO), color=0)
+        # bouton "retour"
+        self.boutRetour = GButton(self.window.canvas, text="Retour", command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_PRINCIPAL), color=0)
+
+
+        #TODO Vérifier
+        #self.vue.eventListener.controller.startServeur()
+
+    def draw(self):
+        self.frameSolo.draw(self.x + 0, self.y + 0)
+        self.window.canvas.create_text(self.x + 420, self.y + 20, anchor='ne', text="Solo", fill="#B45F04", font="Arial 40", tags='menuSolo')
+        self.window.canvas.create_text(self.x + 100, self.y + 30, anchor='nw', text="Ennemis", fill="#B45F04", font="Arial 20", tags='menuSolo')
+        self.window.canvas.create_text(self.x + 50, self.y + 60, anchor='n', text="Non", fill="#B45F04", font="Arial 14", tags='menuSolo')
+        self.window.canvas.create_text(self.x + 110, self.y + 60, anchor='n', text="Facile", fill="#B45F04", font="Arial 14", tags='menuSolo')
+        self.window.canvas.create_text(self.x + 180, self.y + 60, anchor='n', text="Moyen", fill="#B45F04", font="Arial 14", tags='menuSolo')
+        self.window.canvas.create_text(self.x + 250, self.y + 60, anchor='n', text="Difficile", fill="#B45F04", font="Arial 14", tags='menuSolo')
+
+
         # AI - 1
-        self.canevasSolo.create_text(x+30, y+85, anchor='n',text="1.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff1_0.place(x=x+50, y=y+85)
-        self.rBoutDiff1_1.place(x=x+110, y=y+85)
-        self.rBoutDiff1_2.place(x=x+180, y=y+85)
-        self.rBoutDiff1_3.place(x=x+250, y=y+85)
-        # AI - 2
-        self.canevasSolo.create_text(x+30, y+110, anchor='n',text="2.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff2_0.place(x=x+50, y=y+110)
-        self.rBoutDiff2_1.place(x=x+110, y=y+110)
-        self.rBoutDiff2_2.place(x=x+180, y=y+110)
-        self.rBoutDiff2_3.place(x=x+250, y=y+110)
-        # AI - 3
-        self.canevasSolo.create_text(x+30, y+135, anchor='n',text="3.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff3_0.place(x=x+50, y=y+135)
-        self.rBoutDiff3_1.place(x=x+110, y=y+135)
-        self.rBoutDiff3_2.place(x=x+180, y=y+135)
-        self.rBoutDiff3_3.place(x=x+250, y=y+135)
-        # AI - 4
-        self.canevasSolo.create_text(x+30, y+160, anchor='n',text="4.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff4_0.place(x=x+50, y=y+160)
-        self.rBoutDiff4_1.place(x=x+110, y=y+160)
-        self.rBoutDiff4_2.place(x=x+180, y=y+160)
-        self.rBoutDiff4_3.place(x=x+250, y=y+160)
-        # AI - 5
-        self.canevasSolo.create_text(x+30, y+185, anchor='n',text="5.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff5_0.place(x=x+50, y=y+185)
-        self.rBoutDiff5_1.place(x=x+110, y=y+185)
-        self.rBoutDiff5_2.place(x=x+180, y=y+185)
-        self.rBoutDiff5_3.place(x=x+250, y=y+185)
-        # AI - 6
-        self.canevasSolo.create_text(x+30, y+210, anchor='n',text="6.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff6_0.place(x=x+50, y=y+210)
-        self.rBoutDiff6_1.place(x=x+110, y=y+210)
-        self.rBoutDiff6_2.place(x=x+180, y=y+210)
-        self.rBoutDiff6_3.place(x=x+250, y=y+210)
-        # AI - 7
-        self.canevasSolo.create_text(x+30, y+235, anchor='n',text="7.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff7_0.place(x=x+50, y=y+235)
-        self.rBoutDiff7_1.place(x=x+110, y=y+235)
-        self.rBoutDiff7_2.place(x=x+180, y=y+235)
-        self.rBoutDiff7_3.place(x=x+250, y=y+235)
-        # AI - 8
-        self.canevasSolo.create_text(x+30, y+260, anchor='n',text="8.",fill="#B45F04",font="Arial 14")
-        self.rBoutDiff8_0.place(x=x+50, y=y+260)
-        self.rBoutDiff8_1.place(x=x+110, y=y+260)
-        self.rBoutDiff8_2.place(x=x+180, y=y+260)
-        self.rBoutDiff8_3.place(x=x+250, y=y+260)
+        self.window.canvas.create_text(self.x + 30, self.y + 85, anchor='n', text="1.", fill="#B45F04", font="Arial 14", tags='menuSolo')
+        self.window.canvas.create_window(self.x + 50, self.y + 85, anchor=NW, window=self.rBoutDiff1_0, tags='menuSolo')
+        self.window.canvas.create_window(self.x + 110, self.y + 85, anchor=NW, window=self.rBoutDiff1_1, tags='menuSolo')
+        self.window.canvas.create_window(self.x + 180, self.y + 85, anchor=NW, window=self.rBoutDiff1_2, tags='menuSolo')
+        self.window.canvas.create_window(self.x + 250, self.y + 85, anchor=NW, window=self.rBoutDiff1_3, tags='menuSolo')
+
+
+
+
         # couleurs - à changer pour avoir le choix
-        self.canevasSolo.create_rectangle(x+300,y+85,x+350,y+105, fill="#DF0101")  # ROUGE
-        self.canevasSolo.create_rectangle(x+300,y+110,x+350,y+130, fill="#2E2EFE") # BLEU
-        self.canevasSolo.create_rectangle(x+300,y+135,x+350,y+155, fill="#01DF01") # VERT
-        self.canevasSolo.create_rectangle(x+300,y+160,x+350,y+180, fill="#DF01D7") # MAUVE
-        self.canevasSolo.create_rectangle(x+300,y+185,x+350,y+205, fill="#FF8000") # ORANGE
-        self.canevasSolo.create_rectangle(x+300,y+210,x+350,y+230, fill="#FA58F4") # ROSE
-        self.canevasSolo.create_rectangle(x+300,y+235,x+350,y+255, fill="#000000") # NOIR
-        self.canevasSolo.create_rectangle(x+300,y+260,x+350,y+280, fill="#FFFFFF") # BLANC
-        self.canevasSolo.create_text(x+150, y+300, anchor='n',text="Vitesse du jeu",fill="#B45F04",font="Arial 14")
-        self.scaleVitesse.place(x=x+30, y=y+320)
-        self.boutAccept.draw(x+230,y+425)
-        self.boutRetour.draw(x+30,y+425)
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 85, self.x + 350, self.y + 105, fill="#DF0101", tags='menuSolo')  # ROUGE
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 110, self.x + 350, self.y + 130, fill="#2E2EFE", tags='menuSolo')  # BLEU
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 135, self.x + 350, self.y + 155, fill="#01DF01", tags='menuSolo')  # VERT
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 160, self.x + 350, self.y + 180, fill="#DF01D7", tags='menuSolo')  # MAUVE
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 185, self.x + 350, self.y + 205, fill="#FF8000", tags='menuSolo')  # ORANGE
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 210, self.x + 350, self.y + 230, fill="#FA58F4", tags='menuSolo')  # ROSE
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 235, self.x + 350, self.y + 255, fill="#000000", tags='menuSolo')  # NOIR
+        self.window.canvas.create_rectangle(self.x + 300, self.y + 260, self.x + 350, self.y + 280, fill="#FFFFFF", tags='menuSolo')  # BLANC
+        self.window.canvas.create_text(self.x + 150, self.y + 300, anchor='n', text="Vitesse du jeu", fill="#B45F04",
+                                       font="Arial 14", tags='menuSolo')
+        self.window.canvas.create_window(self.x + 30, self.y + 320, anchor=NW, window=self.scaleVitesse, tags='menuSolo')
+
+
+
+        self.boutAccept.draw(self.x + 230, self.y + 425)
+        self.boutRetour.draw(self.x + 30, self.y + 425)
+
+
+    def destroy(self):
+        self.frameSolo.destroy()
+        self.boutAccept.destroy()
+        self.boutRetour.destroy()
+        self.window.canvas.delete('menuSolo')
