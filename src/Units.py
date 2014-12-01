@@ -1136,7 +1136,9 @@ class GuerrierEpee(Soldat):
             Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
             Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 class GuerrierLance(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
@@ -1164,7 +1166,9 @@ class GuerrierLance(Soldat):
             Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
             Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 class GuerrierBouclier(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
@@ -1192,7 +1196,8 @@ class GuerrierBouclier(Soldat):
             Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
             Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 class Scout(Soldat):
     def __init__(self, clientId, x, y, model, civilisation):
@@ -1220,7 +1225,9 @@ class Scout(Soldat):
             Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
             Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
         }
-        return GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 class Noeud:
     def __init__(self, parent, x, y, cibleX, cibleY):
