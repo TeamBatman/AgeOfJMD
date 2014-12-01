@@ -453,6 +453,8 @@ class Unit():
                 if buildingDetected.peutEtreOccupe:
                     self.inBuilding = True
                     buildingDetected.unitInBuilding.append(self)
+                    if len(buildingDetected.unitInBuilding) <= 1: #Il n'y avait pas d'unité avant
+                    	buildingDetected.tempsProduction = time.time()
             
         return -1
 

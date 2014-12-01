@@ -313,13 +313,11 @@ class Base(Batiment):
 
     def creer1(self):  # création des paysans
         if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-            print("in creation 1", self.paysanAFaire)
+            print("in creation 1", self.paysanAFaire, self.coutCreer1['bois'])
             self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
-            #self.joueur.ressources['bois'] -= self.coutCreer1['bois']
             self.paysanAFaire += 1
             civ = self.getClientId()
-            if self.joueur.civilisation == civ:
-                self.joueur.model.controller.view.frameBottom.updateResources(self.joueur)
+            
             if not self.enCreation:
                 self.tempsDepartCreation = time.time()
                 self.enCreation = True
@@ -617,9 +615,7 @@ class Ferme(Batiment):
         if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
                 self.joueur.ajouterRessource('nourriture',self.production * len(self.unitInBuilding) )
-                #self.joueur.ressources['nourriture'] += self.production * len(self.unitInBuilding)
                 civ = self.getClientId()
-                self.joueur.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.joueur.model.joueurs[civ])
                 self.tempsProduction = time.time()
 
     def sortir(self):
