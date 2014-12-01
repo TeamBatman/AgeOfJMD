@@ -740,8 +740,19 @@ class GameView():
         self.height = self.window.height
         self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
 
+
+        self.width = 1024
+        self.height = 768
+        self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
+
+
+        # ZONE DE DESSIN
+        self.canvas = self.window.canvas
+
+
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
+
 
         # LE HUD
         self.drawHUD()

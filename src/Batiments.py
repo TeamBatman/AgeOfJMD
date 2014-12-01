@@ -9,8 +9,8 @@ from GraphicsManagement import GraphicsManager
 # TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
 # TODO L'hopital ne fait rien avec le healing
 # TODO le FOW pour la tour de guet
-from Units import Unit
-from Units import Noeud
+
+from Units import *
 from Civilisations import Civilisation
 
 
@@ -23,7 +23,8 @@ class Batiment:
     HOPITAL = 3
     TOUR_GUET = 4
     LIEU_CULTE = 5
-
+    SCIERIE = 6
+    FONDERIE = 7
 
     def __init__(self, parent, bid, posX, posY):
         self.posX = posX
@@ -43,11 +44,11 @@ class Batiment:
         self.enCreation = False  # booléen pour empecher de recommencer la fonction de création si l'on est déjà en création
         self.tempsDepartRecherche = 0
         self.tempsDepartCreation = 0
-        self.coutRecherche1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutRecherche2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0}
-        self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0}
+        self.coutRecherche1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutRecherche2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.determineImage()
 
     def getClientId(self):
@@ -125,9 +126,9 @@ class Batiment:
 
 
 class Eglise(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
-        self.type = "eglise"
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
+        self.type = Batiment.LIEU_CULTE
         self.tempsDerniereFete = 0
         self.coutRecherche1['bois'] = 50
 
@@ -135,7 +136,7 @@ class Eglise(Batiment):
     def recherche1(self):  # Boost Moral
         if self.joueur.epoque == 2:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche1:
+                if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                     if time.time() - self.tempsDerniereFete >= 60:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
@@ -146,7 +147,7 @@ class Eglise(Batiment):
                 self.tempsDerniereFete = time.time()
         else:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche1:
+                if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                     if time.time() - self.tempsDerniereFete >= 60:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
@@ -160,11 +161,10 @@ class Eglise(Batiment):
         if self.enRecherche:
             self.recherche1()
 
-
 class TourDeGuet(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
-        self.type = "tour"
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
+        self.type = Batiment.TOUR_GUET
         self.coutRecherche1['bois'] = 50
 
     def recherche1(self):  # Meilleure vue du Fog of war
@@ -175,12 +175,12 @@ class TourDeGuet(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
-                    # TODO Decouverir comment le FOW fonctionnera
+                    #TODO Decouverir comment le FOW fonctionnera
                     self.enRecherche = False
                     self.joueur.recherche.append("Tour1")
 
@@ -190,12 +190,12 @@ class TourDeGuet(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
                 elif time.time() - self.tempsDepartRecherche <= 60:
-                    # TODO Decouverir comment le FOW fonctionnera
+                    #TODO Decouverir comment le FOW fonctionnera
                     self.enRecherche = False
                     self.joueur.recherche.append("Tour2")
 
@@ -207,16 +207,16 @@ class TourDeGuet(Batiment):
 
 
 class Hopital(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
-        self.type = "hopital"
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
+        self.type = Batiment.HOPITAL
         self.peutEtreOccupe = True
         self.vitesseDeCreation = 30
         self.coutRecherche1['bois'] = 50
 
     def healing(self, unite):
         # TODO decouvrir comment le healing va se faire
-        # TODO ajouter le temps de recherche
+        #TODO ajouter le temps de recherche
         pass
 
     def recherche1(self):  # Amélioration du healing
@@ -226,14 +226,14 @@ class Hopital(Batiment):
                 self.rechercheCompletee = True
         if self.rechercheCompletee == False:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche1:
+                if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                     self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                     self.enRecherche = True
                     self.tempsDepartRecherche = time.time()
             elif time.time() - self.tempsDepartRecherche <= 60:
                 self.enRecherche = False
                 self.joueur.recherche.append("Hopital")
-                # TODO decouvrir comment la regeneration va se faire
+                #TODO decouvrir comment la regeneration va se faire
 
     def miseAJour(self):
         if self.enRecherche:
@@ -243,7 +243,7 @@ class Hopital(Batiment):
 class Base(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.type = "base"
+        self.type = Batiment.BASE
         self.determineImage()
         self.vitesseDeCreation = 3
         self.coutRecherche1['bois'] = 50
@@ -253,7 +253,7 @@ class Base(Batiment):
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
         self.joueur.base = Noeud(None, cases[0], cases[1], None, None)
-
+        self.typeRecherche = ""
 
     def determineImage(self):
         #self.image = GraphicsManager.getPhotoImage('Graphics/Buildings/Age_I/Base.png')
@@ -286,10 +286,14 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        if not self.enCreation:
-            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-                print("in creation 1")
-                self.joueur.ressources['bois'] -= self.coutCreer1['bois']
+        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
+            print("in creation 1", self.paysanAFaire, self.coutCreer1['bois'])
+            self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
+            self.paysanAFaire += 1
+            civ = self.getClientId()
+            
+            if not self.enCreation:
+                self.tempsDepartCreation = time.time()
                 self.enCreation = True
                 self.tempsDepartCreation = time.time()
 
@@ -301,6 +305,7 @@ class Base(Batiment):
             cmd.addData('X', posUnitX)
             cmd.addData('Y', posUnitY)
             cmd.addData('CIV', self.joueur.civilisation)
+            cmd.addData('CLASSE', "paysan")
             self.joueur.model.controller.sendCommand(cmd)
             self.enCreation = False
 
@@ -313,10 +318,11 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if not self.rechercheCompletee:
                 if not self.enRecherche:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche <= 60:
                     self.enRecherche = False
                     self.vitesseDeCreation *= 0.9
@@ -329,10 +335,11 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if not self.rechercheCompletee:
                 if not self.enRecherche:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
                     self.vitesseDeCreation *= 0.9
@@ -345,10 +352,11 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if not self.rechercheCompletee:
                 if not self.enRecherche:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 1
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.rechercheCompletee = False
                     self.enRecherche = False
@@ -363,25 +371,30 @@ class Base(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche2:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche2['bois']:
+                        print("départ changement d'époque")
                         self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
-                elif time.time() - self.tempsDepartRecherche >= 60:
+                        self.typeRecherche = 2
+                #TODO ne pas oublier de changer le temps pour changer d'époque
+                elif time.time() - self.tempsDepartRecherche >= 0: #60:
                     self.enRecherche = False
                     self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 2")
+                    print("époque changée")
         elif self.joueur.epoque == 2:
             for recherche in self.joueur.recherche:
                 if recherche == "Époque 3":
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche2:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche2['bois'] and self.joueur.ressources['minerai'] >= self.coutRecherche2['minerai']:
                         self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
                         self.joueur.ressources['minerai'] -= self.coutRecherche2['minerai']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = 2
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
                     self.joueur.epoque = 2
@@ -392,156 +405,181 @@ class Base(Batiment):
             print("wassup")
             self.creer1()
         if self.enRecherche:
-            self.recherche1()
+           if self.typeRecherche == 1:
+               self.recherche1()
+           else:
+               self.recherche2()
+
 
 
 class Baraque(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
-        self.type = "baraque"
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
+        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Bawefse.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)
+        self.type = Batiment.BARAQUE
         self.vitesseDeCreation = 40
         self.typeCreation = ""
         self.typeRecherche = ""
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
-        self.coutCreer1['bois'] = 50
-        self.coutCreer2['bois'] = 50
-        self.coutCreer3['bois'] = 50
+        self.coutCreer1['nourriture'] = 50
+        self.coutCreer2['nourriture'] = 50
+        self.coutCreer3['nourriture'] = 50
 
 
-0
+
+    def creer1(self):  # création de soldats avec épée
+        if self.enCreation == False:
+            if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
+                self.enCreation = True
+                self.typeCreation = "Epee"
+                self.tempsDepartCreation = time.time()
+        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            cmd.addData('CLASSE', "soldatEpee")
+            self.joueur.model.controller.sendCommand(cmd)
+            self.enCreation = False
 
 
-def creer1(self):  # création de soldats avec épée
-    if self.enCreation == False:
-        if self.parent.ressources >= self.coutCreer1:
-            self.parent.ressources['bois'] -= self.coutCreer1['bois']
-            self.enCreation = True
-            self.typeCreation = "Epee"
-            self.tempsDepartCreation = time.time()
-    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-        self.parent.unites.add(SoldatEpee(self.posX + 4, self.posY + 4, self.parent))
-        self.enCreation = False
+    def creer2(self):  # création de soldats avec lances
+        if self.enCreation == False:
+            if self.joueur.ressources['nourriture'] >= self.coutCreer2['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer2['nourriture']
+                self.enCreation = True
+                self.typeCreation = "Lance"
+                self.tempsDepartCreation = time.time()
+        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            cmd.addData('CLASSE', "soldatLance")
+            self.joueur.model.controller.sendCommand(cmd)
+            self.enCreation = False
 
 
-def creer2(self):  # création de soldats avec lances
-    if self.enCreation == False:
-        if self.parent.ressources >= self.coutCreer2:
-            self.parent.ressources['bois'] -= self.coutCreer2['bois']
-            self.enCreation = True
-            self.typeCreation = "Lance"
-            self.tempsDepartCreation = time.time()
-    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-        self.parent.unites.add(SoldatLance(self.posX + 4, self.posY + 4, self.parent))
-        self.enCreation = False
+    def creer3(self):  # création de soldats avec boucliers
+        if self.enCreation == False:
+            if self.joueur.ressources['nourriture'] >= self.coutCreer3['nourriture']:
+                self.joueur.ressources['nourriture'] -= self.coutCreer3['nourriture']
+                self.enCreation = True
+                self.typeCreation = "Bouclier"
+                self.tempsDepartCreation = time.time()
+        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            cmd.addData('CLASSE', "soldatBouclier")
+            self.joueur.model.controller.sendCommand(cmd)
+            self.enCreation = False
 
 
-def creer3(self):  # création de soldats avec boucliers
-    if self.enCreation == False:
-        if self.parent.ressources >= self.coutCreer3:
-            self.parent.ressources['bois'] -= self.coutCreer3['bois']
-            self.enCreation = True
-            self.typeCreation = "Bouclier"
-            self.tempsDepartCreation = time.time()
-    elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
-        self.parent.unites.add(SoldatBouclier(self.posX + 4, self.posY + 4, self.parent))
-        self.enCreation = False
+    def recherche1(self):  # meilleure attaque
+        self.rechercheCompletee = False
+        if self.joueur.epoque == 2:
+            for recherche in self.joueur.recherche:
+                if recherche == "Soldat Attaque 1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
+                if self.enRecherche == False:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
+                        self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
+                        self.enRecherche = True
+                        self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = "Attaque"
 
+                elif time.time() - self.tempsDepartRecherche >= 60:
+                    self.enRecherche = False
+                    for unite in self.joueur.units:
+                        if isinstance(unite, Soldat):
+                            unite.attaque = unite.attaque * 1.1
+                    self.rechercheCompletee = False
+                    self.joueur.recherche.append("Soldat Attaque 1")
 
-def recherche1(self):  # meilleure attaque
-    self.rechercheCompletee = False
-    if self.parent.epoque == 2:
-        for recherche in self.parent.recherche:
-            if recherche == "Soldat Attaque 1":
-                self.rechercheCompletee = True
-        if self.rechercheCompletee == False:
-            if self.enRecherche == False:
-                if self.parent.ressources >= self.coutRecherche1:
-                    self.parent.ressources['bois'] -= self.coutRecherche1['bois']
-                    self.enRecherche = True
-                    self.tempsDepartRecherche = time.time()
-                    self.typeRecherche = "Attaque"
+        else:
+            for recherche in self.joueur.recherche:
+                if recherche == "Soldat Attaque 2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
+                if self.enRecherche == False:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
+                        self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
+                        self.enRecherche = True
+                        self.tempsDepartRecherche = time.time()
+                        self.typeRecherche = "Attaque"
 
             elif time.time() - self.tempsDepartRecherche >= 60:
                 self.enRecherche = False
-                for unite in self.parent.units:
+                for unite in self.joueur.units:
                     if isinstance(unite, Soldat):
                         unite.attaque = unite.attaque * 1.1
                 self.rechercheCompletee = False
-                self.parent.recherche.append("Soldat Attaque 1")
-
-    else:
-        for recherche in self.parent.recherche:
-            if recherche == "Soldat Attaque 2":
-                self.rechercheCompletee = True
-        if self.rechercheCompletee == False:
-            if self.enRecherche == False:
-                if self.parent.ressources >= self.coutRecherche1:
-                    self.parent.ressources['bois'] -= self.coutRecherche1['bois']
-                    self.enRecherche = True
-                    self.tempsDepartRecherche = time.time()
-                    self.typeRecherche = "Attaque"
-
-        elif time.time() - self.tempsDepartRecherche >= 60:
-            self.enRecherche = False
-            for unite in self.parent.units:
-                if isinstance(unite, Soldat):
-                    unite.attaque = unite.attaque * 1.1
-            self.rechercheCompletee = False
-            self.parent.recherche.append("Soldat Attaque 2")
+                self.joueur.recherche.append("Soldat Attaque 2")
 
 
-def recherche2(self):  # meilleure vitesse de création
-    self.rechercheCompletee = False
-    if self.parent.epoque == 2:
-        for recherche in self.parent.recherche:
-            if recherche == "Soldat Vitesse 1":
-                self.rechercheCompletee = True
-        if self.rechercheCompletee == False:
-            if self.enRecherche == False:
-                if self.parent.ressources >= self.coutRecherche2:
-                    self.parent.ressources['bois'] -= self.coutRecherche2['bois']
-                    self.enRecherche = True
-                    self.typeRecherche = "Vitesse"
-                    self.tempsDepartRecherche = time.time()
-            elif time.time() - self.tempsDepartRecherche >= 60:
-                self.vitesseDeCreation = self.vitesseDeCreation * 0.9
-                self.rechercheCompletee = False
-                self.parent.recherche.append("Soldat Vitesse 1")
-                self.enRecherche = False
+    def recherche2(self):  # meilleure vitesse de création
+        self.rechercheCompletee = False
+        if self.joueur.epoque == 2:
+            for recherche in self.joueur.recherche:
+                if recherche == "Soldat Vitesse 1":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
+                if self.enRecherche == False:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche2['bois']:
+                        self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
+                        self.enRecherche = True
+                        self.typeRecherche = "Vitesse"
+                        self.tempsDepartRecherche = time.time()
+                elif time.time() - self.tempsDepartRecherche >= 60:
+                    self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                    self.rechercheCompletee = False
+                    self.joueur.recherche.append("Soldat Vitesse 1")
+                    self.enRecherche = False
 
-    else:
-        for recherche in self.parent.recherche:
-            if recherche == "Soldat Vitesse 2":
-                self.rechercheCompletee = True
-        if self.rechercheCompletee == False:
-            if self.enRecherche == False:
-                if self.parent.ressources >= self.coutRecherche2:
-                    self.parent.ressources['bois'] -= self.coutRecherche2['bois']
-                    self.enRecherche = True
-                    self.typeRecherche = "Vitesse"
-                    self.tempsDepartRecherche = time.time()
-            elif time.time() - self.tempsDepartRecherche >= 60:
-                self.vitesseDeCreation = self.vitesseDeCreation * 0.9
-                self.rechercheCompletee = False
-                self.enRecherche = False
-                self.parent.recherche.append("Soldat Vitesse 2")
-
-
-def miseAJour(self):
-    if self.enCreation:
-        if self.typeCreation == "Epee":
-            self.creer1()
-        elif self.typeCreation == "Lance":
-            self.creer2()
         else:
-            self.creer3()
-    if self.enRecherche:
-        if self.typeRecherche == "Attaque":
-            self.recherche1()
-        else:
-            recherche2()
+            for recherche in self.joueur.recherche:
+                if recherche == "Soldat Vitesse 2":
+                    self.rechercheCompletee = True
+            if self.rechercheCompletee == False:
+                if self.enRecherche == False:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche2['bois']:
+                        self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
+                        self.enRecherche = True
+                        self.typeRecherche = "Vitesse"
+                        self.tempsDepartRecherche = time.time()
+                elif time.time() - self.tempsDepartRecherche >= 60:
+                    self.vitesseDeCreation = self.vitesseDeCreation * 0.9
+                    self.rechercheCompletee = False
+                    self.enRecherche = False
+                    self.joueur.recherche.append("Soldat Vitesse 2")
 
+
+    def miseAJour(self):
+        if self.enCreation:
+            if self.typeCreation == "Epee":
+                self.creer1()
+            elif self.typeCreation == "Lance":
+                self.creer2()
+            else:
+                self.creer3()
+        if self.enRecherche:
+            if self.typeRecherche == "Attaque":
+                self.recherche1()
+            else:
+                self.recherche2()
 
 class Ferme(Batiment):
     def __init__(self, parent, bid, posX, posY):
@@ -581,7 +619,8 @@ class Ferme(Batiment):
         # TODO a se renseigner sur les valeurs pour la production
         if self.estOccupe:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.nourriture += self.production
+                self.joueur.ajouterRessource('nourriture',self.production * len(self.unitInBuilding) )
+                civ = self.getClientId()
                 self.tempsProduction = time.time()
 
 
@@ -643,12 +682,13 @@ class Ferme(Batiment):
 
 
 class Scierie(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
+        self.type = Batiment.SCIERIE
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
@@ -665,7 +705,7 @@ class Scierie(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
@@ -681,7 +721,7 @@ class Scierie(Batiment):
                     self.rechercheCompletee = True
             if self.rechercheCompletee == False:
                 if self.enRecherche == False:
-                    if self.joueur.ressources >= self.coutRecherche1:
+                    if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                         self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                         self.enRecherche = True
                         self.tempsDepartRecherche = time.time()
@@ -699,12 +739,13 @@ class Scierie(Batiment):
 
 
 class Fonderie(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
         self.peutEtreOccupe = True
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
+        self.type = Batiment.FONDERIE
 
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
@@ -720,7 +761,7 @@ class Fonderie(Batiment):
                 self.rechercheCompletee = True
         if self.rechercheCompletee == False:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche1:
+                if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                     self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                     self.enRecherche = True
                     self.tempsDepartRecherche = time.time()
@@ -738,8 +779,8 @@ class Fonderie(Batiment):
 
 
 class Garage(Batiment):
-    def __init__(self, parent, posX, posY):
-        super().__init__(parent, posX, posY)
+    def __init__(self, parent, bid, posX, posY):
+        super().__init__(parent, bid, posX, posY)
         self.vitesseDeCreation = 60
         self.typeRecherche = ""
         self.coutRecherche1['bois'] = 50
@@ -748,7 +789,7 @@ class Garage(Batiment):
 
     def creer1(self):  # créer des tanks
         if self.enCreation == False:
-            if self.joueur.ressources >= self.coutCreer1:
+            if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
                 self.joueur.ressources['bois'] -= self.coutCreer1['bois']
                 self.enCreation = True
                 self.tempsDepartCreation = time.time()
@@ -763,7 +804,7 @@ class Garage(Batiment):
                 self.rechercheCompletee = True
         if self.rechercheCompletee == False:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche1:
+                if self.joueur.ressources['bois'] >= self.coutRecherche1['bois']:
                     self.joueur.ressources['bois'] -= self.coutRecherche1['bois']
                     self.enRecherche = True
                     self.tempsDepartRecherche = time.time()
@@ -781,7 +822,7 @@ class Garage(Batiment):
                 self.rechercheCompletee = True
         if self.rechercheCompletee == False:
             if self.enRecherche == False:
-                if self.joueur.ressources >= self.coutRecherche2:
+                if self.joueur.ressources['bois'] >= self.coutRecherche2['bois']:
                     self.joueur.ressources['bois'] -= self.coutRecherche2['bois']
                     self.enRecherche = True
                     self.tempsDepartRecherche = time.time()

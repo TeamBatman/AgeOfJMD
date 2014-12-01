@@ -7,6 +7,11 @@ from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
 
+from Units import Paysan
+from Units import Noeud
+from AI import AI
+from Batiments import *
+
 
 class Model:
     def __init__(self, controller):
@@ -103,10 +108,10 @@ class Model:
         if nbRessources >= command['NB_RESSOURCES']:
             self.carte.matrice[command['X1']][command['Y1']].nbRessources -= command['NB_RESSOURCES']
 
-            if self.joueur.civilisation == civId:
+            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += command['NB_RESSOURCES']
         else:
-            if self.joueur.civilisation == civId:
+            if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][
                     command['Y1']].nbRessources
             self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
@@ -270,6 +275,24 @@ class Model:
         """
         return {bId: b for civ in self.joueurs.values() for bId, b in civ.buildings.items()}
 
+    def creerAI(self, clientId):
+        """  Permet de crééer un joueur et de l'ajouter à la liste des joueurs
+        :param clientId: L'id du client
+        """
+        self.joueurs[clientId] = AI(clientId, self)
+
+    def creerbaseAI(self, clientId):
+        idBase = Batiment.generateId(clientId)
+
+        cmd = Command(clientId, Command.BUILDING_CREATE)
+        cmd.addData('ID', idBase)
+        cmd.addData('X', 400)
+        cmd.addData('Y', 600)
+        cmd.addData('CIV', clientId)
+        cmd.addData('BTYPE', Batiment.BASE)
+        self.controller.sendCommand(cmd)
+
+        self.joueurs[clientId].base = self.getBuilding(idBase)
 
 
 

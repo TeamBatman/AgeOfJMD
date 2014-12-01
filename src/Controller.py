@@ -17,7 +17,7 @@ from SimpleTimer import Timer
 
 
 
-SKIP_MENU = True  # Permet de skipper les menus
+SKIP_MENU = False  # Permet de skipper les menus
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -94,15 +94,6 @@ class Controller:
             self.network.connectClient(ipAddress=IPJoueur, port=33333, playerName=nomJoueur)
             self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
             self.view.drawMenu()
-
-
-
-
-
-
-
-
-
 
 
 
@@ -183,6 +174,7 @@ class Controller:
 
             return
 
+
         # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
@@ -192,6 +184,10 @@ class Controller:
         cmd.addData('ID', self.network.getClientId())
         self.sendCommand(cmd)
         self.model.creerJoueur(self.network.getClientId())
+
+        self.model.creerAI(7)
+        self.model.creerbaseAI(7)
+
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
 
         self.model.civNumber = self.network.getClientId()
@@ -353,6 +349,20 @@ class EventListener:
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
         self.controller.view.deleteSelectionSquare()
+
+        
+        # SÉLECTION BUILDINGS
+        buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
+        if buildings:
+            for b in buildings:
+                print(b.id)
+                if b.estBatimentDe(clientId):
+                    if b.type == Batiment.BASE:
+                        self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
+                    elif b.type == Batiment.FERME:
+                        self.controller.view.frameSide.changeView(FrameSide.FARMVIEW, b)
+            self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
+        print("modeConstruct", self.controller.view.modeConstruction)
 
         if self.controller.view.modeConstruction:
             currentX = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)

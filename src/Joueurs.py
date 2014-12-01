@@ -1,6 +1,6 @@
 import Batiments
 from Commands import Command
-from Units import Paysan
+from Units import *
 
 
 class Ressources:   # TODO appliquer à toutes les références de ressources
@@ -35,6 +35,12 @@ class Joueur:
             self.ressources['minerai'] += nbRessources
         elif typeRessource == 3:
             self.ressources['charbon'] += nbRessources
+
+        elif typeRessource == Ressources.NOURRITURE:
+            self.ressources['nourriture'] += nbRessources
+        civ = self.civilisation
+        if civ == self.model.joueur.civilisation:
+            self.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.model.joueurs[civ])
 
 
     def update(self):
@@ -141,11 +147,28 @@ class Joueur:
         :param btype: Type de bâtiment à construire
         """
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
-        if not self.model.carte.matrice[posX][posY].isWalkable:
-            print("not walkable")
-        else:
-            if not self.model.carte.matrice[posX + 1][posY].isWalkable:
-                print("not walkable")
+
+        if btype == Batiments.Batiment.FERME:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Ferme(self, newID, posX, posY)
+        elif btype == Batiments.Batiment.BARAQUE:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Baraque(self, newID, posX, posY)
+        elif btype == Batiments.Batiment.HOPITAL:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Hopital(self, newID, posX, posY)
+        elif btype == Batiments.Scierie:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Scierie(self, newID, posX, posY)
+        elif btype == Batiments.Fonderie:
+            newID = Batiments.Batiment.generateId(self.civilisation)
+            createdBuild = Batiments.Fonderie(self, newID, posX, posY)
+        elif btype == Batiments.Batiment.BASE:
+            if not self.baseVivante:
+                newID = Batiments.Batiment.generateId(self.civilisation)
+                createdBuild = Batiments.Base(self, newID, posX, posY)
+                self.baseVivante = True
+
             else:
                 if not self.model.carte.matrice[posX][posY + 1].isWalkable:
                     print("not walkable")
@@ -194,4 +217,14 @@ class Joueur:
         """ Met à jour les bâtiments 
         """
         # TODO Ajouter Méthode Update dans les bâtiments
-        [b.miseAJour() for b in self.buildings.values()]
+        [b.miseAJour() for b in self.buildings.values() if b.joueur == self]
+
+    def cheat(self):
+        posUnitX,posUnitY = self.model.trouverCentreCase(5,5)
+        cmd = Command(self.civilisation, Command.UNIT_CREATE)
+        cmd.addData('ID', Unit.generateId(self.civilisation))
+        cmd.addData('X', posUnitX)
+        cmd.addData('Y', posUnitY)
+        cmd.addData('CIV', self.civilisation)
+        cmd.addData('CLASSE', "soldatEpee")
+        self.model.controller.sendCommand(cmd)

@@ -411,7 +411,29 @@ class Unit():
     def finDeplacementTraceVrai(self): #la fin du vrai pathfinding
         self.animation.setActiveFrameKey(SpriteSheet.Direction.DOWN, 1)
         self.enDeplacement = False
-        
+
+        if self.building:
+            print("JE VEUX CONSTRUIRE!")
+            self.joueur.createBuilding(self.building[0], self.x, self.y, self.building[1])
+            self.building = None
+        else:
+            print("JE VEUX PAS CONSTRUIRE!")
+
+        #if self.mode == 5:
+           # civDuBuilding = int(self.attackedBuildingId.split('_')[0])
+           # buildingViser = self.model.joueurs[civDuBuilding].buildings[self.attackedBuildingId]
+           #self.attaquerBuilding(self.model,buildingViser)
+
+        if self.mode == 4: #Rentre dans un building
+            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
+            if buildingDetected:
+                buildingDetected = buildingDetected[0]
+                if buildingDetected.peutEtreOccupe:
+                    self.inBuilding = True
+                    buildingDetected.unitInBuilding.append(self)
+                    if len(buildingDetected.unitInBuilding) <= 1: #Il n'y avait pas d'unité avant
+                    	buildingDetected.tempsProduction = time.time()
+            
         return -1
 
     def choisirTrace(self):
@@ -1023,6 +1045,130 @@ class Paysan(Unit):
 
             # print("MAX!", self.nbRessources)
             # TODO Faire retourner à la base !
+
+
+class Soldat(Unit):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(Soldat, self).__init__(clientId, x, y, model, civilisation)
+
+class GuerrierEpee(Soldat):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierEpee, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 40
+        self.hp = 40
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 15
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+        }
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
+
+class GuerrierLance(Soldat):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierLance, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 30
+        self.hp = 30
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 25
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+        }
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
+
+class GuerrierBouclier(Soldat):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(GuerrierBouclier, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 5
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 50
+        self.hp = 50
+        # Force à laquelle l'unité frappe
+        self.attackMin = 1
+        self.attackMax = 10
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+        }
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
+
+class Scout(Soldat):
+    def __init__(self, clientId, x, y, model, civilisation):
+        super(Scout, self).__init__(clientId, x, y, model, civilisation)
+        self.vitesse = 10
+        # Kombat
+        # Health Points, Points de Vie
+        self.hpMax = 20
+        self.hp = 20
+        # Force à laquelle l'unité frappe
+        self.attackMin = 0
+        self.attackMax = 8
+
+    def determineSpritesheet(self):
+        spritesheets = {
+            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
+            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+
+            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
+            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
+            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+
+            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
+            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
+            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+        }
+
+        spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
+        self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
 
 
 class Noeud:
