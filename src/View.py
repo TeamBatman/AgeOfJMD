@@ -34,6 +34,8 @@ class FrameSide():
     CONSTRUCTIONVIEW = 1
     BASEVIEW = 2
     FARMVIEW = 3
+    HOSPITALVIEW = 4
+    BARACKVIEW = 5
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -99,11 +101,17 @@ class FrameSide():
             self.farmView.draw()
             self.childView = self.farmView
 
+        elif selectedView == FrameSide.HOSPITALVIEW:
+            self.hospitalView = HospitalView(self.canvas, building, self, self.eventListener)
+            self.hospitalView.draw()
+            self.childView = self.hospitalView
+
 
     def destroy(self):
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
+                print("Effacer")
                 value.destroy()
 
 
@@ -269,6 +277,32 @@ class FarmView():
 
     def onRemoveUnit(self):
         self.farm.sortir()
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class HospitalView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.hospital = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.healUnit = GMediumButton(self.canvas, 'Hopital', self.onHealingUnit, GButton.GREY)
+
+    def draw(self):
+        self.healUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onHealingUnit(self):
+        self.hospital.healing()
 
     def destroy(self):
         attr = self.__dict__
@@ -512,6 +546,10 @@ class FrameBottom():
         self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
 
     def updateResources(self, joueur):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GLabel):
+                value.destroy()
         ressources = joueur.ressources
         print("civ", joueur.civilisation, "   " , ressources)
         self.texteNourriture.text = "Nourriture: "+str(ressources['nourriture'])
