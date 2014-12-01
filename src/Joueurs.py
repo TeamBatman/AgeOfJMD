@@ -195,8 +195,7 @@ class Joueur:
         """ Met à jour les bâtiments 
         """
         # TODO Ajouter Méthode Update dans les bâtiments
-<<<<<<< HEAD
-        [b.miseAJour() for b in self.buildings.values()]
+        [b.miseAJour() for b in self.buildings.values() if b.joueur == self]
 
     def cheat(self):
         posUnitX,posUnitY = self.model.trouverCentreCase(5,5)
@@ -207,6 +206,3 @@ class Joueur:
         cmd.addData('CIV', self.civilisation)
         cmd.addData('CLASSE', "soldatEpee")
         self.model.controller.sendCommand(cmd)
-=======
-        [b.miseAJour() for b in self.buildings.values() if b.joueur == self]
->>>>>>> origin/dev
