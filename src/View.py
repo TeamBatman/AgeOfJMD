@@ -757,6 +757,8 @@ class CarteView():
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
         self.canvas.delete("base")
+        self.canvas.delete("building")#QUICK FIX
+        
         for building in buildings.values():
             if self.isBuildingShown(building):
                 img = building.image
