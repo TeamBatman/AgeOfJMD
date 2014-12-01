@@ -40,8 +40,8 @@ class Joueur:
         elif typeRessource == Ressources.NOURRITURE:
             self.ressources['nourriture'] += nbRessources
         civ = self.civilisation
-        self.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.model.joueurs[civ])
-
+        if civ == self.model.joueur.civilisation:
+            self.model.joueurs[civ].model.controller.view.frameBottom.updateResources(self.model.joueurs[civ])
 
     def update(self):
         """ Permet de lancer les commande updates importantes
@@ -195,6 +195,7 @@ class Joueur:
         """ Met à jour les bâtiments 
         """
         # TODO Ajouter Méthode Update dans les bâtiments
+<<<<<<< HEAD
         [b.miseAJour() for b in self.buildings.values()]
 
     def cheat(self):
@@ -206,3 +207,6 @@ class Joueur:
         cmd.addData('CIV', self.civilisation)
         cmd.addData('CLASSE', "soldatEpee")
         self.model.controller.sendCommand(cmd)
+=======
+        [b.miseAJour() for b in self.buildings.values() if b.joueur == self]
+>>>>>>> origin/dev

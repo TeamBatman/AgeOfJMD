@@ -453,6 +453,8 @@ class Unit():
                 if buildingDetected.peutEtreOccupe:
                     self.inBuilding = True
                     buildingDetected.unitInBuilding.append(self)
+                    if len(buildingDetected.unitInBuilding) <= 1: #Il n'y avait pas d'unité avant
+                    	buildingDetected.tempsProduction = time.time()
             
         return -1
 
@@ -1034,17 +1036,17 @@ class Paysan(Unit):
         age = ageString[self.joueur.epoque]
 
         spritesheets = {
-            Civilisation.BLANC: 'Units/%s/paysan_blanc.png' % age,
-            Civilisation.BLEU: 'Units/%s/paysan_bleu.png' % age,
-            Civilisation.JAUNE: 'Units/%s/paysan_jaune.png' % age,
+            Civilisation.BLANC: 'Units/%s/paysans/paysan_blanc.png' % age,
+            Civilisation.BLEU: 'Units/%s/paysans/paysan_bleu.png' % age,
+            Civilisation.JAUNE: 'Units/%s/paysans/paysan_jaune.png' % age,
 
-            Civilisation.MAUVE: 'Units/%s/paysan_mauve.png' % age,
-            Civilisation.NOIR: 'Units/%s/paysan_noir.png' % age,
-            Civilisation.ORANGE: 'Units/%s/paysan_orange.png' % age,
+            Civilisation.MAUVE: 'Units/%s/paysans/paysan_mauve.png' % age,
+            Civilisation.NOIR: 'Units/%s/paysans/paysan_noir.png' % age,
+            Civilisation.ORANGE: 'Units/%s/paysans/paysan_orange.png' % age,
 
-            Civilisation.ROUGE: 'Units/%s/paysan_rouge.png' % age,
-            Civilisation.VERT: 'Units/%s/paysan_vert.png' % age,
-            Civilisation.ROSE: 'Units/%s/paysan_rose.png' % age
+            Civilisation.ROUGE: 'Units/%s/paysans/paysan_rouge.png' % age,
+            Civilisation.VERT: 'Units/%s/paysans/paysan_vert.png' % age,
+            Civilisation.ROSE: 'Units/%s/paysans/paysan_rose.png' % age
         }
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
         self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes
