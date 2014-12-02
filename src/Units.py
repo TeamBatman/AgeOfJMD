@@ -8,7 +8,6 @@ from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
 from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation
 
-
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
 
@@ -125,7 +124,7 @@ class Unit():
             anim.animate()
             if anim.isFinished:
                 self.oneTimeAnimations.remove(anim)
-
+                
         self.determineCombatBehaviour(model)
         try:
             civDuBuilding = int(self.attackedBuildingId.split('_')[0])
@@ -864,8 +863,8 @@ class Unit():
         """ Détermine le comportement de combat à adopter
         dépendemment du mode de combat (Actif ou Passif)
         """
-        if int(self.getClientId()) != model.joueur.civilisation:
-             return     # Ce n'est pas une unité du joueur en cours
+        if int(self.getClientId()) != model.joueur.civilisation and not self.joueur.ai:
+             return     # Ce n'est pas une unité du joueur en cours ni l'AI
 
         if self.ennemiCible == self:
             self.ennemiCible = None
@@ -898,7 +897,6 @@ class Unit():
             self.cibleY = self.ennemiCible.y
             self.mode = 3
             if self.leader == 1:
-                #print("leader")
                 groupe = []
                 for unitID in self.groupeID: 
                     groupe.append(model.getUnit(unitID))
@@ -1014,7 +1012,7 @@ class Unit():
 
         # RIPOSTER SEULEMENT SI ON EST LE PROPRIÉTAIRE DE L'UNITÉ
         # TODO Compatibiliser avec l'AI
-        if int(self.getClientId()) == model.joueur.civilisation:
+        if int(self.getClientId()) == model.joueur.civilisation or self.joueur.ai:
             self.ennemiCible = attaquant
             self.mode = 3
 

@@ -196,7 +196,7 @@ class ConstructionView():
                                          iconPath="Graphics/Buildings/Age_I/Ferme/Ferme_noire.png")
 
         self.buttonBaraque = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingBaraque,
-                                         iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
+                                        iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
         self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
 
@@ -205,7 +205,7 @@ class ConstructionView():
 
 
     def onRetour(self):
-        self.parent.changeView(Batiment.UNITVIEW)
+        self.parent.changeView(FrameSide.UNITVIEW)
 
     def onCreateBuildingBaraque(self):
         self.eventListener.createBuilding(Batiment.BARAQUE)
@@ -222,8 +222,16 @@ class ConstructionView():
     def draw(self):
         # BTN CONSTRUCTION
         self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
-        self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
-        self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
+        if self.parent.parent.selected:
+            unit = self.parent.parent.selected[0]
+            epoque = unit.joueur.epoque
+        else:
+            print("fail epoque")
+            epoque = 1
+            
+        if epoque > 1:
+            self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
+            self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
 
         self.btnRetour.draw(x=self.x + 25, y=self.y + 235)
 
@@ -247,6 +255,7 @@ class BaseView():
         self.height = parent.width
         self.x = parent.x
         self.y = parent.y
+
         self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
         self.boutonCreateUnit.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysans/paysan_noir.png').frames[
             'DOWN_1']

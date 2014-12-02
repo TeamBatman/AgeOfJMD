@@ -15,6 +15,7 @@ from Carte import Tuile
 class AI(Joueur):
     def __init__(self, civilisation, model):
         super().__init__(civilisation, model)
+        self.ai = True
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0

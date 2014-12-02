@@ -545,10 +545,14 @@ class EventListener:
 
         elif param == Batiment.BARAQUE:
             print("Create building baraque")
+            self.controller.view.lastConstructionType = Batiment.BARAQUE
+            self.controller.view.modeConstruction = True
 
 
         elif param == Batiment.HOPITAL:
             print("Create building hopital")
+            self.controller.view.lastConstructionType = Batiment.HOPITAL
+            self.controller.view.modeConstruction = True
 
 
         elif param == Batiment.BASE:
