@@ -214,9 +214,11 @@ class Hopital(Batiment):
         self.vitesseDeCreation = 30
         self.coutRecherche1['bois'] = 50
 
-    def healing(self, unite):
+    def healing(self):
         # TODO decouvrir comment le healing va se faire
         #TODO ajouter le temps de recherche
+
+        #TODO se referer a la fonction de sortir de la ferme
         pass
 
     def recherche1(self):  # Amélioration du healing

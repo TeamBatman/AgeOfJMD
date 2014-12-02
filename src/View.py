@@ -33,6 +33,10 @@ class FrameSide():
     UNITVIEW = 0
     CONSTRUCTIONVIEW = 1
     BASEVIEW = 2
+    FARMVIEW = 3
+    HOSPITALVIEW = 4
+    BARACKVIEW = 5
+
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -93,11 +97,22 @@ class FrameSide():
             self.baseView.draw()
             self.childView = self.baseView
 
+        elif selectedView == FrameSide.FARMVIEW:
+            self.farmView = FarmView(self.canvas, building, self, self.eventListener)
+            self.farmView.draw()
+            self.childView = self.farmView
+
+        elif selectedView == FrameSide.HOSPITALVIEW:
+            self.hospitalView = HospitalView(self.canvas, building, self, self.eventListener)
+            self.hospitalView.draw()
+            self.childView = self.hospitalView
+
 
     def destroy(self):
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
+                print("Effacer")
                 value.destroy()
 
 
@@ -243,6 +258,60 @@ class BaseView():
         for value in attr.values():
             if isinstance(value, GButton):
                 value.destroy()
+
+
+class FarmView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.farm = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonReleaseUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
+
+    def draw(self):
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onRemoveUnit(self):
+        self.farm.sortir()
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class HospitalView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.hospital = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.healUnit = GMediumButton(self.canvas, 'Hopital', self.onHealingUnit, GButton.GREY)
+
+    def draw(self):
+        self.healUnit.draw(x=self.x + 25, y=self.y + 25)
+
+    def onHealingUnit(self):
+        self.hospital.healing()
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
 
 
 class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
@@ -464,6 +533,26 @@ class FrameBottom():
         self.frame.draw(self.x, self.y)
         self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
 
+        #self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        self.texteNourriture.draw(x=self.frame.x + 225, y=self.frame.y + 35)
+        self.texteBois.draw(x=self.frame.x + 375, y=self.frame.y + 35)
+        self.texteMinerai.draw(x=self.frame.x + 500, y=self.frame.y + 35)
+        self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
+
+    def updateResources(self, joueur):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GLabel):
+                value.destroy()
+        ressources = joueur.ressources
+        print("civ", joueur.civilisation, "   " , ressources)
+        self.texteNourriture.text = "Nourriture: "+str(ressources['nourriture'])
+        self.texteBois.text = "Bois: "+str(ressources['bois'])
+        self.texteMinerai.text = "Minerai: "+str(ressources['minerai'])
+        self.texteCharbon.text = "Charbon: "+str(ressources['charbon'])
+        self.draw()
+
+
 
 class CarteView():
     def __init__(self, canvas, eventListener, largeurEcran, hauteurEcran, largeurCadreDroit, hauteurCadreBas):
@@ -662,6 +751,8 @@ class CarteView():
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
         self.canvas.delete("base")
+        self.canvas.delete("building")#QUICK FIX
+        
         for building in buildings.values():
             print("buildings", building)
             if self.isBuildingShown(building):

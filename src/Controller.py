@@ -17,7 +17,7 @@ from SimpleTimer import Timer
 
 
 
-SKIP_MENU = False  # Permet de skipper les menus
+SKIP_MENU = True  # Permet de skipper les menus
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
