@@ -266,6 +266,8 @@ class EventListener:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
                     elif b.type == Batiment.FERME:
                         self.controller.view.frameSide.changeView(FrameSide.FARMVIEW, b)
+                    elif b.type == Batiment.BARAQUE:
+                        self.controller.view.frameSide.changeView(FrameSide.BARACKVIEW, b)
             self.controller.view.selected = [b for b in buildings if b.estBatimentDe(clientId)]
         print("modeConstruct", self.controller.view.modeConstruction)
         if self.controller.view.modeConstruction:
