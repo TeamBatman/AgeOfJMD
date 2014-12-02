@@ -33,6 +33,8 @@ class Batiment:
         self.peutEtreOccupe = False
         self.estOccupe = False
         self.pointsDeVie = 100
+        self.hpMax = 100
+        self.grandeur = 41  # 32 donc grandeur/2 - 16
         self.estSelectionne = False
         self.tailleX = 128  # Taille en pixels
         self.tailleY = 128  # Taille en pixels

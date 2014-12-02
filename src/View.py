@@ -221,7 +221,6 @@ class ConstructionView():
 
     def draw(self):
         # BTN CONSTRUCTION
-        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
         if self.parent.parent.selected:
             unit = self.parent.parent.selected[0]
             epoque = unit.joueur.epoque
@@ -230,9 +229,18 @@ class ConstructionView():
             epoque = 1
             
         if epoque > 1:
+            ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+            unit = self.parent.parent.selected[0]
+            epoque = unit.joueur.epoque
+            age = ageString[epoque]
+            img = GraphicsManager.getImage(('Buildings/%s/Ferme/ferme_noire.png' % age))
+            resized = img.resize((70, 70), Image.ANTIALIAS)
+            imageBonne = ImageTk.PhotoImage(resized)
+            self.buttonFerme.icon = imageBonne
             self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
             self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
 
+        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
         self.btnRetour.draw(x=self.x + 25, y=self.y + 235)
 
 
@@ -262,13 +270,29 @@ class BaseView():
 
 
     def draw(self):
-        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.base.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.base.pointsDeVie * largeurBarre / self.base.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.base.image,
+                                 tags=('buildingView', self.base.id))
+
+        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onCreateUnit(self):
         self.base.creer1()
         print("created unit")
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -289,12 +313,28 @@ class FarmView():
         self.boutonReleaseUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
 
     def draw(self):
-        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.farm.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.farm.pointsDeVie * largeurBarre / self.farm.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.farm.image,
+                                 tags=('buildingView', self.farm.id))
+
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onRemoveUnit(self):
         self.farm.sortir()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -315,12 +355,28 @@ class HospitalView():
         self.healUnit = GMediumButton(self.canvas, 'Regenerer', self.onHealingUnit, GButton.GREY)
 
     def draw(self):
-        self.healUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.hospital.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.hospital.pointsDeVie * largeurBarre / self.hospital.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.hospital.image,
+                                 tags=('buildingView', self.hospital.id))
+
+        self.healUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onHealingUnit(self):
         self.hospital.healing()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -352,9 +408,24 @@ class BarackView():
 
 
     def draw(self):
-        self.createPrivate.draw(x=self.x + 25, y=self.y + 25)
-        self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
-        self.createShieldPrivate.draw(x=self.x+25, y=self.y+130)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.barack.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.barack.pointsDeVie * largeurBarre / self.barack.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.barack.image,
+                                 tags=('buildingView', self.barack.id))
+
+        self.createPrivate.draw(x=self.x + 25, y=self.y + 130)
+        self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
+        self.createShieldPrivate.draw(x=self.x+25, y=self.y+225)
 
     def onCreatePrivate(self):
         self.barack.creer1()
@@ -366,6 +437,7 @@ class BarackView():
         self.barack.creer3()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
