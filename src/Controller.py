@@ -146,15 +146,20 @@ class EventListener:
         # Position du dernier clic Gauche sur la carte
         self.leftClickPos = None
 
-    def onMapRClick(self, event, groupe=None, building = None, attackedBuildingId = None):
+    def onMapRClick(self, event, groupe=None, building = None, attackedBuildingId = None, AI = False):
         """ Appelée lorsque le joueur fait un clique droit dans la regions de la map
         :param event: Tkinter Event
         :param groupe: l'ensemble des unités qui veulent se déplacer
         :param building: le building à construire
         """
         try:
-            x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-            y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            if not AI:
+                x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+                y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+            else:
+                x2 = event.x
+                y2 = event.y
+
             if not groupe:
                 groupe = self.controller.view.selected[:]
                 if isinstance(groupe[0], Batiment):

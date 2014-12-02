@@ -302,6 +302,7 @@ class Model:
         """
         self.joueurs[clientId] = Joueur(clientId, self)
         self.joueurs[clientId].ressources['bois'] += 100
+        self.joueurs[clientId].ressources['nourriture'] += 100
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations

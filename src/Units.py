@@ -550,6 +550,7 @@ class Unit():
 
             self.cibleXDeplacement = cheminTrace[-1].x
             self.cibleYDeplacement = cheminTrace[-1].y
+
         return cheminTrace
 
     def choisirTraceFail(self):
@@ -1097,7 +1098,7 @@ class Paysan(Unit):
                             groupe = []
                             groupe.append(self)
                             #self.ressourceEnvoye = True
-                            
+                            print("BASE!!!!!!!",self.joueur.base.x, self.joueur.base.y)
                             self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
                             self.model.controller.sendCommand(cmd)
                             #self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)#QUICK FIX

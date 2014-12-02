@@ -12,6 +12,7 @@ from GraphicsManagement import GraphicsManager, OneTimeAnimation
 
 from Units import *
 from Civilisations import Civilisation
+from Joueurs import Ressources
 
 
 class Batiment:
@@ -316,7 +317,7 @@ class Base(Batiment):
     def creer1(self):  # création des paysans
         if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
             print("in creation 1", self.paysanAFaire, self.coutCreer1['nourriture'])
-            self.joueur.ajouterRessource('bois', -self.coutCreer1['nourriture'])
+            self.joueur.ajouterRessource(Ressources.NOURRITURE, -self.coutCreer1['nourriture'])
             self.paysanAFaire += 1
             civ = self.getClientId()
             
@@ -639,7 +640,7 @@ class Ferme(Batiment):
         self.unitInBuilding = [] # Les unités dans la ferme
         self.production = 5
         self.tempsProduction = 10
-        self.type = "ferme"
+        self.type = Batiment.FERME
         #self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
         #self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
         #self.image = ImageTk.PhotoImage(self.resized)
