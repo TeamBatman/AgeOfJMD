@@ -276,7 +276,7 @@ class Base(Batiment):
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-        self.coutCreer1['bois'] = 5
+        self.coutCreer1['nourriture'] = 5
         self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
@@ -314,9 +314,9 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-            print("in creation 1", self.paysanAFaire, self.coutCreer1['bois'])
-            self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
+        if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
+            print("in creation 1", self.paysanAFaire, self.coutCreer1['nourriture'])
+            self.joueur.ajouterRessource('bois', -self.coutCreer1['nourriture'])
             self.paysanAFaire += 1
             civ = self.getClientId()
             

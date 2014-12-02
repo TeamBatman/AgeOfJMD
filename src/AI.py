@@ -381,6 +381,7 @@ class AI(Joueur):
                 unit.modeAttack = Unit.PASSIF
                 batiment = self.model.trouverCentreCase(destination.posX, destination.posY)
                 self.deplacerUnite(batiment[0], batiment[1], unit, None)
+        self.paix = True
 
     def defendre(self):
         print("défense")
@@ -428,6 +429,7 @@ class AI(Joueur):
                 self.hpMoyen = hpTotal/self.nombreSoldatsAllies
             else:
                 self.hpMoyen = 100
+                self.paix = True
 
 
             #trouve le nombre de soldats de l'ennemi avec le plus de soldats
@@ -453,8 +455,13 @@ class AI(Joueur):
                     self.defendre()
                 else:
                     self.paix = True
+                    for unitID in self.units:
+                        unit = self.model.getUnit(unitID)
+                        unit.modeAttack = unit.PASSIF
+
                 print(base.pointsDeVie)
                 self.lastHPBase = base.pointsDeVie
+
             else:
                 unit = self.trouverUniteLibre("")
                 if unit == None:
@@ -462,6 +469,10 @@ class AI(Joueur):
                     return
                 else:
                     self.paix = True
+                    for unitID in self.units:
+                        unit = self.model.getUnit(unitID)
+                        unit.modeAttack = unit.PASSIF
+
                     self.batirBatiment(Batiment.BASE, unit)
 
 
