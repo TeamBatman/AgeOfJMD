@@ -34,7 +34,7 @@ class AI(Joueur):
         self.dernierHopital = 0
         self.dernierGarage = 0
         self.derniereFete = 0
-        self.lastCheck = 0
+        self.lastCheck = time.time()
         self.departEpoque = time.time()
         self.cooldownAutomatisation = 60
         self.cooldownEpoque = 60#60
@@ -55,6 +55,8 @@ class AI(Joueur):
         self.tempsDepart = time.time() - 55
         self.nombrePaysans = 0
         self.epoque = 1
+        self.lastHPBase = 0
+        self.defense = False
 
     def penser(self):
         #fais des test requis pour savoir quel mode prendre
@@ -62,13 +64,7 @@ class AI(Joueur):
         #premier test pour savoir si on est en paix
         if self.paix:
             #print("paix")
-            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
-            if time.time() - self.dernierPaysan >= self.cooldownUnite and (self.paysansOccupes or self.nombrePaysans < 10):
-                print("besoin Paysan")
-                self.creerPaysan()
-                self.dernierPaysan = time.time()
-                return
-            #print("paysans libres")
+
             #si on manque de ressources, aller les miner
             if self.manqueRessource:
                 print("manque ressource")
@@ -106,6 +102,14 @@ class AI(Joueur):
                 return
             #print("peux pas changer d'époque")
 
+            #si tous les paysans sont occupés et que l'on en a moins de 10, créer un nouveau paysan
+            if time.time() - self.dernierPaysan >= self.cooldownUnite and (self.paysansOccupes or self.nombrePaysans < 10):
+                print("besoin Paysan")
+                self.creerPaysan()
+                self.dernierPaysan = time.time()
+                return
+            #print("paysans libres")
+
             #TODO Implémenter le moral
             #si le moral est trop bas, faire une fête
             #if self.morale < 50 and time.time() - self.derniereFete >= self.cooldownRecherche:
@@ -114,6 +118,7 @@ class AI(Joueur):
                 #self.derniereFete = time.time()
                 #return
             #print("moral assez haut")
+
             #si un ennemi a plus de soldats que nous, creer des soldats
             if self.nombreSoldatsAllies < self.nombreSoldatsEnnemis and time.time() - self.dernierSoldat >= self.cooldownUnite:
                 print("besoin soldats !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -126,6 +131,7 @@ class AI(Joueur):
                 print("a l'attaque!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 self.attaquer()
                 self.derniereAttaque = time.time()
+                self.paix = False
                 return
             #print("peux pas attaquer")
 
@@ -140,9 +146,14 @@ class AI(Joueur):
 
         #sinon on est en guerre
         else:
+            if self.defense:
+                self.defendre()
+                return
+
             if self.hpMoyen < 50 :
-                print("retreat")
                 self.retraite()
+                return
+
             self.attaquer()
             #print("pas besoin retraite")
 
@@ -356,9 +367,9 @@ class AI(Joueur):
         print("retraite")
         destination = self.trouverBatiment(Batiment.HOPITAL, "", self.civilisation)
         if destination == None:
-            self.trouverBatiment(Batiment.BASE, "", self.civilisation)
+            destination = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
         if destination == None:
-            self.trouverPremierBatiment( self.civilisation)
+            destination = self.trouverPremierBatiment( self.civilisation)
 
         for unitID in self.units:
             unit = self.model.getUnit(unitID)
@@ -366,6 +377,18 @@ class AI(Joueur):
                 unit.modeAttack = Unit.PASSIF
                 batiment = self.model.trouverCentreCase(destination.posX, destination.posY)
                 self.deplacerUnite(batiment[0], batiment[1], unit, None)
+
+    def defendre(self):
+        print("défense")
+        destination = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
+        if destination == None:
+            destination = self.trouverPremierBatiment( self.civilisation)
+
+        for unitID in self.units:
+            unit = self.model.getUnit(unitID)
+            unit.modeAttack = Unit.ACTIF
+            batiment = self.model.trouverCentreCase(destination.posX+1, destination.posY+1)
+            self.deplacerUnite(batiment[0], batiment[1], unit, None)
 
     def rechercher(self):
         print("rechercher")
@@ -416,6 +439,14 @@ class AI(Joueur):
                     #print(nombreSoldatsCiv," soldats de civ " ,joueur.civilisation)
             #print(self.nombreSoldatsEnnemis, " soldats pour civ ", self.ennemiPlusFort)
 
+            #determine si la base est sous attaque
+            base = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
+            if self.lastHPBase > base.pointsDeVie:
+                self.paix = False
+                self.attaquer()
+
+            print(base.pointsDeVie)
+            self.lastHPBase = base.pointsDeVie
 
             self.lastCheck = time.time()
 
