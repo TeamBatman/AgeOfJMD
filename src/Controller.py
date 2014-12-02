@@ -9,9 +9,11 @@ from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
 from Units import Unit
 from Units import Noeud
-from View import View, FrameSide
+from View import GameView, FrameSide
+from GameWindow import GameWindow
 from SimpleTimer import Timer
 
+SKIP_MENU = True  # Permet de skipper les menus
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -25,7 +27,8 @@ class Controller:
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View(self.eventListener)
+        self.window = GameWindow()
+        self.view = None
 
         self.gameMode = Controller.MULTIPLAYER
 
@@ -47,7 +50,7 @@ class Controller:
 
         self.renderGraphics()
 
-        self.view.after(self.refreshRate, self.mainLoop)
+        self.window.after(self.refreshRate, self.mainLoop)
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
@@ -81,11 +84,23 @@ class Controller:
                 self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
             self.displayTimer.reset()
 
-
     def start(self):
         """ Starts the controller
         """
+        if not SKIP_MENU:
+            # TIMERS
+            self.displayTimer.start()
 
+            # FRAMES
+            self.currentFrame = 0
+
+            self.view = TitleScreen(self.window, self)
+            self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+            self.titleScreenLoop()
+            self.window.show()
+
+            return
+            
         # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
@@ -102,6 +117,7 @@ class Controller:
         self.model.civNumber = self.network.getClientId()
 
         # INITIALISATION AFFICHAGE
+        self.view = GameView(self.window, self.eventListener)
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
@@ -113,7 +129,68 @@ class Controller:
         self.currentFrame = 0
 
         self.mainLoop()
-        self.view.show()
+        self.window.show()
+
+
+
+    def catchMenuEvent(self, event, additionalData=None):
+        """ Événement actionné par l'usager durant l'écran titre
+        :param event: L'évenement à gérer
+        :param additionalData: paramètre additionnel accompagnant l'action
+        """
+        # Affichage Menus
+        if event == MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL:
+            self.view.changerMenu(MenuDebut.MenuPrincipal(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR:
+            self.view.changerMenu(MenuDebut.MenuMultijoueur(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_CREER_SERVEUR:
+            self.view.changerMenu(MenuDebut.MenuServeur(self.window, self, NetworkModule.detectIP()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_REJOINDRE_SERVEUR:
+            self.view.changerMenu(MenuDebut.MenuRejoindreServeur(self.window, self))
+            self.view.drawMenu()
+
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_SOLO:
+            self.view.changerMenu(MenuDebut.MenuSolo(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.LANCER_PARTIE_SOLO:
+            pass
+
+        elif event == MenuDebut.TitleEvent.QUITTER_JEU:
+            self.shutdown()
+
+        elif event == MenuDebut.TitleEvent.CREER_SERVEUR:
+            nomJoueur = self.view.menuActif.nomJoueur
+            self.network.startServer(port=33333)
+            self.network.connectClient(ipAddress=NetworkModule.detectIP(), port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.REJOINDRE_SERVEUR:
+            IPJoueur = self.view.menuActif.IPJoueur
+            nomJoueur = self.view.menuActif.nomJoueur
+            self.network.connectClient(ipAddress=IPJoueur, port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+
+    def titleScreenLoop(self):
+        if self.displayTimer.isDone():
+            self.view.update()
+            if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
+                self.view.menuActif.update(self.network.client.host.getClients())
+            self.displayTimer.reset()
+
+
+        self.window.after(self.refreshRate, self.titleScreenLoop)
+
 
     def shutdown(self):
         self.view.destroy()

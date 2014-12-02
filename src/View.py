@@ -828,29 +828,31 @@ class CarteView():
         return False
 
 
-class View(GWindow):
+class GameView():
     """ Responsable de l'affichage graphique et de captuer les entrées de l'usager"""
 
-    def __init__(self, evListener):
-        GWindow.__init__(self)
+    def __init__(self, window, evListener):
+        self.window = window
+        self.canvas = self.window.canvas
 
         # PARAMÈTRES DE BASE
+        self.width = self.window.width
+        self.height = self.window.height
+        self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
+
 
         self.width = 1024
         self.height = 768
         self.selected = []  # Liste qui contient ce qui est selectionné (unités ou bâtiments)
 
-        self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#2B2B2B')
 
         # ZONE DE DESSIN
-        self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
-                             highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
-        self.canvas.pack()
+        self.canvas = self.window.canvas
 
 
         # GESTION ÉVÈNEMENTS
         self.eventListener = evListener  # Une Classe d'écoute d'évènement
+
 
         # LE HUD
         self.drawHUD()
@@ -1030,7 +1032,7 @@ class View(GWindow):
         self.frameMinimap.bindEvents()
         self.carte.bindEvents()
 
-        self.root.protocol("WM_DELETE_WINDOW", self.eventListener.onCloseWindow)
+        self.window.root.protocol("WM_DELETE_WINDOW", self.eventListener.onCloseWindow)
 
 
     def update(self, units, buildings, carte=None, joueur=None):  # CLEAN UP
@@ -1054,8 +1056,10 @@ class View(GWindow):
                     return True
         return False
 
+
+
     def destroy(self):
         """ Détruit la fenêtre de jeu
         """
-        self.root.destroy()
+        self.window.destroy()
 

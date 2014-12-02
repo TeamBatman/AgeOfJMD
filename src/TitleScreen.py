@@ -1,3 +1,4 @@
+from tkinter import ALL
 from GraphicsManagement import GraphicsManager
 from GuiAwesomeness import *
 
@@ -10,6 +11,8 @@ import SimpleTimer
 
 
 class Cloud:
+    """ Représentation d'un nuage
+    """
     def __init__(self, pI, x, y, speed):
         self.pI = pI
         self.x = x
@@ -22,6 +25,8 @@ class Cloud:
 
 
 class Wave:
+    """ Représentation d'une vague
+    """
     def __init__(self, pI, x, y):
         self.pI = pI
         self.x = x
@@ -31,7 +36,6 @@ class Wave:
         self.radius = 10
         self.invert = 1
 
-
     def update(self):
         # TODO fixerl le rate avec des Frame en remplaçant
         # msElapsed par un frameTick auxquel on fait ++ à chaque call de update
@@ -40,38 +44,21 @@ class Wave:
         self.x = newX
 
 
-def reduceOpacity(im, opacity):
-    """ Permet de réduire l'opacité d'une image
-    Source: http://www.pythonware.com/products/pil/
+
+
+
+
+class TitleScreen():
+    """ Écran titre et ses Menus
     """
-    if not (0 <= opacity <= 1):
-        opacity = 1
-    if im.mode != 'RGBA':
-        im = im.convert('RGBA')
-    else:
-        im = im.copy()
-    alpha = im.split()[3]
-    alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
-    im.putalpha(alpha)
-    return im
+    def __init__(self, window, controller):
 
-
-
-
-
-class TitleScreen(GWindow):
-    def __init__(self):
-        GWindow.__init__(self)
-        self.width = 1024
-        self.height = 768
-        self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#000')
-
-        # ZONE DE DESSIN
-        self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#000', bd=0,
-                             highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
-        self.canvas.pack()
-
+        self.waves = []
+        self.title = GraphicsManager.getPhotoImage('Graphics/Screens/TitleScreen/title.jpg')
+        self.clouds = []
+        self.canvas = window.canvas
+        self.width = window.width
+        self.controller = controller
 
         self.initBackground()
         self.initClouds()
@@ -81,8 +68,6 @@ class TitleScreen(GWindow):
         self.canvas.create_image(327, 457, anchor=NW, image=self.castle, tags='castle')
         self.canvas.tag_raise('castle')
 
-        self.initMenu()
-
         self.cloudTimer = SimpleTimer.FrameTimer(1)
         self.cloudTimer.start()
 
@@ -90,29 +75,22 @@ class TitleScreen(GWindow):
         self.waveTimer.start()
 
 
+        self.menuActif = None
 
 
+    def changerMenu(self, menu):
+        if self.menuActif:
+            self.menuActif.destroy()
+        self.menuActif = menu
 
-       
+    def drawMenu(self):
+        self.menuActif.draw()
 
-
-
-    def initMenu(self):
-        self.frame = GFrame(self.canvas, 300, 250)
-        self.frame.draw(500, 270)
-
-        self.btnCommencer = GButton(self.canvas, text="Jouer Solo")
-        self.btnCommencer.draw(550, 320)
-
-        self.btnCommencer = GButton(self.canvas, text="Jouer Multijoueur")
-        self.btnCommencer.draw(550, 380)
-
-        self.btnCommencer = GButton(self.canvas, text="Quitter")
-        self.btnCommencer.draw(550, 440)
+    def updateMenu(self):
+        self.menuActif.update()
 
 
     def initBackground(self):
-        self.title = GraphicsManager.getPhotoImage('Graphics/Screens/TitleScreen/title.jpg')
         self.canvas.create_image(0, 0, anchor=NW, image=self.title, tags=('background'))
 
         """
@@ -122,19 +100,14 @@ class TitleScreen(GWindow):
         self.canvas.create_image(0, 0, anchor=NW, image=night, tags=('backgroundNight'))
         """
 
-
-
-
-
-
     def initClouds(self):
-        self.clouds = []
+        """ Initialise les nuages
+        """
         for c in range(8):
             image = GraphicsManager.getPhotoImage("Graphics/Screens/TitleScreen/Cloud_%s.png" % c)
             x = 0
             y = 0
             self.clouds.append(Cloud(image, x, y, 1))
-
 
         self.clouds[0].x = 850
         self.clouds[0].y = 450
@@ -168,18 +141,14 @@ class TitleScreen(GWindow):
         self.clouds[7].y = 400
         self.clouds[7].vx = 0.5
 
-
-
-
-
     def initWaves(self):
-        self.waves = []
+        """ Initialise les vagues
+        """
         for w in range(4):
             image = GraphicsManager.getPhotoImage("Graphics/Screens/TitleScreen/wave_%s.png" % w)
             x = 0
             y = 0
             self.waves.append(Wave(image, x, y))
-
 
         self.waves[0].x = 0
         self.waves[0].y = 735
@@ -195,12 +164,10 @@ class TitleScreen(GWindow):
         self.waves[3].y = 693
         self.waves[3].invert = -1.2
 
-
-
     def update(self):
+        """ Permet de m'ettre à jour les images et aniamtions
+        """
         #self.canvas.delete('backgroundNight')
-
-
 
         # NUIT
         """self.nightOpacity += 0.1
@@ -230,8 +197,13 @@ class TitleScreen(GWindow):
                 self.canvas.tag_raise('wave', 'background')
 
 
+    def destroy(self):
+        """ Permet d'effacer l'écran Titre
+        """
+        self.canvas.delete(ALL)
+        self.menuActif.destroy()
 
-        self.after(int(1000/15), self.update)
+
 
 
 
