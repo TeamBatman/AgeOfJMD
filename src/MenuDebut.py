@@ -231,8 +231,8 @@ class MenuLobby:
         self.couleurs = ["#D34343", "#3D99BB", "#26BE2E", "#5637DD", "#F39621", "#CF4592", "#0F0F0F", "#FFFFFF",
                          "#F5F520"]
 
-        self.boutPret = GButton(self.window.canvas, text="Prêt",
-                                command=self.controller.catchMenuEvent(TitleEvent.SIGNALER_PRET))
+        #self.boutPret = GButton(self.window.canvas, text="Prêt",
+        #                        command=self.controller.catchMenuEvent(TitleEvent.SIGNALER_PRET))
 
         self.boutQuitServ = GButton(self.window.canvas, text="Quitter le serveur",
                                     command=lambda: self.controller.catchMenuEvent(TitleEvent.ARRETER_SERVEUR))
@@ -267,7 +267,7 @@ class MenuLobby:
         # fond pour les joueurs
         self.window.canvas.create_rectangle(x + 30, y + 75, x + 400, y + 350, fill="#E1F5A9", tags='lobby')
 
-        self.boutPret.draw(x + 30, y + 370)
+        #self.boutPret.draw(x + 30, y + 370)
         self.boutQuitServ.draw(x + 30, y + 475)
         if self.siServeur:
             self.boutLancerPartie.draw(x + 570, y + 475)
@@ -295,7 +295,7 @@ class MenuLobby:
     def destroy(self):
         self.frameLobby.destroy()
         self.boutLancerPartie.destroy()
-        self.boutPret.destroy()
+        #self.boutPret.destroy()
         self.boutQuitServ.destroy()
         self.window.canvas.delete('lobby')
 

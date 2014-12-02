@@ -31,7 +31,7 @@ LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fon
 
 
 def detectIP():
-    return socket.gethostbyname("127.0.0.1")
+    return socket.gethostbyname(socket.gethostname())
 
 
 class SCClient:
@@ -49,6 +49,12 @@ class SCClient:
 class ServerController:
     """ Contrôleur serveur. C'est une instance de cette classe qui sera mis à disposition des clients. Enregistrée dans
      le démon Pyro4. Ainsi, ils ne pourront avoir accès qu'aux méthodes définies ici."""
+
+    # ÉTATS DU JEU
+    WAITING_LOADING = 'wl'  # Le serveur attends que tous les joueur aient loadé les ressources du jeu
+    IN_GAME = 'ig'  # La parite est en cours
+
+
 
     def __init__(self):
         # Chaque clé est identifiant du client et la valeur est sa progression dans l'ensemble des commandes
@@ -92,7 +98,6 @@ class ServerController:
 
         return [c.__dict__ for c in self.clients.values()]
 
-
     def join(self, ip, name='Joueur Anonyme'):
         """ Permet à un client de rejoindre le serveur et lui retoune un Identifiant unique
         :return: l'identifiant unique généré pour le client
@@ -114,10 +119,14 @@ class ServerController:
         :param command: la commande à être envoyé à tous les clients
         """
         maxFrame = self.getFrameMostForwardInTime()
+        targetFrame = maxFrame + self.commandFrameLatency
+        print("TARGET: %s" % targetFrame)
         try:
-            self.commands[maxFrame + self.commandFrameLatency].append(command)
+            self.commands[targetFrame].append(command)
         except KeyError:
-            self.commands[maxFrame + self.commandFrameLatency] = [command]
+            self.commands[targetFrame] = [command]
+
+
 
 
     def getNextCommand(self, clientId, currentFrame):  # TODO Simplifier
@@ -127,6 +136,11 @@ class ServerController:
         :param clientId: le numéro d'identification du client
         :return: La prochaine commande à exécuter par le client
         """
+
+
+
+
+
 
         currentClient = self.clients[clientId]
         currentClient.currentFrame = currentFrame

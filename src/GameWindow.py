@@ -7,12 +7,17 @@ class GameWindow(GWindow):
         self.width = 1024
         self.height = 768
         self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#2B2B2B')
+        self.root.configure(background='#000')
 
         # ZONE DE DESSIN
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
                              highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
         self.canvas.pack()
+        self.isShown = False
+
+    def show(self):
+        self.isShown = True
+        GWindow.show(self)
 
 
     def clearWindow(self):

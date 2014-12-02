@@ -5,15 +5,17 @@ import sys
 
 from Batiments import Batiment
 from Commands import Command
+import GraphicsManagement
+from LoadingScreen import ResourceLoader, LoadingScreen
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
 import NetworkModule
+from TitleScreen import TitleScreen
 from Units import Unit
 from Units import Noeud
 from View import GameView, FrameSide
 from GameWindow import GameWindow
 from SimpleTimer import Timer
-from TitleScreen import TitleScreen
 import MenuDebut
 
 
@@ -41,20 +43,42 @@ class Controller:
         self.refreshRate = int(1000 / self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000 / 60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
-
+        self.loadingThread = None
 
     def mainLoop(self):
-        try:
-            cmd = self.network.synchronizeClient(self.currentFrame)
-        except ClientConnectionError:
-            self.shutdown()
-        # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+        if self.network.client is not None:
+            try:
+                cmd = self.network.synchronizeClient(self.currentFrame)
+            except ClientConnectionError:
+                self.shutdown()
+            # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+            for c in cmd:
+                if c['TYPE'] == Command.START_GAME:
+                    print("OK")
+                    self.startGame()
 
-        self.doLogic(cmd)
+        if not isinstance(self.view, GameView):
+            self.titleScreenLoop()
 
-        self.renderGraphics()
+        else:
+            self.gameLoop(cmd)
 
         self.window.after(self.refreshRate, self.mainLoop)
+
+    def gameLoop(self, cmd):
+        self.doLogic(cmd)
+        self.renderGraphics()
+
+
+    def startGame(self):
+        self.view = GameView(self.window, self.eventListener)
+        self.view.drawMinimap(self.model.carte.matrice)
+        self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
+
+
+
+
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
@@ -83,7 +107,7 @@ class Controller:
         if self.displayTimer.isDone():
 
             if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), self.model.carte.matrice, joueur=joueur)
             else:
                 self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
             self.displayTimer.reset()
@@ -91,49 +115,44 @@ class Controller:
     def start(self):
         """ Starts the controller
         """
-        if not SKIP_MENU:
-            # TIMERS
-            self.displayTimer.start()
-
-            # FRAMES
-            self.currentFrame = 0
-
-            self.view = TitleScreen(self.window, self)
-            self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
-            self.titleScreenLoop()
-            self.window.show()
-
-            return
-            
-        # INITIALISATION RÉSEAU
-        self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
-
-        # INITIALISATION MODEL
-        cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
-        cmd.addData('ID', self.network.getClientId())
-        self.sendCommand(cmd)
-        self.model.creerJoueur(self.network.getClientId())
-        self.model.creerAI(7)
-        self.model.creerbaseAI(7)
-        self.model.joueur = self.model.joueurs[self.network.getClientId()]
-
-        self.model.civNumber = self.network.getClientId()
-
-        # INITIALISATION AFFICHAGE
-        self.view = GameView(self.window, self.eventListener)
-        self.view.drawMinimap(self.model.carte.matrice)
-        self.view.drawRectMiniMap()
-        self.view.drawMap(self.model.carte.matrice)
 
         # TIMERS
         self.displayTimer.start()
 
         # FRAMES
         self.currentFrame = 0
+        self.view = LoadingScreen(self.window, self)
+        self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+
+
+        if SKIP_MENU:
+           # INITIALISATION RÉSEAU
+            self.network.startServer(port=33333)
+            self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
+
+            # INITIALISATION MODEL
+            cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
+            cmd.addData('ID', self.network.getClientId())
+            self.sendCommand(cmd)
+            self.model.creerJoueur(self.network.getClientId())
+            self.model.creerAI(7)
+            self.model.creerbaseAI(7)
+            self.model.joueur = self.model.joueurs[self.network.getClientId()]
+
+            self.model.civNumber = self.network.getClientId()
+
+            # INITIALISATION AFFICHAGE
+            self.view = GameView(self.window, self.eventListener)
+            self.view.drawMinimap(self.model.carte.matrice)
+            self.view.drawRectMiniMap()
+            self.view.drawMap(self.model.carte.matrice)
 
         self.mainLoop()
         self.window.show()
+
+
+
+
 
 
 
@@ -152,6 +171,7 @@ class Controller:
             self.view.drawMenu()
 
         elif event == MenuDebut.TitleEvent.VOIR_MENU_CREER_SERVEUR:
+            print(NetworkModule.detectIP())
             self.view.changerMenu(MenuDebut.MenuServeur(self.window, self, NetworkModule.detectIP()))
             self.view.drawMenu()
 
@@ -172,6 +192,7 @@ class Controller:
 
         elif event == MenuDebut.TitleEvent.CREER_SERVEUR:
             nomJoueur = self.view.menuActif.nomJoueur
+
             self.network.startServer(port=33333)
             self.network.connectClient(ipAddress=NetworkModule.detectIP(), port=33333, playerName=nomJoueur)
             self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
@@ -191,17 +212,28 @@ class Controller:
                 self.network.stopServer()
             self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR)
 
+        elif event == MenuDebut.TitleEvent.LANCER_PARTIE_MULTIJOUEUR:
+            self.sendCommand(Command(cmdType=Command.START_GAME))
+
 
 
     def titleScreenLoop(self):
+        if not self.graphicsLoader.isDone:
+            if self.window.isShown:
+                self.graphicsLoader.run()
+                self.view = TitleScreen(self.window, self)
+                self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+
         if self.displayTimer.isDone():
-            self.view.update()
-            if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
-                self.view.menuActif.update(self.network.client.host.getClients())
-            self.displayTimer.reset()
-
-
+                if isinstance(self.view, LoadingScreen):
+                    self.view.update(self.graphicsLoader.progression)
+                else:
+                    self.view.update()
+                    if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
+                        self.view.menuActif.update(self.network.client.host.getClients())
+                self.displayTimer.reset()
         self.window.after(self.refreshRate, self.titleScreenLoop)
+
 
 
     def shutdown(self):
@@ -658,3 +690,4 @@ class EventListener:
 if __name__ == '__main__':
     app = Controller()
     app.start()
+
