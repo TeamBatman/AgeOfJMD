@@ -116,7 +116,6 @@ class FrameSide():
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
-                print("Effacer")
                 value.destroy()
 
 
@@ -198,7 +197,8 @@ class ConstructionView():
         self.buttonBaraque = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingBaraque,
                                         iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
-        self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
+        self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
+                                        iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
 
         self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
                                        iconPath='Graphics/Icones/arrowBack.png')
@@ -339,18 +339,31 @@ class BarackView():
         self.x = parent.x
         self.y = parent.y
         self.createPrivate = GMediumButton(self.canvas, 'Soldat', self.onCreatePrivate, GButton.GREY)
+        self.createPrivate.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_epee/soldat_epee_noir.png').frames[
+            'DOWN_1']
         self.createUpgradedPrivate = GMediumButton(self.canvas, 'Soldat 2', self.onCreateUpgradedPrivate, GButton.GREY)
+        self.createUpgradedPrivate.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_lance/soldat_lance_noir.png').frames[
+            'DOWN_1']
+        self.createShieldPrivate = GMediumButton(self.canvas, 'Soldat 3', self.onCreateShieldPrivate, GButton.GREY)
+        self.createShieldPrivate.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_bouclier/soldat_bouclier_noir.png').frames[
+            'DOWN_1']
+
+
 
 
     def draw(self):
         self.createPrivate.draw(x=self.x + 25, y=self.y + 25)
         self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
+        self.createShieldPrivate.draw(x=self.x+25, y=self.y+130)
 
     def onCreatePrivate(self):
         self.barack.creer1()
 
     def onCreateUpgradedPrivate(self):
         self.barack.creer2()
+
+    def onCreateShieldPrivate(self):
+        self.barack.creer3()
 
     def destroy(self):
         attr = self.__dict__

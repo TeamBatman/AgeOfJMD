@@ -1126,17 +1126,17 @@ class GuerrierEpee(Soldat):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_II/Soldat_epee/soldat_epee_blanc.png',
+            Civilisation.BLEU: 'Units/Age_II/Soldat_epee/soldat_epee_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_II/Soldat_epee/soldat_epee_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/Age_II/Soldat_epee/soldat_epee_.png',
+            Civilisation.NOIR: 'Units/Age_II/Soldat_epee/soldat_epee_noir.png',
+            Civilisation.ORANGE: 'Units/Age_II/Soldat_epee/soldat_epee_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/soldat_epee_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/soldat_epee_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/soldat_epee_rose.png'
         }
 
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])

@@ -69,7 +69,11 @@ class Model:
         :param command: la commande à exécuter [Objet Command]
         """
         print(self.joueurs)
-        self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
+        if command.data['CLASSE'] == "soldatEpee":
+            self.joueurs[command.data['CIV']].createUnitSword(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+        elif command.data['CLASSE'] == "paysan":
+            self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
     def executeMoveUnit(self, command):

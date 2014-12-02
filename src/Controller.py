@@ -58,7 +58,7 @@ class Controller:
             if command['TYPE'] == Command.WAIT:
                 doUpdate = False
             elif command['TYPE'] == Command.DESYNC:
-                Client.outputDebug("Votre clent est DÉSYNCHRONISÉ")
+                Client.outputDebug("Votre client est DÉSYNCHRONISÉ")
                 self.shutdown()  # TODO Afficher message
             else:
                 self.model.executeCommand(command)
