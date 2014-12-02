@@ -10,6 +10,7 @@ from Units import Paysan
 from Units import Noeud
 from AI import AI
 from Batiments import *
+import random
 
 class Model:
     def __init__(self, controller):
@@ -155,7 +156,7 @@ class Model:
         """
         self.creerJoueur(command['ID'])
         # TODO CRÉER BASE
-
+        self.executeCreerBase(44,44)
 
 
     def executeEvolveCivilisation(self, command):
@@ -165,15 +166,27 @@ class Model:
         self.joueurs[command.data['CIV']].changerAge(command['AGE'])
 
 
+    def executeCreerBase(self,x,y):
+        while not self.validPosBuilding(x,y):
+            x = random.randint(20,86)
+            y = random.randint(20,86)
+    
+        print(str(x)+":"+str(y))
+
+        self.controller.view.carte.cameraX = x
+        self.controller.view.carte.cameraY = y
+        self.creerBaseJoueur(self.civNumber,x*48,y*48)
+        self.carte.matrice[x][y].revealed = 1
+        self.controller.renderGraphics()
 
 
+        self.controller.view.frameMinimap.updateFog(self.pseudoElement(x*48,y*48))
 
-
-
-
-
-
-
+    class pseudoElement(object):
+        def __init__(self, x,y):
+            self.x = x
+            self.y = y
+			
 
 
     # ## HELPERS ###
@@ -332,6 +345,18 @@ class Model:
 
         self.joueurs[clientId].base = self.getBuilding(idBase)
 
+    def creerBaseJoueur(self,clientId,x,y):
+        idBase = Batiment.generateId(clientId)
+
+        cmd = Command(clientId, Command.BUILDING_CREATE)
+        cmd.addData('ID', idBase)
+        cmd.addData('X', x)
+        cmd.addData('Y', y)
+        cmd.addData('CIV', clientId)
+        cmd.addData('BTYPE', Batiment.BASE)
+        self.controller.sendCommand(cmd)
+
+        self.joueurs[clientId].base = self.getBuilding(idBase)
 
 
 

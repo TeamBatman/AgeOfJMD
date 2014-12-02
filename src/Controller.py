@@ -251,6 +251,9 @@ class EventListener:
         """
         print("RELEASE")
         clientId = self.controller.network.getClientId()
+
+        if not self.leftClickPos:
+        	self.leftClickPos = (0,0)
         x1, y1 = self.leftClickPos
         x2, y2 = event.x, event.y
 
