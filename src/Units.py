@@ -866,8 +866,11 @@ class Unit():
         if int(self.getClientId()) != model.joueur.civilisation and not self.joueur.ai:
              return     # Ce n'est pas une unité du joueur en cours ni l'AI
 
-        if self.ennemiCible == self:
-            self.ennemiCible = None
+        try:
+            if self.ennemiCible == self or self.ennemiCible.civilisation == self.joueur.civilisation:
+                self.ennemiCible = None
+        except:
+            pass
 
         # ACTIF
         if self.modeAttack == Unit.ACTIF and not self.mode == 3:
@@ -879,6 +882,7 @@ class Unit():
                                                           units=self.model.getUnits())
             except:
                 print("ennemi tué")
+                return
 
             # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
             units = [u for u in units if not u.id == self.id]
@@ -942,8 +946,8 @@ class Unit():
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
                 print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
-                if self.ennemiCible.enDeplacement:
-                #if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance: #or not self.cheminTrace:
+                #if self.ennemiCible.enDeplacement:
+                if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance or (not self.enDeplacement and abs(self.x - self.ennemiCible.x) > distance or abs(self.y - self.ennemiCible.y) > distance): #or not self.cheminTrace:
                     #x2 = self.ennemiCible.x-self.grandeur
                     #y2 = self.ennemiCible.y-self.grandeur
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)

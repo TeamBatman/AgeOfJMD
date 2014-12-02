@@ -177,6 +177,7 @@ class AI(Joueur):
             if self.epoque >= 2:
                 if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
                     self.batirBatiment(Batiment.SCIERIE, unit)
+                    self.derniereScierie = time.time()
                     print("scierie créée?")
                     return
             if time.time() - self.derniereRessourceBois >= self.cooldownRessource:
@@ -196,6 +197,7 @@ class AI(Joueur):
             if self.epoque >= 3:
                 if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
                     self.batirBatiment(Batiment.FONDERIE, unit)
+                    self.derniereFonderie = time.time()
                     print("fonderie créée?")
                     return
             if time.time() - self.derniereRessourceMinerai >= self.cooldownRessource:
@@ -345,6 +347,7 @@ class AI(Joueur):
         if self.epoque >= 2:
             if time.time() - self.derniereBarraque >= self.cooldownBatiment:
                 self.batirBatiment(Batiment.BARAQUE, unit)
+                self.derniereBarraque = time.time()
                 print("Baraque créée")
                 return
         else:
@@ -423,6 +426,8 @@ class AI(Joueur):
 
             if self.nombreSoldatsAllies > 0:
                 self.hpMoyen = hpTotal/self.nombreSoldatsAllies
+            else:
+                self.hpMoyen = 100
 
 
             #trouve le nombre de soldats de l'ennemi avec le plus de soldats
@@ -442,12 +447,24 @@ class AI(Joueur):
 
             #determine si la base est sous attaque
             base = self.trouverBatiment(Batiment.BASE, "", self.civilisation)
-            if self.lastHPBase > base.pointsDeVie:
-                self.paix = False
-                self.attaquer()
+            if base:
+                if self.lastHPBase > base.pointsDeVie:
+                    self.paix = False
+                    self.defendre()
+                else:
+                    self.paix = True
+                print(base.pointsDeVie)
+                self.lastHPBase = base.pointsDeVie
+            else:
+                unit = self.trouverUniteLibre("")
+                if unit == None:
+                    print("AI DEAD")
+                    return
+                else:
+                    self.paix = True
+                    self.batirBatiment(Batiment.BASE, unit)
 
-            print(base.pointsDeVie)
-            self.lastHPBase = base.pointsDeVie
+
 
             self.lastCheck = time.time()
 

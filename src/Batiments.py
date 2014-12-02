@@ -411,7 +411,8 @@ class Base(Batiment):
                 #TODO ne pas oublier de changer le temps pour changer d'époque
                 elif time.time() - self.tempsDepartRecherche >= 0: #60:
                     self.enRecherche = False
-                    self.joueur.epoque = 2
+                    #self.joueur.epoque = 2
+                    self.joueur.changerAge(2)
                     self.joueur.recherche.append("Époque 2")
                     print("époque changée")
         elif self.joueur.epoque == 2:
@@ -428,7 +429,8 @@ class Base(Batiment):
                         self.typeRecherche = 2
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
-                    self.joueur.epoque = 2
+                    #self.joueur.epoque = 3
+                    self.joueur.changerAge(3)
                     self.joueur.recherche.append("Époque 3")
 
     def miseAJour(self):
