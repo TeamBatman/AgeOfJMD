@@ -260,7 +260,7 @@ class EventListener:
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
             for b in buildings:
-                print(b.id)
+                print("building", b.type)
                 if b.estBatimentDe(clientId):
                     if b.type == Batiment.BASE:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
