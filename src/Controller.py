@@ -181,7 +181,7 @@ class EventListener:
             groupeSansLeader.remove(leaderUnit)
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index !")
-            groupeSansLeader = None
+            groupeSansLeader = []
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
