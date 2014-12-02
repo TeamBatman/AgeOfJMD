@@ -31,7 +31,6 @@ class LoadingScreen():
         self.loader.start()
 
     def update(self, progression):
-        print("UPDATE")
         self.progressBar.setProgression(progression)
         self.progressBar.update()
         self.window.root.update()

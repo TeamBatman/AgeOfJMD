@@ -48,6 +48,7 @@ class Controller:
     def mainLoop(self):
         if self.network.client is not None:
             try:
+                print(self.currentFrame)
                 cmd = self.network.synchronizeClient(self.currentFrame)
             except ClientConnectionError:
                 self.shutdown()

@@ -120,11 +120,13 @@ class ServerController:
         """
         maxFrame = self.getFrameMostForwardInTime()
         targetFrame = maxFrame + self.commandFrameLatency
-        print("TARGET: %s" % targetFrame)
         try:
             self.commands[targetFrame].append(command)
         except KeyError:
             self.commands[targetFrame] = [command]
+
+        if Command.START_GAME in command:
+            self.commands[currentFrame] = [command]
 
 
 
@@ -136,9 +138,6 @@ class ServerController:
         :param clientId: le numéro d'identification du client
         :return: La prochaine commande à exécuter par le client
         """
-
-
-
 
 
 
