@@ -16,6 +16,7 @@ class Joueur:
     def __init__(self, civilisation, model):
         self.model = model
         self.civilisation = civilisation  # Couleur de la civilisation
+        self.ai = False
         self.base = None  # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
         self.baseVivante = False  # À modifier, doit être true quand on commence une vraie partie
         #self.ressources = {Ressources.BOIS: 0, Ressources.MINERAI: 0, Ressources.CHARBON: 0}
@@ -72,7 +73,7 @@ class Joueur:
     def changerAge(self, nouvelAge):
         self.epoque = nouvelAge
         # TODO Changer les images pour les buildings
-        #[b.determineImage() for b in self.buildings.values()]
+        [b.determineImage() for b in self.buildings.values()]
         # TODO Changer les images pour les unités
         [u.determineSpritesheet() for u in self.units.values()]
 
@@ -170,6 +171,8 @@ class Joueur:
             else:
                 print("base already exist")
                 return
+        else:
+            return -1 #Pas un building valide
 
         self.buildings[newID] = createdBuild
         print(newID)

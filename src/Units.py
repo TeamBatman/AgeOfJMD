@@ -8,7 +8,6 @@ from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
 from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation
 
-
 class Unit():
     COUNT = 0  # Un compteur permettant d'avoir un Id unique pour chaque unité
 
@@ -125,7 +124,7 @@ class Unit():
             anim.animate()
             if anim.isFinished:
                 self.oneTimeAnimations.remove(anim)
-
+                
         self.determineCombatBehaviour(model)
         try:
             civDuBuilding = int(self.attackedBuildingId.split('_')[0])
@@ -864,8 +863,8 @@ class Unit():
         """ Détermine le comportement de combat à adopter
         dépendemment du mode de combat (Actif ou Passif)
         """
-        if int(self.getClientId()) != model.joueur.civilisation:
-             return     # Ce n'est pas une unité du joueur en cours
+        if int(self.getClientId()) != model.joueur.civilisation and not self.joueur.ai:
+             return     # Ce n'est pas une unité du joueur en cours ni l'AI
 
         if self.ennemiCible == self:
             self.ennemiCible = None
@@ -882,7 +881,7 @@ class Unit():
                 print("ennemi tué")
 
             # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
-            units = [u for u in units if u.id != self.id]
+            units = [u for u in units if not u.id == self.id]
             if not units:
                 return
 
@@ -897,13 +896,14 @@ class Unit():
             self.cibleX = self.ennemiCible.x
             self.cibleY = self.ennemiCible.y
             self.mode = 3
+            print("leader actif", self.id, self.leader)
             if self.leader == 1:
-                #print("leader")
                 groupe = []
+                groupe.append(self)
                 for unitID in self.groupeID: 
                     groupe.append(model.getUnit(unitID))
 
-                model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+                self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
                 self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -941,18 +941,20 @@ class Unit():
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
-                if not self.ennemiCible.x == self.ancienPosEnnemi[0] and not self.ennemiCible.y == self.ancienPosEnnemi[1]: #or not self.cheminTrace:
-                    print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1], self.cheminTrace)
-                    x2 = self.ennemiCible.x-self.grandeur
-                    y2 = self.ennemiCible.y-self.grandeur
+                print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
+                if self.ennemiCible.enDeplacement:
+                #if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance: #or not self.cheminTrace:
+                    #x2 = self.ennemiCible.x-self.grandeur
+                    #y2 = self.ennemiCible.y-self.grandeur
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
                     if self.leader == 1:
-                        #print("leader")
+                        print("leader deplacement attaque", self.id)
                         groupe = []
+                        groupe.append(self)
                         for unitID in self.groupeID: 
                             groupe.append(model.getUnit(unitID))
 
-                        model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+                        self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
                         #model.controller.eventListener.selectionnerUnit(self,True, None,x2,y2, groupe)
                         # TODO: DOIT CHANGER LUI ET SON GROUPE !
                     else:
@@ -1014,7 +1016,7 @@ class Unit():
 
         # RIPOSTER SEULEMENT SI ON EST LE PROPRIÉTAIRE DE L'UNITÉ
         # TODO Compatibiliser avec l'AI
-        if int(self.getClientId()) == model.joueur.civilisation:
+        if int(self.getClientId()) == model.joueur.civilisation or self.joueur.ai:
             self.ennemiCible = attaquant
             self.mode = 3
 

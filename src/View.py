@@ -106,6 +106,11 @@ class FrameSide():
             self.hospitalView.draw()
             self.childView = self.hospitalView
 
+        elif selectedView == FrameSide.BARACKVIEW:
+            self.barackView = BarackView(self.canvas, building, self, self.eventListener)
+            self.barackView.draw()
+            self.childView = self.barackView
+
 
     def destroy(self):
         attr = self.__dict__
@@ -190,7 +195,9 @@ class ConstructionView():
         self.buttonFerme = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFerme,
                                          iconPath="Graphics/Buildings/Age_I/Ferme/Ferme_noire.png")
 
-        self.buttonBaraque = GMediumButton(self.canvas, 'Baraque', self.onCreateBuildingBaraque, GButton.GREY)
+        self.buttonBaraque = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingBaraque,
+                                        iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
+
         self.buttonHopital = GMediumButton(self.canvas, 'Hopital', self.onCreateBuildingHopital, GButton.GREY)
 
         self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
@@ -215,8 +222,16 @@ class ConstructionView():
     def draw(self):
         # BTN CONSTRUCTION
         self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
-        self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
-        self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
+        if self.parent.parent.selected:
+            unit = self.parent.parent.selected[0]
+            epoque = unit.joueur.epoque
+        else:
+            print("fail epoque")
+            epoque = 1
+            
+        if epoque > 1:
+            self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
+            self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
 
         self.btnRetour.draw(x=self.x + 25, y=self.y + 235)
 
@@ -240,6 +255,7 @@ class BaseView():
         self.height = parent.width
         self.x = parent.x
         self.y = parent.y
+
         self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
         self.boutonCreateUnit.icon = GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysans/paysan_noir.png').frames[
             'DOWN_1']
@@ -296,13 +312,45 @@ class HospitalView():
         self.height = parent.width
         self.x = parent.x
         self.y = parent.y
-        self.healUnit = GMediumButton(self.canvas, 'Hopital', self.onHealingUnit, GButton.GREY)
+        self.healUnit = GMediumButton(self.canvas, 'Regenerer', self.onHealingUnit, GButton.GREY)
 
     def draw(self):
         self.healUnit.draw(x=self.x + 25, y=self.y + 25)
 
     def onHealingUnit(self):
         self.hospital.healing()
+
+    def destroy(self):
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class BarackView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.barack = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.createPrivate = GMediumButton(self.canvas, 'Soldat', self.onCreatePrivate, GButton.GREY)
+        self.createUpgradedPrivate = GMediumButton(self.canvas, 'Soldat 2', self.onCreateUpgradedPrivate, GButton.GREY)
+
+
+    def draw(self):
+        self.createPrivate.draw(x=self.x + 25, y=self.y + 25)
+        self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
+
+    def onCreatePrivate(self):
+        self.barack.creer1()
+
+    def onCreateUpgradedPrivate(self):
+        self.barack.creer2()
 
     def destroy(self):
         attr = self.__dict__
