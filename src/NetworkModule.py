@@ -126,7 +126,7 @@ class ServerController:
             self.commands[targetFrame] = [command]
 
         if Command.START_GAME in command:
-            self.commands[currentFrame] = [command]
+            self.commands[1] = [command]
 
 
 
@@ -143,7 +143,7 @@ class ServerController:
 
         currentClient = self.clients[clientId]
         currentClient.currentFrame = currentFrame
-        #print(["%s: %s" % (c.civId, c.currentFrame) for c in self.clients.values()])   # PROGRESSION CLIENTS
+
 
 
         # a-t-on suffisamment de joueurs pour commencer la partie?
@@ -158,7 +158,7 @@ class ServerController:
 
 
 
-        # Si quelqu'un est plus en retard que nous on ne peut obtenir notre prochaine frame
+        # Si quelqu'un est plus en retard que nous on ne peut pas obtenir notre prochaine frame
         # On va attendre que le(s) client(s) en retard se synchronise(nt)
         if self.isSomeoneLate():
             if self.isSomeoneMoreLate(currentClient):
@@ -167,8 +167,10 @@ class ServerController:
                     return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
 
         try:
+            print(currentFrame + 1)
             return self.commands[currentFrame + 1]
         except KeyError:
+            print("ERROR?")
             return []
 
 

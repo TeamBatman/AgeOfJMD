@@ -55,7 +55,6 @@ class Controller:
             # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
             for c in cmd:
                 if c['TYPE'] == Command.START_GAME:
-                    print("OK")
                     self.startGame()
 
         if not isinstance(self.view, GameView):
