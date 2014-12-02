@@ -72,6 +72,15 @@ class Model:
         if command.data['CLASSE'] == "soldatEpee":
             self.joueurs[command.data['CIV']].createUnitSword(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatLance":
+            self.joueurs[command.data['CIV']].createUnitLance(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatBouclier":
+            self.joueurs[command.data['CIV']].createUnitShield(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
         elif command.data['CLASSE'] == "paysan":
             self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])

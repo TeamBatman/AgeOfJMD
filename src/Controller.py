@@ -397,7 +397,7 @@ class EventListener:
             print("click sur building ennemi")
             self.onMapRClick(event, attackedBuildingId=building.id)
 
-        if building.type == "ferme":
+        if building.type == Batiment.FERME:
             print("batiment")
             self.onMapRClick(event)
             

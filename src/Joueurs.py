@@ -108,6 +108,22 @@ class Joueur:
         """
         self.units[uId] = GuerrierEpee(uId, x, y, self, civilisation)
 
+    def createUnitLance(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité avec lance à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = GuerrierLance(uId, x, y, self, civilisation)
+
+    def createUnitShield(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité avec lance à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
+
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
         (donc retirer de la liste des unités)
