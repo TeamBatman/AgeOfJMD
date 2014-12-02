@@ -445,9 +445,6 @@ class Base(Batiment):
 class Baraque(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
-        self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Bawefse.png')
-        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
         self.type = Batiment.BARAQUE
         self.vitesseDeCreation = 40
         self.typeCreation = ""
@@ -457,6 +454,27 @@ class Baraque(Batiment):
         self.coutCreer1['nourriture'] = 50
         self.coutCreer2['nourriture'] = 50
         self.coutCreer3['nourriture'] = 50
+
+    def determineImage(self):
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        baraqueImages = {
+            Civilisation.BLANC: 'Buildings/%s/Barracks/barracks_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Barracks/barracks_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Barracks/barracks_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Barracks/barracks_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Barracks/barracks_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Barracks/barracks_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Barracks/barracks_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Barracks/barracks_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Barracks/barracks_rose.png' % age
+        }
+        img = GraphicsManager.getImage(baraqueImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
 
 
     def creer1(self):  # création de soldats avec épée
