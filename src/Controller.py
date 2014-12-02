@@ -45,6 +45,9 @@ class Controller:
         self.displayTimer = Timer(1000 / 60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
         self.loadingThread = None
 
+        self.gameStarted = False
+
+
     def mainLoop(self):
         if self.network.client is not None:
             try:
@@ -57,9 +60,8 @@ class Controller:
                 if c['TYPE'] == Command.START_GAME:
                     self.startGame()
 
-        if not isinstance(self.view, GameView):
+        if not self.gameStarted:
             self.titleScreenLoop()
-
         else:
             self.gameLoop(cmd)
 
@@ -71,6 +73,7 @@ class Controller:
 
 
     def startGame(self):
+        self.gameStarted = True
         self.view = GameView(self.window, self.eventListener)
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()

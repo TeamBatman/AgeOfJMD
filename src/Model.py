@@ -57,7 +57,7 @@ class Model:
 
             Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation,
 
-            Command.START_GAME:  lambda x: x
+            Command.START_GAME: lambda x: x
         }
 
         try:
