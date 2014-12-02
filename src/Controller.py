@@ -235,7 +235,7 @@ class Controller:
                     if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
                         self.view.menuActif.update(self.network.client.host.getClients())
                 self.displayTimer.reset()
-        self.window.after(self.refreshRate, self.titleScreenLoop)
+        self.window.after(self.refreshRate, self.mainLoop)
 
 
 
