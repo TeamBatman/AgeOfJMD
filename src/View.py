@@ -164,7 +164,7 @@ class UnitView():
         ico = GraphicsManager.getPhotoImage('Icones/modeActif.png') if self.unit.modeAttack == Unit.ACTIF \
             else GraphicsManager.getPhotoImage('Icones/modePassif.png')
         self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
-        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.animation.activeFrame,
+        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.animation.spriteSheet.frames['DOWN_1'],
                                  tags=('unitView', self.unit.id))
 
         # BOUTONS
@@ -525,6 +525,10 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
                                                          tags=self.miniMapTag)
 
                                 self.eventListener.controller.model.carte.matrice[x][y].revealed = 1
+                                try:
+                                    self.canvas.tag_lower(str(x)+":"+str(y))
+                                except:
+                                    pass
 
                                 self.canvas.tag_raise('rectMiniMap')
                         except IndexError:
@@ -695,23 +699,23 @@ class CarteView():
                 posY1 = 0 + (y - y1) * self.item
                 self.canvas.create_image(posX1, posY1, anchor=NW, image=images[Tuile.GAZON], tags=self.tagName)
 
-        for x in range(x1, x1 + self.nbCasesX + 1):
-            for y in range(y1, y1 + self.nbCasesY):
-                posX1 = 0 + (x - x1) * self.item
-                posY1 = 0 + (y - y1) * self.item
+        #for x in range(x1, x1 + self.nbCasesX + 1):
+        #    for y in range(y1, y1 + self.nbCasesY):
+        #        posX1 = 0 + (x - x1) * self.item
+         #       posY1 = 0 + (y - y1) * self.item
                 posX2 = posX1 + self.item
                 posY2 = posY1 + self.item
                 tuile = carte[x][y]
-
-                if not carte[x][y].revealed:
-                    img = GraphicsManager.getPhotoImage('World/fog.png')
-                    self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=self.tagName)
-                    continue
 
                 if tuile.type != Tuile.GAZON:
                     img = images[tuile.type]
                     tag = self.tagName
                     self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=tag)
+
+                if not carte[x][y].revealed:
+                    img = GraphicsManager.getPhotoImage('World/fog.png')
+                    self.canvas.create_image(posX1, posY1, anchor=NW, image=img, tags=(self.tagName, str(x)+":"+str(y)))
+                    continue
 
                 # TODO raise Fog and Forest
 

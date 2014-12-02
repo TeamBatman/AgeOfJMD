@@ -75,10 +75,10 @@ class Controller:
         joueur = self.model.joueurs[self.model.civNumber]
         if self.displayTimer.isDone():
 
-            if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
-            else:
-                self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
+            #if self.view.needUpdateCarte():
+            #    self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
+            #else:
+            self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
             self.displayTimer.reset()
 
 
@@ -181,7 +181,7 @@ class EventListener:
             groupeSansLeader.remove(leaderUnit)
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index !")
-            groupeSansLeader = None
+            groupeSansLeader = []
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
@@ -260,7 +260,7 @@ class EventListener:
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
             for b in buildings:
-                print(b.id)
+                print("building", b.type)
                 if b.estBatimentDe(clientId):
                     if b.type == Batiment.BASE:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)

@@ -167,11 +167,11 @@ class Unit():
             if self.leader == 1:
                 self.building = building
             self.mode = 2
-
+            
+        self.attackedBuildingId = attackedBuildingID
         if attackedBuildingID:
             print("JAI UN BUILDING A ATTAQUER")
-            self.mode = 5
-            self.attackedBuildingId = attackedBuildingID
+            self.mode = 5           
             
         self.cibleX = cibleX
         self.cibleY = cibleY
