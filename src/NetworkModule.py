@@ -343,7 +343,7 @@ class NetworkController:
      """
 
     def __init__(self):
-        self.client = Client()  # Instance du client
+        self.client = None #Client()  # Instance du client
         self.server = None  # Instance du serveur (Seulement lorsque le joueur décide de hoster une partie)
         self.serverThread = None  # Le Fil d'éxécution du serveur
 
@@ -354,6 +354,8 @@ class NetworkController:
         """
         if self.serverThread:
             ipAddress = detectIP()
+        if not self.client:
+            self.client = Client()
         try:
             self.client.connect(ipAddress, port, playerName=playerName)
         except Pyro4.errors.CommunicationError:
@@ -411,6 +413,12 @@ class NetworkController:
         """
         self.server.stop()
         self.server = None
+
+    def isClientHost(self):
+        """ Retourne si le client en cours est un HOST
+        :return: booléen True si le client est host autrement false
+        """
+        return self.serverThread is not None
 
 
 class ClientConnectionError(Exception):

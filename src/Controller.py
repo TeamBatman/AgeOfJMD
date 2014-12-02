@@ -7,13 +7,17 @@ from Batiments import Batiment
 from Commands import Command
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
+import NetworkModule
 from Units import Unit
 from Units import Noeud
 from View import GameView, FrameSide
 from GameWindow import GameWindow
 from SimpleTimer import Timer
+from TitleScreen import TitleScreen
+import MenuDebut
 
-SKIP_MENU = True  # Permet de skipper les menus
+
+SKIP_MENU = False  # Permet de skipper les menus
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
@@ -179,6 +183,14 @@ class Controller:
             self.network.connectClient(ipAddress=IPJoueur, port=33333, playerName=nomJoueur)
             self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
             self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.ARRETER_SERVEUR:
+            if self.network.client:
+                self.network.disconnectClient()
+            if self.network.server:
+                self.network.stopServer()
+            self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR)
+
 
 
     def titleScreenLoop(self):
