@@ -165,7 +165,7 @@ class UnitView():
         ico = GraphicsManager.getPhotoImage('Icones/modeActif.png') if self.unit.modeAttack == Unit.ACTIF \
             else GraphicsManager.getPhotoImage('Icones/modePassif.png')
         self.canvas.create_image(posX - 16, posY, anchor=NW, image=ico, tags='unitView')
-        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.animation.activeFrame,
+        self.canvas.create_image(posX, posY, anchor=NW, image=self.unit.animation.spriteSheet.frames['DOWN_1'],
                                  tags=('unitView', self.unit.id))
 
         # BOUTONS
