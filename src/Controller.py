@@ -75,10 +75,10 @@ class Controller:
         joueur = self.model.joueurs[self.model.civNumber]
         if self.displayTimer.isDone():
 
-            if self.view.needUpdateCarte():
-                self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
-            else:
-                self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
+            #if self.view.needUpdateCarte():
+            #    self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
+            #else:
+            self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
             self.displayTimer.reset()
 
 
