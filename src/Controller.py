@@ -11,6 +11,10 @@ from Units import Unit
 from Units import Noeud
 from View import View, FrameSide
 from SimpleTimer import Timer
+try:
+    from tkinter import Event  # Python 3
+except ImportError:
+    from Tkinter import Event  # Python 2
 
 
 class Controller:
@@ -58,7 +62,7 @@ class Controller:
             if command['TYPE'] == Command.WAIT:
                 doUpdate = False
             elif command['TYPE'] == Command.DESYNC:
-                Client.outputDebug("Votre clent est DÉSYNCHRONISÉ")
+                Client.outputDebug("Votre client est DÉSYNCHRONISÉ")
                 self.shutdown()  # TODO Afficher message
             else:
                 self.model.executeCommand(command)
@@ -153,13 +157,22 @@ class EventListener:
         :param building: le building à construire
         """
         try:
+<<<<<<< HEAD
             if not AI:
+=======
+            if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+>>>>>>> origin/dev
                 x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
                 y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             else:
                 x2 = event.x
                 y2 = event.y
+<<<<<<< HEAD
 
+=======
+                
+            print("DEPLACEMENT !!!!:::", x2, y2, " vs ", event.x, event.y, event)
+>>>>>>> origin/dev
             if not groupe:
                 groupe = self.controller.view.selected[:]
                 if isinstance(groupe[0], Batiment):
@@ -265,7 +278,7 @@ class EventListener:
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
             for b in buildings:
-                print(b.id)
+                print("building", b.type)
                 if b.estBatimentDe(clientId):
                     if b.type == Batiment.BASE:
                         self.controller.view.frameSide.changeView(FrameSide.BASEVIEW, b)
@@ -323,8 +336,12 @@ class EventListener:
 
         x1, y1 = event.x, event.y
         # x2, y2 = event.x, event.y
-        x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
-        y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
+            y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
+        else:
+            x2 = event.x
+            y2 = event.y
         # print("dude!", x2, y2)
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
         #TODO: Merge avec onMapRClick !!!
@@ -402,7 +419,7 @@ class EventListener:
             print("click sur building ennemi")
             self.onMapRClick(event, attackedBuildingId=building.id)
 
-        if building.type == "ferme":
+        if building.type == Batiment.FERME:
             print("batiment")
             self.onMapRClick(event)
             
