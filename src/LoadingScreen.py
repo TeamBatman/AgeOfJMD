@@ -1,4 +1,5 @@
 import threading
+from tkinter import ALL
 from GameWindow import GameWindow
 from GraphicsManagement import GraphicsManager
 import GraphicsManagement
@@ -34,6 +35,11 @@ class LoadingScreen():
         self.progressBar.setProgression(progression)
         self.progressBar.update()
         self.window.root.update()
+
+    def destroy(self):
+        self.canvas.delete(ALL)
+
+
 
 
 class ResourceLoader():
@@ -78,6 +84,9 @@ class ResourceLoader():
         self.nbLoadedRes += 1
         self.progression = int(self.nbLoadedRes * 100 / self.nbResTotal)
         self.view.update(self.progression)
+
+
+
 
 
 def main():
