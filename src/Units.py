@@ -156,6 +156,9 @@ class Unit():
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
+        if self.nbRessources == 0:#S'il n'est pas en ressource
+            self.mode = 0
+        
         if self.ennemiCible:
             print("changement", self.id)
             self.mode = 3
@@ -167,11 +170,11 @@ class Unit():
             if self.leader == 1:
                 self.building = building
             self.mode = 2
-
+            
+        self.attackedBuildingId = attackedBuildingID
         if attackedBuildingID:
             print("JAI UN BUILDING A ATTAQUER")
-            self.mode = 5
-            self.attackedBuildingId = attackedBuildingID
+            self.mode = 5           
             
         self.cibleX = cibleX
         self.cibleY = cibleY
@@ -1061,6 +1064,7 @@ class Paysan(Unit):
         #print(self.nbRessources)
         cases = self.model.trouverCaseMatrice(self.posRessource.x, self.posRessource.y)
         if self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+            print("FIN DE LA RESSOURCE")
             self.mode = 0
         if self.nbRessources + self.compteurRessource + self.vitesseRessource <= self.nbRessourcesMax:
             self.compteurRessource += self.vitesseRessource
@@ -1126,17 +1130,17 @@ class GuerrierEpee(Soldat):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_II/Soldat_epee/soldat_epee_blanc.png',
+            Civilisation.BLEU: 'Units/Age_II/Soldat_epee/soldat_epee_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_II/Soldat_epee/soldat_epee_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/Age_II/Soldat_epee/soldat_epee_.png',
+            Civilisation.NOIR: 'Units/Age_II/Soldat_epee/soldat_epee_noir.png',
+            Civilisation.ORANGE: 'Units/Age_II/Soldat_epee/soldat_epee_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/soldat_epee_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/soldat_epee_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/soldat_epee_rose.png'
         }
 
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
@@ -1156,17 +1160,17 @@ class GuerrierLance(Soldat):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_II/Soldat_lance/soldat_lance_blanc.png',
+            Civilisation.BLEU: 'Units/Age_II/Soldat_lance/soldat_lance_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_II/Soldat_lance/soldat_lance_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/Age_II/Soldat_lance/soldat_lance_mauve.png',
+            Civilisation.NOIR: 'Units/Age_II/Soldat_lance/soldat_lance_noir.png',
+            Civilisation.ORANGE: 'Units/Age_II/Soldat_lance/soldat_lance_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/Soldat_lance/soldat_lance_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/Soldat_lance/soldat_lance_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/Soldat_lance/soldat_lance_rose.png'
         }
 
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
@@ -1186,17 +1190,17 @@ class GuerrierBouclier(Soldat):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_blanc.png',
+            Civilisation.BLEU: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_mauve.png',
+            Civilisation.NOIR: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_noir.png',
+            Civilisation.ORANGE: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/Soldat_bouclier/soldat_bouclier_rose.png'
         }
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
         self.animation = SpriteAnimation(spritesheet, 333)  # 1000/333 = 3 fois par secondes

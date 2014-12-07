@@ -446,7 +446,7 @@ class Baraque(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = Batiment.BARAQUE
-        self.vitesseDeCreation = 40
+        self.vitesseDeCreation = 5
         self.typeCreation = ""
         self.typeRecherche = ""
         self.coutRecherche1['bois'] = 50
@@ -479,11 +479,12 @@ class Baraque(Batiment):
 
     def creer1(self):  # création de soldats avec épée
         if self.enCreation == False:
+            print("HFKSDJFBDSGFSDG-----------!!!!!!!")
             if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
-                self.enCreation = True
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.typeCreation = "Epee"
                 self.tempsDepartCreation = time.time()
+                self.enCreation = True
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
             cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
@@ -499,7 +500,7 @@ class Baraque(Batiment):
     def creer2(self):  # création de soldats avec lances
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer2['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer2['nourriture']
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Lance"
                 self.tempsDepartCreation = time.time()
@@ -518,7 +519,7 @@ class Baraque(Batiment):
     def creer3(self):  # création de soldats avec boucliers
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer3['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer3['nourriture']
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Bouclier"
                 self.tempsDepartCreation = time.time()
@@ -637,7 +638,7 @@ class Ferme(Batiment):
         self.unitInBuilding = [] # Les unités dans la ferme
         self.production = 5
         self.tempsProduction = 10
-        self.type = "ferme"
+        self.type = Batiment.FERME
         #self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
         #self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
         #self.image = ImageTk.PhotoImage(self.resized)

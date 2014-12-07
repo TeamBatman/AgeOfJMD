@@ -71,7 +71,20 @@ class Model:
         :param command: la commande à exécuter [Objet Command]
         """
         print(self.joueurs)
-        self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
+        if command.data['CLASSE'] == "soldatEpee":
+            self.joueurs[command.data['CIV']].createUnitSword(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatLance":
+            self.joueurs[command.data['CIV']].createUnitLance(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatBouclier":
+            self.joueurs[command.data['CIV']].createUnitShield(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "paysan":
+            self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
     def executeMoveUnit(self, command):
@@ -124,7 +137,7 @@ class Model:
             if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][
                     command['Y1']].nbRessources
-            self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
+            #self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
         if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
             self.carte.matrice[command['X1']][command['Y1']].type = 0  # Gazon -> n'est plus une ressource
             self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
@@ -254,6 +267,56 @@ class Model:
         centreY = (grandeurCase * caseY) + grandeurCase / 2
 
         return centreX, centreY
+
+    def trouverRessourcePlusPres(self, unit, typeRessource):
+        ressource = {"x" : 0 , "y" : 0}
+
+        minX = int(unit.x)
+        minY = int(unit.y)
+        maxX = int(unit.x)
+        maxY = int(unit.y)
+        found = False
+
+        while not found:
+            print("start check")
+            minX = minX - 144
+            minY = minY - 144
+            maxX += 144
+            maxY += 144
+            print(minX, minY)
+            #si le minimum des X à vérifier est va à moins de 0, mettre à 0
+            if minX < 0:
+                minX = 0
+
+            #si le minimum des Y à vérifier est va à moins de 0, mettre à 0
+            if minY < 0:
+                minY = 0
+
+            #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxX > self.carte.size * 48:
+                maxX = self.carte.size * 48
+
+            #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxY > self.carte.size * 48:
+                maxY = self.carte.size * 48
+
+            print(maxX)
+            print(maxY)
+            print(minX)
+            print(minY)
+
+            for x in range (minX, maxX, 48):
+                for y in range (minY, maxY, 48):
+                    casesCible = self.trouverCaseMatrice(x, y)
+                    caseCibleX = casesCible[0]
+                    caseCibleY = casesCible[1]
+                    if self.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
+                        ressource["x"] = x
+                        ressource["y"] = y
+                        print("!", x,y)
+                        return ressource
 
     def validPosBuilding(self, caseX, caseY):
         """Regarde si on peut construire à cette endroit un building

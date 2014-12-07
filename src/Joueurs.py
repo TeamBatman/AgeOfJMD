@@ -100,6 +100,30 @@ class Joueur:
         """
         self.units[uId] = Paysan(uId, x, y, self, civilisation)
 
+    def createUnitSword(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité avec épée à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = GuerrierEpee(uId, x, y, self, civilisation)
+
+    def createUnitLance(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité avec lance à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = GuerrierLance(uId, x, y, self, civilisation)
+
+    def createUnitShield(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité avec lance à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
+
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
         (donc retirer de la liste des unités)
@@ -120,7 +144,6 @@ class Joueur:
         for paysan in self.enRessource:
             #print(paysan.id, paysan.mode)
             if paysan.mode == 1:
-                #print(paysan.id)
                 if not paysan.enDeplacement and paysan.ressource:
                     paysan.chercherRessources()
                 elif not paysan.cheminTrace and not paysan.ressourceEnvoye:
@@ -136,8 +159,17 @@ class Joueur:
                     self.model.controller.eventListener.onMapRClick(paysan.posRessource, groupe)
                     paysan.ressourceEnvoye = True
             else:
-                print("remove", paysan.id)
-                self.enRessource.remove(paysan)
+                cases = self.model.trouverCaseMatrice(paysan.posRessource.x, paysan.posRessource.y)
+                if not self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+                    print("remove", paysan.id)
+                    self.enRessource.remove(paysan)
+                else:
+                    ressource = self.model.trouverRessourcePlusPres(paysan,paysan.typeRessource)
+                    if ressource:
+                        groupe = []
+                        groupe.append(paysan)
+                        self.model.controller.eventListener.onMapRClick(Noeud(None, ressource["x"],ressource["y"], None, None), groupe)
+                    print("FIN DE LA RESSOURCE")
 
     ### BUILDINGS ###
     def createBuilding(self, bId, posX, posY, btype):  # TODO CLEAN UP
