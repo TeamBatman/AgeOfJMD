@@ -355,8 +355,8 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupeSansLeader, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupeSansLeader),
                                                                     groupeSansLeader[0].grandeur)
-            if groupe == None:
-                groupeSansLeader.remove(leaderUnit)
+            #if groupe == None:
+            #    groupeSansLeader.remove(leaderUnit)
 
                 #groupeSansLeader = self.controller.view.selected[:]
 

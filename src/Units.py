@@ -157,6 +157,7 @@ class Unit():
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
+        self.groupeID = []
         if isEvent:
             self.mode = 0
         
@@ -680,7 +681,6 @@ class Unit():
             self.trouverCheminMultiSelectionUnit(self)
 
         #self.leader = 0 #defaut
-        self.groupeID = []
 
     def trouverCheminMultiSelectionUnit(self,unit):
         """Utilisé par trouverCheminMultiSelection"""
@@ -864,6 +864,19 @@ class Unit():
             return True
         return False
 
+    def remplirGroupe(self):
+        """Crée un groupe pour envoyer au déplacement"""
+        groupe = []
+        groupe.append(self)
+        for unitID in self.groupeID:
+            unit = self.model.getUnit(unitID)
+            if unit:
+                groupe.append(unit)
+            else:
+                print("mort UNIT")
+                self.groupeID.remove(unitID)#unite du groupe tué
+        return groupe
+
 
     # KOMBAT ==========================================================
 
@@ -916,14 +929,10 @@ class Unit():
             self.mode = 3
             print("leader actif", self.id, self.leader)
             if self.leader == 1:
-                groupe = []
-                groupe.append(self)
-                for unitID in self.groupeID: 
-                    groupe.append(model.getUnit(unitID))
+                groupe = self.remplirGroupe()
 
-
-                print("actif!", self.cibleAvantAttaque)
-                self.model.controller.eventListener.onMapRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+                print("actif!", self.cibleAvantAttaque,len(groupe), len(self.groupeID))
+                self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
                 self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -953,10 +962,7 @@ class Unit():
             if self.leader == 1 and self.cibleAvantAttaque:
                 cible = Noeud(None, self.cibleAvantAttaque[0],self.cibleAvantAttaque[1] , None, None)
                 self.cibleAvantAttaque = None
-                groupe = []
-                groupe.append(self)
-                for unitID in self.groupeID: 
-                    groupe.append(model.getUnit(unitID))
+                groupe = self.remplirGroupe()
 
                 if self.enDeplacement:
                     self.cibleAvantAttaque = (self.cibleX,self.cibleY)
@@ -971,7 +977,7 @@ class Unit():
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
-                print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
+                #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
                 if self.ennemiCible.enDeplacement:
                 #if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance: #or not self.cheminTrace:
                     #x2 = self.ennemiCible.x-self.grandeur
@@ -979,10 +985,7 @@ class Unit():
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
                     if self.leader == 1:
                         print("leader deplacement attaque", self.id)
-                        groupe = []
-                        groupe.append(self)
-                        for unitID in self.groupeID: 
-                            groupe.append(model.getUnit(unitID))
+                        groupe = self.remplirGroupe()
 
                         self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
                         #model.controller.eventListener.selectionnerUnit(self,True, None,x2,y2, groupe)
