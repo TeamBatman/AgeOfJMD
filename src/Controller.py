@@ -21,7 +21,7 @@ from SimpleTimer import Timer
 import MenuDebut
 
 
-SKIP_MENU = True  # Permet de skipper les menus
+SKIP_MENU = False  # Permet de skipper les menus
 LOAD_RESSOURCE_ON_START = True  # Si on load les ressources au démarrage du jeu ou non
 
 try:
@@ -223,7 +223,8 @@ class Controller:
             self.view.drawMenu()
 
         elif event == MenuDebut.TitleEvent.LANCER_PARTIE_SOLO:
-            pass
+            self.view.destroy()
+            self.startSoloGame()
 
         elif event == MenuDebut.TitleEvent.QUITTER_JEU:
             self.shutdown()
