@@ -514,7 +514,7 @@ class AI(Joueur):
 
     def deplacerUnite(self, butX, butY, unite, building):
         print(butX, butY, unite.x, unite.y)
-        self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite], building, None, True)
+        self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite], building, None)
         #cmd = Command(self.civilisation, Command.MOVE_UNIT)
         #cmd.addData('ID', unite.id)
         #cmd.addData('X1', unite.x)
