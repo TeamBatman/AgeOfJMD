@@ -158,9 +158,11 @@ class EventListener:
         """
         try:
             if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+                eventTkinter = True
                 x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
                 y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             else:
+                eventTkinter = False
                 x2 = event.x
                 y2 = event.y
                 
@@ -178,7 +180,7 @@ class EventListener:
             carte = self.model.carte.matrice
             cases = self.model.trouverCaseMatrice(x2,y2)
             if not carte[cases[0]][cases[1]].isWalkable and carte[cases[0]][cases[1]].type == 5:
-                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings())[0]
+                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings(),eventTkinter)[0]
                 if buildingDetected.peutEtreOccupe:
                     posFin = []
                     for i in range(len(groupe)-1):
@@ -406,7 +408,11 @@ class EventListener:
         Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
         :param event: Tkinter Event
         """
-        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            eventTkinter = True
+        else:
+            eventTkinter = False
+        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings(),eventTkinter)[0]
         if not building.estBatimentDe(self.model.joueur.civilisation):
             print("click sur building ennemi")
             self.onMapRClick(event, attackedBuildingId=building.id)

@@ -821,6 +821,7 @@ class CarteView():
                 self.canvas.tag_lower('unit','GMenu')
                 self.canvas.tag_lower('unitHP','GMenu')
                 self.canvas.tag_lower('unitVision','GMenu')
+                self.canvas.tag_lower('unitVision','building')
                 self.canvas.tag_lower('unitAttackMode','GMenu')
                 self.canvas.tag_raise('unit', 'unitAttackMode')
 
@@ -1028,7 +1029,7 @@ class View(GWindow):
 
         return None
 
-    def detectBuildings(self, x1, y1, x2, y2, buildings):
+    def detectBuildings(self, x1, y1, x2, y2, buildings, eventTkinter=True):
         """ Retourne une liste de buildings faisant partie de la region passé en paramètre
         :param x1: coord x du point haut gauche
         :param y1: coord y du point haut gauche
@@ -1036,7 +1037,13 @@ class View(GWindow):
         :param y2: coord y du point bas droite
         :return: une liste de buildings
         """
-
+        if not eventTkinter: #Si le x1,y1,x2 et y2 ne viennnent pas d'un event (e.g.: unit.x, unit.y)
+            #On converti pour avoir le x/y du canevas
+            x1 = x1 - (self.carte.cameraX * self.carte.item) 
+            y1 = y1 - (self.carte.cameraY * self.carte.item)
+            x2 = x2 - (self.carte.cameraX * self.carte.item)
+            y2 = y2 - (self.carte.cameraY * self.carte.item)
+        
         items = [item for item in self.canvas.find_overlapping(x1, y1, x2, y2) if
                  'building' in self.canvas.gettags(item)]
         buildings = [buildings[self.canvas.gettags(i)[2]] for i in

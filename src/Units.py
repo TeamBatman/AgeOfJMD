@@ -449,7 +449,8 @@ class Unit():
            #self.attaquerBuilding(self.model,buildingViser)
 
         if self.mode == 4: #Rentre dans un building
-            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
+            print("JE VEUX RENTRER !")
+            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings(),False)
             if buildingDetected:
                 buildingDetected = buildingDetected[0]
                 if buildingDetected.peutEtreOccupe:
