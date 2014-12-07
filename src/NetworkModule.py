@@ -167,10 +167,8 @@ class ServerController:
                     return [pickle.dumps(Command(-1, Command.WAIT).convertToDict())]
 
         try:
-            print(currentFrame + 1)
             return self.commands[currentFrame + 1]
         except KeyError:
-            print("ERROR?")
             return []
 
 

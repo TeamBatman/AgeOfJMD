@@ -19,24 +19,25 @@ from SimpleTimer import Timer
 import MenuDebut
 
 
-SKIP_MENU = False  # Permet de skipper les menus
+SKIP_MENU = True  # Permet de skipper les menus
+LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
+
+
 
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
         de sorte à ce qu'ils n'aient pas accès entre eux directement.
     """
 
-    SINGLE_PLAYER = 0
-    MULTIPLAYER = 1
 
     def __init__(self):
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.window = GameWindow()
+
         self.view = None
 
-        self.gameMode = Controller.MULTIPLAYER
 
         self.currentFrame = -1
         self.nbFramesPerSecond = 15
@@ -73,11 +74,26 @@ class Controller:
 
 
     def startGame(self):
-        self.gameStarted = True
+
+        self.view.destroy()
+        print(self.window.root)
         self.view = GameView(self.window, self.eventListener)
-        self.view.drawMinimap(self.model.carte.matrice)
-        self.view.drawRectMiniMap()
-        self.view.drawMap(self.model.carte.matrice)
+
+        cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
+        cmd.addData('ID', self.network.getClientId())
+        self.sendCommand(cmd)
+        self.model.creerJoueur(self.network.getClientId())
+        self.model.civNumber = self.network.getClientId()
+
+        self.gameStarted = True
+
+
+
+        #self.view = GameView(self.window, self.eventListener)
+        #self.view.drawMinimap(self.model.carte.matrice)
+        #self.view.drawRectMiniMap()
+        #self.view.drawMap(self.model.carte.matrice)
+
 
 
 
@@ -124,8 +140,6 @@ class Controller:
 
         # FRAMES
         self.currentFrame = 0
-        self.view = LoadingScreen(self.window, self)
-        self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
 
 
         if SKIP_MENU:
@@ -134,21 +148,35 @@ class Controller:
             self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
             # INITIALISATION MODEL
+            self.gameStarted = True
             cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
             cmd.addData('ID', self.network.getClientId())
             self.sendCommand(cmd)
+
             self.model.creerJoueur(self.network.getClientId())
+            self.model.joueur = self.model.joueurs[self.network.getClientId()]
+            self.model.civNumber = self.network.getClientId()
+
+
             self.model.creerAI(7)
             self.model.creerbaseAI(7)
-            self.model.joueur = self.model.joueurs[self.network.getClientId()]
-
-            self.model.civNumber = self.network.getClientId()
 
             # INITIALISATION AFFICHAGE
             self.view = GameView(self.window, self.eventListener)
             self.view.drawMinimap(self.model.carte.matrice)
             self.view.drawRectMiniMap()
             self.view.drawMap(self.model.carte.matrice)
+        else:
+            if LOAD_RESSOURCE_ON_START:
+                print("YAA")
+                self.view = LoadingScreen(self.window, self)
+                self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+            else:
+                self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+                self.graphicsLoader.isDone = True
+                self.view = TitleScreen(self.window, self)
+                self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+
 
         self.mainLoop()
         self.window.show()

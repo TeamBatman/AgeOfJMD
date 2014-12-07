@@ -360,9 +360,10 @@ class BarackView():
 
 
 class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
-    def __init__(self, canvas, eventListener):
+    def __init__(self, mainView, canvas, eventListener):
         self.canvas = canvas
         self.eventListener = eventListener
+        self.mainView = mainView
 
         # LE CADRE
         self.width = 250  # Largeur du cadre en pixels
@@ -917,7 +918,7 @@ class GameView():
         """ Dessine la base du HUD
         """
         # LE CADRE DE LA MINIMAP
-        self.frameMinimap = FrameMiniMap(self.canvas, self.eventListener)
+        self.frameMinimap = FrameMiniMap(self, self.canvas, self.eventListener)
         self.frameMinimap.draw()
 
         # LE CADRE DROIT
@@ -1097,12 +1098,15 @@ class GameView():
 
     def needUpdateCarte(self):
         # print(len(self.eventListener.controller.model.joueurs[self.eventListener.controller.model.civNumber].units))
-        for unite in self.eventListener.controller.model.joueurs[
-            self.eventListener.controller.model.civNumber].units.values():
-            if self.carte.isUnitShown(unite):
-                if unite.enDeplacement:
-                    return True
-        return False
+        try:
+            for unite in self.eventListener.controller.model.joueurs[
+                self.eventListener.controller.model.civNumber].units.values():
+                if self.carte.isUnitShown(unite):
+                    if unite.enDeplacement:
+                        return True
+            return False
+        except KeyError:
+            pass
 
 
 

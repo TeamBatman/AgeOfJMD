@@ -200,8 +200,10 @@ class TitleScreen():
     def destroy(self):
         """ Permet d'effacer l'écran Titre
         """
-        self.canvas.delete(ALL)
         self.menuActif.destroy()
+        self.canvas.delete(ALL)
+        print("menu destroyed")
+
 
 
 
