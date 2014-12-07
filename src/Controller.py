@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from tkinter import ALL
 
 from Batiments import Batiment
 from Commands import Command
@@ -19,8 +20,8 @@ from SimpleTimer import Timer
 import MenuDebut
 
 
-SKIP_MENU = True  # Permet de skipper les menus
-LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
+SKIP_MENU = False  # Permet de skipper les menus
+LOAD_RESSOURCE_ON_START = True  # Si on load les ressources au démarrage du jeu ou non
 
 
 
@@ -75,24 +76,25 @@ class Controller:
 
     def startGame(self):
 
-        self.view.destroy()
-        print(self.window.root)
+        self.window.canvas.delete(ALL)
+        print(self.window.root.update())
         self.view = GameView(self.window, self.eventListener)
 
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
         self.sendCommand(cmd)
         self.model.creerJoueur(self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.model.civNumber = self.network.getClientId()
 
         self.gameStarted = True
 
 
 
-        #self.view = GameView(self.window, self.eventListener)
-        #self.view.drawMinimap(self.model.carte.matrice)
-        #self.view.drawRectMiniMap()
-        #self.view.drawMap(self.model.carte.matrice)
+        self.view = GameView(self.window, self.eventListener)
+        self.view.drawMinimap(self.model.carte.matrice)
+        self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
 
 
 
@@ -141,36 +143,35 @@ class Controller:
         # FRAMES
         self.currentFrame = 0
 
-
-        if SKIP_MENU:
-           # INITIALISATION RÉSEAU
-            self.network.startServer(port=33333)
-            self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
-
-            # INITIALISATION MODEL
-            self.gameStarted = True
-            cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
-            cmd.addData('ID', self.network.getClientId())
-            self.sendCommand(cmd)
-
-            self.model.creerJoueur(self.network.getClientId())
-            self.model.joueur = self.model.joueurs[self.network.getClientId()]
-            self.model.civNumber = self.network.getClientId()
-
-
-            self.model.creerAI(7)
-            self.model.creerbaseAI(7)
-
-            # INITIALISATION AFFICHAGE
-            self.view = GameView(self.window, self.eventListener)
-            self.view.drawMinimap(self.model.carte.matrice)
-            self.view.drawRectMiniMap()
-            self.view.drawMap(self.model.carte.matrice)
+        if LOAD_RESSOURCE_ON_START:
+            print("YAA")
+            self.view = LoadingScreen(self.window, self)
+            self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
         else:
-            if LOAD_RESSOURCE_ON_START:
-                print("YAA")
-                self.view = LoadingScreen(self.window, self)
-                self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+            if SKIP_MENU:
+               # INITIALISATION RÉSEAU
+                self.network.startServer(port=33333)
+                self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
+
+                # INITIALISATION MODEL
+                self.gameStarted = True
+                cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
+                cmd.addData('ID', self.network.getClientId())
+                self.sendCommand(cmd)
+
+                self.model.creerJoueur(self.network.getClientId())
+                self.model.joueur = self.model.joueurs[self.network.getClientId()]
+                self.model.civNumber = self.network.getClientId()
+
+
+                self.model.creerAI(7)
+                self.model.creerbaseAI(7)
+
+                # INITIALISATION AFFICHAGE
+                self.view = GameView(self.window, self.eventListener)
+                self.view.drawMinimap(self.model.carte.matrice)
+                self.view.drawRectMiniMap()
+                self.view.drawMap(self.model.carte.matrice)
             else:
                 self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
                 self.graphicsLoader.isDone = True
