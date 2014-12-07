@@ -318,9 +318,11 @@ class EventListener:
         """
         try:
             if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+                eventTkinter = True
                 x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
                 y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             else:
+                eventTkinter = False
                 x2 = event.x
                 y2 = event.y
                 
@@ -338,7 +340,7 @@ class EventListener:
             carte = self.model.carte.matrice
             cases = self.model.trouverCaseMatrice(x2,y2)
             if not carte[cases[0]][cases[1]].isWalkable and carte[cases[0]][cases[1]].type == 5:
-                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings())[0]
+                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings(),eventTkinter)[0]
                 if buildingDetected.peutEtreOccupe:
                     posFin = []
                     for i in range(len(groupe)-1):
@@ -355,11 +357,11 @@ class EventListener:
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building, attackedBuildingId)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building, attackedBuildingId, eventTkinter)
 
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building, attackedBuildingId)  # Faire le leader en dernier
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building, attackedBuildingId, eventTkinter)  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None, attackedBuildingId = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None, attackedBuildingId = None, eventTkinter = False):
         """Pour la fonction onMapRClick !!!"""
         # print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
@@ -370,6 +372,7 @@ class EventListener:
         cmd.addData('Y2', y2)
         cmd.addData('BTYPE', building)
         cmd.addData('ABID', attackedBuildingId)
+        cmd.addData('ISEVENT', eventTkinter)
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -463,11 +466,17 @@ class EventListener:
 
 
     def envoyerCommandBatiment(self,idBatiment, posX, posY, unitsSelected, bType, civ = None):
+        print("ENVOYER BATIMENT")
         caseX, caseY = self.model.trouverCaseMatrice(posX, posY)
         if self.model.validPosBuilding(caseX, caseY) and unitsSelected:
-            self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
+            tropProche = False
+            caseUnitX, caseUnitY = self.model.trouverCaseMatrice(unitsSelected[0].x, unitsSelected[0].y)
+            if abs(caseUnitX - caseX) + abs(caseUnitY - caseY) <= 1:
+                tropProche = True
+            else:
+                self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
             
-        if bType == 0: #Base TEMPORAIRE !
+        if bType == 0 or tropProche: #Base TEMPORAIRE !
             clientId = self.controller.network.getClientId()
             cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', idBatiment)
@@ -489,13 +498,17 @@ class EventListener:
         x1, y1 = event.x, event.y
         # x2, y2 = event.x, event.y
         if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            eventTkinter = True
             x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         else:
+            eventTkinter = False
             x2 = event.x
             y2 = event.y
         # print("dude!", x2, y2)
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
+        if targetUnit.civilisation == self.model.joueur.civilisation:
+            return #Ne peux pas attaquer sa civilisation
         #TODO: Merge avec onMapRClick !!!
         try:
             groupe = groupeSansLeader
@@ -508,8 +521,8 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupeSansLeader, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupeSansLeader),
                                                                     groupeSansLeader[0].grandeur)
-            if groupe == None:
-                groupeSansLeader.remove(leaderUnit)
+            #if groupe == None:
+            #    groupeSansLeader.remove(leaderUnit)
 
                 #groupeSansLeader = self.controller.view.selected[:]
 
@@ -524,16 +537,15 @@ class EventListener:
             unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible, None, None, eventTkinter)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
         leaderUnit.mode = 3
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupeSansLeader,
-                              leaderUnit.ennemiCible)  # Faire le leader en dernier
-
-
+                              leaderUnit.ennemiCible, None, None, eventTkinter)  # Faire le leader en dernier
+        
         # if not targetUnit.estUniteDe(clientId):
         #leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
         #for unitSelected in self.controller.view.selected:
@@ -566,13 +578,17 @@ class EventListener:
         Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
         :param event: Tkinter Event
         """
-        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            eventTkinter = True
+        else:
+            eventTkinter = False
+        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings(),eventTkinter)[0]
         if not building.estBatimentDe(self.model.joueur.civilisation):
             print("click sur building ennemi")
             self.onMapRClick(event, attackedBuildingId=building.id)
 
         if building.type == Batiment.FERME:
-            print("batiment")
+            print("Rentre dans batiment")
             self.onMapRClick(event)
             
 

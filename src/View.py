@@ -7,6 +7,7 @@ from Carte import Tuile
 from GraphicsManagement import GraphicsManager
 import GraphicsManagement
 from Units import Unit
+from Units import Paysan
 from Civilisations import Civilisation
 
 try:
@@ -170,7 +171,8 @@ class UnitView():
         # BOUTONS
         self.btnActive.draw(self.x + 25, self.y + 130)
         self.btnPassive.draw(self.x + 130, self.y + 130)
-        self.btnConstruction.draw(self.x + 25, self.y + 235)
+        if isinstance(self.unit, Paysan):
+            self.btnConstruction.draw(self.x + 25, self.y + 235)
 
     def destroy(self):
         self.canvas.delete('unitView')
@@ -589,6 +591,7 @@ class FrameBottom():
         self.y = int(self.canvas.cget('height')) - self.height
 
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
+        self.canvas.tag_raise(self.frame.id, 'GButton')
 
         # TODO COMPLETER
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
@@ -796,10 +799,11 @@ class CarteView():
 
 
                 # ICÔNE MODE COMBAT
-                ico = GraphicsManager.getPhotoImage(
-                    'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
-                    'Icones/modePassif.png')
-                self.canvas.create_image(posX - 16, posY, anchor=CENTER, image=ico, tags='unitAttackMode')
+                if self.eventListener.controller.model.joueur.civilisation == unit.civilisation:
+                    ico = GraphicsManager.getPhotoImage(
+                        'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+                        'Icones/modePassif.png')
+                    self.canvas.create_image(posX - 16, posY, anchor=CENTER, image=ico, tags='unitAttackMode')
 
                 self.canvas.create_image(posX, posY, anchor=CENTER, image=unitImage, tags=('unit', unit.id))
 
@@ -816,9 +820,17 @@ class CarteView():
                 elif unit.leader == 0:
                     self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
                 """
-
-                self.canvas.tag_raise('unit')
-
+                
+                try:
+                    self.canvas.tag_raise('unit')
+                    self.canvas.tag_lower('unit','GMenu')
+                    self.canvas.tag_lower('unitHP','GMenu')
+                    self.canvas.tag_lower('unitVision','GMenu')
+                    self.canvas.tag_lower('unitVision','building')
+                    self.canvas.tag_lower('unitAttackMode','GMenu')
+                    self.canvas.tag_raise('unit', 'unitAttackMode')
+                except:
+                    pass #un des tags n'existait pas (e.g. unitAttackMode si ennemi)
 
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
@@ -836,11 +848,13 @@ class CarteView():
                                          image=img,
                                          tags=('building', building.type, building.id))
                 # self.lowerAllItemsOnMap()
+        
 
             # ANIMATION BLESSURES ET AUTRES
                 for anim in building.oneTimeAnimations:
                     imgAnim = anim.activeFrame
                     self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('building', building.id))
+        self.canvas.tag_lower('building','GMenu')
 
 
     def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING
@@ -865,10 +879,10 @@ class CarteView():
         y2 = y1 + (self.nbCasesY * self.item)
 
         # minimap
-        unitX1 = unit.x - unit.grandeur / 2
-        unitY1 = unit.y - unit.grandeur / 2
-        unitX2 = unit.x + unit.grandeur / 2
-        unitY2 = unit.y + unit.grandeur / 2
+        unitX1 = unit.x - unit.grandeur / 2 + unit.grandeur
+        unitY1 = unit.y - unit.grandeur / 2 + unit.grandeur
+        unitX2 = unit.x + unit.grandeur / 2 - unit.grandeur
+        unitY2 = unit.y + unit.grandeur / 2 - unit.grandeur
 
         if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2 and not unit.inBuilding:
             return True
@@ -883,10 +897,10 @@ class CarteView():
 
         cases = self.eventListener.model.trouverCentreCase(building.posX, building.posY)
 
-        batimentX1 = cases[0] - building.tailleX / 2
-        batimentY1 = cases[1] - building.tailleY / 2
-        batimentX2 = cases[0] + building.tailleX / 2
-        batimentY2 = cases[1] + building.tailleY / 2
+        batimentX1 = cases[0] - building.tailleX / 2 + building.tailleX
+        batimentY1 = cases[1] - building.tailleY / 2 + building.tailleY
+        batimentX2 = cases[0] + building.tailleX / 2 - building.tailleX
+        batimentY2 = cases[1] + building.tailleY / 2 - building.tailleY
 
         if batimentX1 > x1 and batimentX2 < x2 and batimentY1 > y1 and batimentY2 < y2:
             return True
@@ -1024,7 +1038,7 @@ class GameView():
 
         return None
 
-    def detectBuildings(self, x1, y1, x2, y2, buildings):
+    def detectBuildings(self, x1, y1, x2, y2, buildings, eventTkinter=True):
         """ Retourne une liste de buildings faisant partie de la region passé en paramètre
         :param x1: coord x du point haut gauche
         :param y1: coord y du point haut gauche
@@ -1032,7 +1046,13 @@ class GameView():
         :param y2: coord y du point bas droite
         :return: une liste de buildings
         """
-
+        if not eventTkinter: #Si le x1,y1,x2 et y2 ne viennnent pas d'un event (e.g.: unit.x, unit.y)
+            #On converti pour avoir le x/y du canevas
+            x1 = x1 - (self.carte.cameraX * self.carte.item) 
+            y1 = y1 - (self.carte.cameraY * self.carte.item)
+            x2 = x2 - (self.carte.cameraX * self.carte.item)
+            y2 = y2 - (self.carte.cameraY * self.carte.item)
+        
         items = [item for item in self.canvas.find_overlapping(x1, y1, x2, y2) if
                  'building' in self.canvas.gettags(item)]
         buildings = [buildings[self.canvas.gettags(i)[2]] for i in

@@ -94,7 +94,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'], command.data['ISEVENT'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
