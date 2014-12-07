@@ -796,10 +796,11 @@ class CarteView():
 
 
                 # ICÔNE MODE COMBAT
-                ico = GraphicsManager.getPhotoImage(
-                    'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
-                    'Icones/modePassif.png')
-                self.canvas.create_image(posX - 16, posY, anchor=CENTER, image=ico, tags='unitAttackMode')
+                if self.eventListener.controller.model.joueur.civilisation == unit.civilisation:
+                    ico = GraphicsManager.getPhotoImage(
+                        'Icones/modeActif.png') if unit.modeAttack == Unit.ACTIF else GraphicsManager.getPhotoImage(
+                        'Icones/modePassif.png')
+                    self.canvas.create_image(posX - 16, posY, anchor=CENTER, image=ico, tags='unitAttackMode')
 
                 self.canvas.create_image(posX, posY, anchor=CENTER, image=unitImage, tags=('unit', unit.id))
 
@@ -816,14 +817,17 @@ class CarteView():
                 elif unit.leader == 0:
                     self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='yellow', tags='unit')
                 """
-
-                self.canvas.tag_raise('unit')
-                self.canvas.tag_lower('unit','GMenu')
-                self.canvas.tag_lower('unitHP','GMenu')
-                self.canvas.tag_lower('unitVision','GMenu')
-                self.canvas.tag_lower('unitVision','building')
-                self.canvas.tag_lower('unitAttackMode','GMenu')
-                self.canvas.tag_raise('unit', 'unitAttackMode')
+                
+                try:
+                    self.canvas.tag_raise('unit')
+                    self.canvas.tag_lower('unit','GMenu')
+                    self.canvas.tag_lower('unitHP','GMenu')
+                    self.canvas.tag_lower('unitVision','GMenu')
+                    self.canvas.tag_lower('unitVision','building')
+                    self.canvas.tag_lower('unitAttackMode','GMenu')
+                    self.canvas.tag_raise('unit', 'unitAttackMode')
+                except:
+                    pass #un des tags n'existait pas (e.g. unitAttackMode si ennemi)
 
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
