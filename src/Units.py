@@ -160,10 +160,11 @@ class Unit():
         self.groupeID = []
         if isEvent:
             self.mode = 0
-        
-        if self.nbRessources == 0:#S'il n'est pas en ressource
-            self.mode = 0
-        
+
+        if isinstance(self, Paysan):
+            if self.nbRessources == 0:#S'il n'est pas en ressource
+                self.mode = 0
+                
         if self.ennemiCible:
             print("changement", self.id)
             self.mode = 3
@@ -206,6 +207,8 @@ class Unit():
                 self.finMultiSelection = Noeud(None, finMultiSelection[0], finMultiSelection[1], None, None)
 
             self.cheminTrace = self.choisirTrace()
+            if self.cheminTrace == -1:
+                return -1 #Reste sur place
             #self.afficherList("cheminTrace", self.cheminTrace)
             if self.trouver:
                 self.trouverCheminMultiSelection()
@@ -520,7 +523,8 @@ class Unit():
 
                     # TODO Changer le chemin pour aller à côté de la ressource !
                 else:
-                    return -1  # Ne peut pas aller sur un obstacle
+                    self.enDeplacement = False #Reste sur place
+                    return -1# Ne peut pas aller sur un obstacle
             else:
                 print("MODE semi", self.mode)
                 if not self.mode == 1 and not self.mode == 5: #S'il ne retourne pas à la base (ressource)
@@ -538,8 +542,8 @@ class Unit():
         # print("Temps a*: ", time.time() - self.time1)
 
         n = chemin
+        cheminTrace = []
         if not n == -1:
-            cheminTrace = []
             while n.parent:
                 cheminTrace.append(n)
                 centreCase = self.model.trouverCentreCase(n.x, n.y)
