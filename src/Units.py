@@ -156,6 +156,9 @@ class Unit():
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
+        if self.nbRessources == 0:#S'il n'est pas en ressource
+            self.mode = 0
+        
         if self.ennemiCible:
             print("changement", self.id)
             self.mode = 3
@@ -1061,6 +1064,7 @@ class Paysan(Unit):
         #print(self.nbRessources)
         cases = self.model.trouverCaseMatrice(self.posRessource.x, self.posRessource.y)
         if self.model.carte.matrice[cases[0]][cases[1]].type == 0:
+            print("FIN DE LA RESSOURCE")
             self.mode = 0
         if self.nbRessources + self.compteurRessource + self.vitesseRessource <= self.nbRessourcesMax:
             self.compteurRessource += self.vitesseRessource
