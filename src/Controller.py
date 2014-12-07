@@ -412,7 +412,7 @@ class EventListener:
             self.onMapRClick(event, attackedBuildingId=building.id)
 
         if building.type == Batiment.FERME:
-            print("batiment")
+            print("Rentre dans batiment")
             self.onMapRClick(event)
             
 

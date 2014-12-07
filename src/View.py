@@ -588,6 +588,7 @@ class FrameBottom():
         self.y = int(self.canvas.cget('height')) - self.height
 
         self.frame = GFrame(self.canvas, width=self.width, height=self.height)
+        self.canvas.tag_raise(self.frame.id, 'GButton')
 
         # TODO COMPLETER
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
@@ -817,7 +818,11 @@ class CarteView():
                 """
 
                 self.canvas.tag_raise('unit')
-
+                self.canvas.tag_lower('unit','GMenu')
+                self.canvas.tag_lower('unitHP','GMenu')
+                self.canvas.tag_lower('unitVision','GMenu')
+                self.canvas.tag_lower('unitAttackMode','GMenu')
+                self.canvas.tag_raise('unit', 'unitAttackMode')
 
     def drawBuildings(self, buildings):  # TODO JULIEN DOCSTRING
         self.canvas.delete("ferme")
@@ -835,11 +840,13 @@ class CarteView():
                                          image=img,
                                          tags=('building', building.type, building.id))
                 # self.lowerAllItemsOnMap()
+        
 
             # ANIMATION BLESSURES ET AUTRES
                 for anim in building.oneTimeAnimations:
                     imgAnim = anim.activeFrame
                     self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('building', building.id))
+        self.canvas.lower('building','GMenu')
 
 
     def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING
@@ -864,10 +871,10 @@ class CarteView():
         y2 = y1 + (self.nbCasesY * self.item)
 
         # minimap
-        unitX1 = unit.x - unit.grandeur / 2
-        unitY1 = unit.y - unit.grandeur / 2
-        unitX2 = unit.x + unit.grandeur / 2
-        unitY2 = unit.y + unit.grandeur / 2
+        unitX1 = unit.x - unit.grandeur / 2 + unit.grandeur
+        unitY1 = unit.y - unit.grandeur / 2 + unit.grandeur
+        unitX2 = unit.x + unit.grandeur / 2 - unit.grandeur
+        unitY2 = unit.y + unit.grandeur / 2 - unit.grandeur
 
         if unitX1 > x1 and unitX2 < x2 and unitY1 > y1 and unitY2 < y2 and not unit.inBuilding:
             return True
@@ -882,10 +889,10 @@ class CarteView():
 
         cases = self.eventListener.model.trouverCentreCase(building.posX, building.posY)
 
-        batimentX1 = cases[0] - building.tailleX / 2
-        batimentY1 = cases[1] - building.tailleY / 2
-        batimentX2 = cases[0] + building.tailleX / 2
-        batimentY2 = cases[1] + building.tailleY / 2
+        batimentX1 = cases[0] - building.tailleX / 2 + building.tailleX
+        batimentY1 = cases[1] - building.tailleY / 2 + building.tailleY
+        batimentX2 = cases[0] + building.tailleX / 2 - building.tailleX
+        batimentY2 = cases[1] + building.tailleY / 2 - building.tailleY
 
         if batimentX1 > x1 and batimentX2 < x2 and batimentY1 > y1 and batimentY2 < y2:
             return True

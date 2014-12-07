@@ -155,7 +155,7 @@ class GPanel(GWidget):
 
     def draw(self, x, y):
         GWidget.draw(self, x, y)
-        self.parent.create_image(self.x, self.y, image=self.graphImage, anchor=NW, tags=self.id)
+        self.parent.create_image(self.x, self.y, image=self.graphImage, anchor=NW, tags=(self.id, 'GMenu'))
         GWidget.drawChildren(self)
 
 
