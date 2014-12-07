@@ -7,6 +7,7 @@ from Carte import Tuile
 from GraphicsManagement import GraphicsManager
 import GraphicsManagement
 from Units import Unit
+from Units import Paysan
 from Civilisations import Civilisation
 
 try:
@@ -170,7 +171,8 @@ class UnitView():
         # BOUTONS
         self.btnActive.draw(self.x + 25, self.y + 130)
         self.btnPassive.draw(self.x + 130, self.y + 130)
-        self.btnConstruction.draw(self.x + 25, self.y + 235)
+        if isinstance(self.unit, Paysan):
+            self.btnConstruction.draw(self.x + 25, self.y + 235)
 
     def destroy(self):
         self.canvas.delete('unitView')
@@ -851,7 +853,7 @@ class CarteView():
                 for anim in building.oneTimeAnimations:
                     imgAnim = anim.activeFrame
                     self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('building', building.id))
-        self.canvas.lower('building','GMenu')
+        self.canvas.tag_lower('building','GMenu')
 
 
     def drawSpecificBuilding(self, building):  # TODO JULIEN DOCSTRING

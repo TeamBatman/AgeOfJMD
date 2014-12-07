@@ -557,8 +557,11 @@ class Unit():
                 else:
                     cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
-            self.cibleXDeplacement = cheminTrace[-1].x
-            self.cibleYDeplacement = cheminTrace[-1].y
+            try:
+                self.cibleXDeplacement = cheminTrace[-1].x
+                self.cibleYDeplacement = cheminTrace[-1].y
+            except:
+                pass #pas de cheminTrace
         return cheminTrace
 
     def choisirTraceFail(self):

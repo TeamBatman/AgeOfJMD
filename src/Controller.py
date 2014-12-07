@@ -306,11 +306,17 @@ class EventListener:
 
 
     def envoyerCommandBatiment(self,idBatiment, posX, posY, unitsSelected, bType, civ = None):
+        print("ENVOYER BATIMENT")
         caseX, caseY = self.model.trouverCaseMatrice(posX, posY)
         if self.model.validPosBuilding(caseX, caseY) and unitsSelected:
-            self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
+            tropProche = False
+            caseUnitX, caseUnitY = self.model.trouverCaseMatrice(unitsSelected[0].x, unitsSelected[0].y)
+            if abs(caseUnitX - caseX) + abs(caseUnitY - caseY) <= 1:
+                tropProche = True
+            else:
+                self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
             
-        if bType == 0: #Base TEMPORAIRE !
+        if bType == 0 or tropProche: #Base TEMPORAIRE !
             clientId = self.controller.network.getClientId()
             cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', idBatiment)
