@@ -48,6 +48,7 @@ class Unit():
         self.positionDejaVue = []
         self.casesDejaVue = []
         self.cheminAttente = []
+        self.cibleAvantAttaque = None # Tuple de la cible (cibleX,cibleY)
 
         self.groupeID = [] #Pour le leader
         self.leader = 0
@@ -150,12 +151,15 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None, isEvent = False):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
+        if isEvent:
+            self.mode = 0
+        
         if self.nbRessources == 0:#S'il n'est pas en ressource
             self.mode = 0
         
@@ -870,8 +874,14 @@ class Unit():
         if int(self.getClientId()) != model.joueur.civilisation and not self.joueur.ai:
              return     # Ce n'est pas une unité du joueur en cours ni l'AI
 
-        if self.ennemiCible == self:
-            self.ennemiCible = None
+        try:
+            if self.ennemiCible == self or self.ennemiCible.civilisation == self.joueur.civilisation:
+                print("nTO attaque!", self.mode)
+                self.ennemiCible = None
+                if self.mode == 3:
+                    self.mode = 0
+        except:
+            pass
 
         # ACTIF
         if self.modeAttack == Unit.ACTIF and not self.mode == 3:
@@ -881,14 +891,16 @@ class Unit():
                 units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
                                                           self.x + self.rayonVision, self.y + self.rayonVision,
                                                           units=self.model.getUnits())
+
+                units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
+                units = [u for u in units if not u.id == self.id]
+                if not units:
+                    return
             except:
                 print("ennemi tué")
-
-            # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
-            units = [u for u in units if not u.id == self.id]
-            if not units:
                 return
 
+            
             # Prendre la plus proche
             closestDistance = 2000
             closestUnit = units[0]
@@ -897,6 +909,8 @@ class Unit():
                 if d > closestDistance:
                     closestUnit = unit
             self.ennemiCible = closestUnit
+            if self.enDeplacement:
+                self.cibleAvantAttaque = (self.cibleX,self.cibleY)
             self.cibleX = self.ennemiCible.x
             self.cibleY = self.ennemiCible.y
             self.mode = 3
@@ -907,7 +921,9 @@ class Unit():
                 for unitID in self.groupeID: 
                     groupe.append(model.getUnit(unitID))
 
-                self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
+
+                print("actif!", self.cibleAvantAttaque)
+                self.model.controller.eventListener.onMapRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
                 self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -934,7 +950,17 @@ class Unit():
         #    pass
         if self.ennemiCible.hp == 0:
             self.ennemiCible = None
-            #TODO: SI en déplacement trouver une nouvelle position...
+            if self.leader == 1 and self.cibleAvantAttaque:
+                cible = Noeud(None, self.cibleAvantAttaque[0],self.cibleAvantAttaque[1] , None, None)
+                self.cibleAvantAttaque = None
+                groupe = []
+                groupe.append(self)
+                for unitID in self.groupeID: 
+                    groupe.append(model.getUnit(unitID))
+
+                if self.enDeplacement:
+                    self.cibleAvantAttaque = (self.cibleX,self.cibleY)
+                self.model.controller.eventListener.onMapRClick(cible,groupe)
             return
 
         
