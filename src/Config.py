@@ -5,8 +5,8 @@ import sys
 
 SKIP_MENU = False
 SKIP_LOADING = False
-PLAY_MUSIC = True
-DEBUG_VERBOSE = False
+PLAY_MUSIC = False
+DEBUG_VERBOSE = True
 
 
 

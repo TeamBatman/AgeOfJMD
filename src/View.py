@@ -792,10 +792,12 @@ class CarteView():
                 if unit in selectedUnits:
                     unitImage = unit.animation.activeOutline
 
+
                     selColor = GraphicsManagement.hex_to_rgba(couleursCiv[unit.civilisation])
 
+
                     try:
-                        vision = GraphicsManager.photoImages['unitVision']
+                        vision = GraphicsManager.getPhotoImage('unitVision_%s' % couleursCiv[unit.civilisation])
                     except KeyError:
                         vision = GraphicsManagement.generateCircle(unit.rayonVision, selColor)
                         GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
