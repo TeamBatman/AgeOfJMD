@@ -11,6 +11,8 @@ from Units import Unit
 from Units import Noeud
 from View import View, FrameSide
 from SimpleTimer import Timer
+import Config
+
 try:
     from tkinter import Event  # Python 3
 except ImportError:
@@ -120,6 +122,7 @@ class Controller:
         self.view.show()
 
     def shutdown(self):
+
         self.view.destroy()
         if self.network.client:
             self.network.disconnectClient()

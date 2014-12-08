@@ -3,7 +3,7 @@ import time
 import math
 
 from Commands import Command
-from GraphicsManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
+from ResourcesManagement import SpriteSheet, SpriteAnimation, GraphicsManager, \
     OneTimeAnimation
 from SimpleTimer import Timer, FrameTimer
 from Civilisations import Civilisation

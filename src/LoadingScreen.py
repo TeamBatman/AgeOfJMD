@@ -1,6 +1,6 @@
 import threading
-from GraphicsManagement import GraphicsManager
-import GraphicsManagement
+from ResourcesManagement import GraphicsManager
+import ResourcesManagement
 from GuiAwesomeness import *
 
 from View import Color
@@ -59,14 +59,14 @@ class ResourceLoaderThread(threading.Thread):
 
         # Loading Rayon Vision
         for c in self.couleursHEX:
-            selColor = GraphicsManagement.hex_to_rgba(c)
-            vision = GraphicsManagement.generateCircle(5, selColor)  # Pour tous les rayons possibles par défaut
+            selColor = ResourcesManagement.hex_to_rgba(c)
+            vision = ResourcesManagement.generateCircle(5, selColor)  # Pour tous les rayons possibles par défaut
             GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
             self.loadSomething()
 
         for c in self.couleursHEX:
-            selColor = GraphicsManagement.hex_to_rgba(c)
-            vision = GraphicsManagement.generateCircle(10, selColor)  # Pour tous les rayons possibles par défaut
+            selColor = ResourcesManagement.hex_to_rgba(c)
+            vision = ResourcesManagement.generateCircle(10, selColor)  # Pour tous les rayons possibles par défaut
             GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
             self.loadSomething()
 
@@ -87,7 +87,7 @@ class ResourceLoaderThread(threading.Thread):
 def main():
     t = LoadingScreen()
 
-    resources = GraphicsManagement.detectGraphics()
+    resources = ResourcesManagement.detectGraphics()
     ResourceLoaderThread(resources, t.progressBar).start()
 
     t.show()
