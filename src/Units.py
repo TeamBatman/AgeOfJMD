@@ -561,17 +561,11 @@ class Unit():
                 else:
                     cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
-<<<<<<< HEAD
-            self.cibleXDeplacement = cheminTrace[-1].x
-            self.cibleYDeplacement = cheminTrace[-1].y
-
-=======
             try:
                 self.cibleXDeplacement = cheminTrace[-1].x
                 self.cibleYDeplacement = cheminTrace[-1].y
             except:
                 pass #pas de cheminTrace
->>>>>>> origin/dev
         return cheminTrace
 
     def choisirTraceFail(self):
@@ -902,14 +896,10 @@ class Unit():
 
         try:
             if self.ennemiCible == self or self.ennemiCible.civilisation == self.joueur.civilisation:
-<<<<<<< HEAD
-                self.ennemiCible = None
-=======
                 print("nTO attaque!", self.mode)
                 self.ennemiCible = None
                 if self.mode == 3:
                     self.mode = 0
->>>>>>> origin/dev
         except:
             pass
 
@@ -928,14 +918,6 @@ class Unit():
                     return
             except:
                 print("ennemi tué")
-<<<<<<< HEAD
-                return
-
-            # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
-            units = [u for u in units if not u.id == self.id]
-            if not units:
-=======
->>>>>>> origin/dev
                 return
 
             
@@ -1002,15 +984,9 @@ class Unit():
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
-<<<<<<< HEAD
-                print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
-                #if self.ennemiCible.enDeplacement:
-                if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance or (not self.enDeplacement and abs(self.x - self.ennemiCible.x) > distance or abs(self.y - self.ennemiCible.y) > distance): #or not self.cheminTrace:
-=======
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
                 if self.ennemiCible.enDeplacement:
                 #if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance: #or not self.cheminTrace:
->>>>>>> origin/dev
                     #x2 = self.ennemiCible.x-self.grandeur
                     #y2 = self.ennemiCible.y-self.grandeur
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
@@ -1158,7 +1134,7 @@ class Paysan(Unit):
                             groupe = []
                             groupe.append(self)
                             #self.ressourceEnvoye = True
-                            print("BASE!!!!!!!",self.joueur.base.x, self.joueur.base.y)
+                            
                             self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)
                             self.model.controller.sendCommand(cmd)
                             #self.model.controller.eventListener.onMapRClick(self.joueur.base, groupe)#QUICK FIX
