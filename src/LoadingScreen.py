@@ -1,4 +1,6 @@
 import threading
+from tkinter import ALL
+from GameWindow import GameWindow
 from GraphicsManagement import GraphicsManager
 import GraphicsManagement
 from GuiAwesomeness import *
@@ -6,26 +8,17 @@ from GuiAwesomeness import *
 from View import Color
 
 
-class LoadingScreen(GWindow):
-    def __init__(self):
-        GWindow.__init__(self)
-        self.width = 1024
-        self.height = 768
-        self.root.geometry('%sx%s' % (self.width, self.height))
-        self.root.configure(background='#000')
-
-        # ZONE DE DESSIN
-        self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#000', bd=0,
-                             highlightthickness=0)  # higlightthickness retire la bordure par défaut blanche des canvas
-        self.canvas.pack()
+class LoadingScreen():
+    def __init__(self, window, controller):
+        self.window = window
+        self.canvas = self.window.canvas
 
         self.initBackground()
-
         self.initMenu()
 
     def initMenu(self):
         self.frame = GFrame(self.canvas, 600, 100)
-        self.frame.draw(self.width / 2 - self.frame.width / 2, self.height - 150)
+        self.frame.draw(self.window.width / 2 - self.frame.width / 2, self.window.height - 150)
         self.progressBar = GProgressBar(self.canvas, self.frame.width - 60, text="Chargement...")
         self.progressBar.setProgression(0)
         self.progressBar.draw(self.frame.x + 30, self.frame.y + 30)
@@ -35,13 +28,24 @@ class LoadingScreen(GWindow):
         self.canvas.create_image(0, 0, anchor=NW, image=self.title)
         self.canvas.create_image(0, 0, anchor=NW, image=self.title, tags='background')
 
+    def startLoading(self):
+        self.loader.start()
+
+    def update(self, progression):
+        self.progressBar.setProgression(progression)
+        self.progressBar.update()
+        self.window.root.update()
+
+    def destroy(self):
+        self.canvas.delete(ALL)
 
 
-class ResourceLoaderThread(threading.Thread):
-    def __init__(self, resources, progressBar):
-        threading.Thread.__init__(self)
-        self.progressBar = progressBar
 
+
+class ResourceLoader():
+    def __init__(self, resources, view):
+        self.view = view
+        self.progression = 0
         self.resources = resources
         self.sprites = [r for r in self.resources if 'Units' in r]
         self.couleursHEX = [Color.BLANC, Color.BLEU, Color.JAUNE, Color.MAUVE,
@@ -50,14 +54,10 @@ class ResourceLoaderThread(threading.Thread):
 
         self.nbResTotal = len(self.resources) + len(self.sprites) + len(self.couleursHEX) * 2  # *2 =>units + tours guet
         self.nbLoadedRes = 0
+        self.isDone = False
 
 
     def run(self):
-        """ Charge toutes les images nécessaire à une partie dans le graphics manager
-        :return:
-        """
-
-        # Loading Rayon Vision
         for c in self.couleursHEX:
             selColor = GraphicsManagement.hex_to_rgba(c)
             vision = GraphicsManagement.generateCircle(5, selColor)  # Pour tous les rayons possibles par défaut
@@ -77,21 +77,26 @@ class ResourceLoaderThread(threading.Thread):
             GraphicsManager.getSpriteSheet(sp)
             self.loadSomething()
 
+        self.isDone = True
+
+
     def loadSomething(self):
         self.nbLoadedRes += 1
-        progression = int(self.nbLoadedRes * 100 / self.nbResTotal)
-        self.progressBar.setProgression(progression)
-        self.progressBar.update()
+        self.progression = int(self.nbLoadedRes * 100 / self.nbResTotal)
+        self.view.update(self.progression)
+
+
+
 
 
 def main():
-    t = LoadingScreen()
-
-    resources = GraphicsManagement.detectGraphics()
-    ResourceLoaderThread(resources, t.progressBar).start()
-
-    t.show()
+    w = GameWindow()
+    l = LoadingScreen(w, None)
+    w.show()
 
 
 if __name__ == '__main__':
     main()
+
+
+

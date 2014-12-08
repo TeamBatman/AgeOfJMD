@@ -7,10 +7,12 @@ class Command():
     # LES TYPES DE COMMANDES POSSIBLES
 
     # COMMANDES GÉNÉRALES
-    START_GAME = 'sg'      # Utilisée par l'hôte lorsqu'on désire lancer la partie
-    NEXT_FRAME = 'nf'      # Utilisée pour indiquer au client de changer de frame
-    WAIT = 'w'             # Utilisée par le serveur pour indiquer à un client qu'il doit attendre
-    DESYNC = 'dsc'         # Utilisée par le serveur pour indiquer à un client qu'il est totalement désynchronisé
+    START_GAME = 'sg'        # Utilisée par l'hôte lorsqu'on désire lancer la partie
+    NEXT_FRAME = 'nf'        # Utilisée pour indiquer au client de changer de frame
+    WAIT = 'w'               # Utilisée par le serveur pour indiquer à un client qu'il doit attendre
+    DESYNC = 'dsc'           # Utilisée par le serveur pour indiquer à un client qu'il est totalement désynchronisé
+    LOAD_GAME = 'lg'         # Utilisée par le serveur pour indiquer à tous les clients de loader les ressources
+    FINISHED_LOADING = 'fl'  # Utilisée par les clients pour signaler qu'ils on terminer de charger les ressources du jeu
 
     # COMMANDES POUR CIVILISATIONS
     CIVILISATION_CREATE = 'cc'          # Utilisée lorsqu'un joueur se joint à la partie
