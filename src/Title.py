@@ -1,4 +1,4 @@
-from ResourcesManagement import GraphicsManager
+from GraphicsManagement import GraphicsManager
 from GuiAwesomeness import *
 
 class TitleScreen(GWindow):

@@ -5,8 +5,8 @@ import winsound
 from Batiments import Batiment
 from Carte import Tuile
 import Config
-from ResourcesManagement import GraphicsManager
-import ResourcesManagement
+from GraphicsManagement import GraphicsManager
+import GraphicsManagement
 from Units import Unit
 from Civilisations import Civilisation
 
@@ -788,12 +788,12 @@ class CarteView():
                 if unit in selectedUnits:
                     unitImage = unit.animation.activeOutline
 
-                    selColor = ResourcesManagement.hex_to_rgba(couleursCiv[unit.civilisation])
+                    selColor = GraphicsManagement.hex_to_rgba(couleursCiv[unit.civilisation])
 
                     try:
                         vision = GraphicsManager.photoImages['unitVision']
                     except KeyError:
-                        vision = ResourcesManagement.generateCircle(unit.rayonVision, selColor)
+                        vision = GraphicsManagement.generateCircle(unit.rayonVision, selColor)
                         GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
                         vision = GraphicsManager.getPhotoImage('unitVision')
                     self.canvas.create_image(posX, posY, anchor=CENTER, image=vision, tags='unitVision')

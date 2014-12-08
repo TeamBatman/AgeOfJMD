@@ -3,7 +3,7 @@
 import time
 from PIL import Image, ImageTk
 from Commands import Command
-from ResourcesManagement import GraphicsManager, OneTimeAnimation
+from GraphicsManagement import GraphicsManager, OneTimeAnimation
 
 
 # TODO trouver des valeurs correctes pour le prix en ressources des unités et batiments
