@@ -2,16 +2,30 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from tkinter import ALL
 
 from Batiments import Batiment
 from Commands import Command
+import GraphicsManagement
+from LoadingScreen import ResourceLoader, LoadingScreen
 from Model import Model
 from NetworkModule import NetworkController, ClientConnectionError, Client
+import NetworkModule
+from TitleScreen import TitleScreen
 from Units import Unit
 from Units import Noeud
-from View import View, FrameSide
+from View import GameView, FrameSide
+from GameWindow import GameWindow
 from SimpleTimer import Timer
+
 import Config
+
+import MenuDebut
+
+
+SKIP_MENU = False  # Permet de skipper les menus
+LOAD_RESSOURCE_ON_START = True  # Si on load les ressources au démarrage du jeu ou non
+
 
 try:
     from tkinter import Event  # Python 3
@@ -19,41 +33,82 @@ except ImportError:
     from Tkinter import Event  # Python 2
 
 
+
 class Controller:
     """ Responsable des communications entre le module réseau, la Vue et le Modèle
         de sorte à ce qu'ils n'aient pas accès entre eux directement.
     """
 
-    SINGLE_PLAYER = 0
-    MULTIPLAYER = 1
 
     def __init__(self):
         self.model = Model(self)
         self.network = NetworkController()
         self.eventListener = EventListener(self)
-        self.view = View(self.eventListener)
+        self.window = GameWindow()
 
-        self.gameMode = Controller.MULTIPLAYER
+        self.view = None
+
 
         self.currentFrame = -1
         self.nbFramesPerSecond = 15
         self.refreshRate = int(1000 / self.nbFramesPerSecond)
 
         self.displayTimer = Timer(1000 / 60)  # Pour limiter nombre de rafraichissement du GUI (60 FPS ~ 16ms)
+        self.loadingThread = None
+
+        self.gameStarted = False
 
 
     def mainLoop(self):
-        try:
-            cmd = self.network.synchronizeClient(self.currentFrame)
-        except ClientConnectionError:
-            self.shutdown()
-        # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+        if self.network.client is not None:
+            try:
+                print(self.currentFrame)
+                cmd = self.network.synchronizeClient(self.currentFrame)
+            except ClientConnectionError:
+                self.shutdown()
+            # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+            for c in cmd:
+                if c['TYPE'] == Command.START_GAME:
+                    self.startGame()
 
+        if not self.gameStarted:
+            self.titleScreenLoop()
+        else:
+            self.gameLoop(cmd)
+
+        self.window.after(self.refreshRate, self.mainLoop)
+
+    def gameLoop(self, cmd):
         self.doLogic(cmd)
-
         self.renderGraphics()
 
-        self.view.after(self.refreshRate, self.mainLoop)
+
+    def startGame(self):
+
+        self.window.canvas.delete(ALL)
+        print(self.window.root.update())
+        self.view = GameView(self.window, self.eventListener)
+
+        cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
+        cmd.addData('ID', self.network.getClientId())
+        self.sendCommand(cmd)
+        self.model.creerJoueur(self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
+        self.model.civNumber = self.network.getClientId()
+
+        self.gameStarted = True
+
+
+
+        self.view = GameView(self.window, self.eventListener)
+        self.view.drawMinimap(self.model.carte.matrice)
+        self.view.drawRectMiniMap()
+        self.view.drawMap(self.model.carte.matrice)
+
+
+
+
+
 
     def doLogic(self, commands):
         """ Une itération sur cette fonction constitue une FRAME
@@ -80,37 +135,41 @@ class Controller:
         """
         joueur = self.model.joueurs[self.model.civNumber]
         if self.displayTimer.isDone():
-
             #if self.view.needUpdateCarte():
             #    self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
             #else:
             self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
+
             self.displayTimer.reset()
 
-
-    def start(self):
-        """ Starts the controller
-        """
-
-        # INITIALISATION RÉSEAU
+    def startSoloGame(self):
+         # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
         self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
 
         # INITIALISATION MODEL
+        self.gameStarted = True
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
         self.sendCommand(cmd)
-        self.model.creerJoueur(self.network.getClientId())
-        self.model.creerAI(7)
-        self.model.creerbaseAI(7)
-        self.model.joueur = self.model.joueurs[self.network.getClientId()]
 
+        self.model.creerJoueur(self.network.getClientId())
+        self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.model.civNumber = self.network.getClientId()
 
+
+        self.model.creerAI(7)
+        self.model.creerbaseAI(7)
+
         # INITIALISATION AFFICHAGE
+        self.view = GameView(self.window, self.eventListener)
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
+
+    def start(self):
+        """ Starts the controller
+        """
 
         # TIMERS
         self.displayTimer.start()
@@ -118,8 +177,110 @@ class Controller:
         # FRAMES
         self.currentFrame = 0
 
+        if LOAD_RESSOURCE_ON_START:
+            self.view = LoadingScreen(self.window, self)
+            self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+        else:
+            if SKIP_MENU:
+               self.startSoloGame()
+            else:
+                self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
+                self.graphicsLoader.isDone = True
+                self.view = TitleScreen(self.window, self)
+                self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
         self.mainLoop()
-        self.view.show()
+        self.window.show()
+
+
+
+
+
+
+
+    def catchMenuEvent(self, event, additionalData=None):
+        """ Événement actionné par l'usager durant l'écran titre
+        :param event: L'évenement à gérer
+        :param additionalData: paramètre additionnel accompagnant l'action
+        """
+        # Affichage Menus
+        if event == MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL:
+            self.view.changerMenu(MenuDebut.MenuPrincipal(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR:
+            self.view.changerMenu(MenuDebut.MenuMultijoueur(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_CREER_SERVEUR:
+            print(NetworkModule.detectIP())
+            self.view.changerMenu(MenuDebut.MenuServeur(self.window, self, NetworkModule.detectIP()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_REJOINDRE_SERVEUR:
+            self.view.changerMenu(MenuDebut.MenuRejoindreServeur(self.window, self))
+            self.view.drawMenu()
+
+
+        elif event == MenuDebut.TitleEvent.VOIR_MENU_SOLO:
+            self.view.changerMenu(MenuDebut.MenuSolo(self.window, self))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.LANCER_PARTIE_SOLO:
+            self.view.destroy()
+            self.startSoloGame()
+
+        elif event == MenuDebut.TitleEvent.QUITTER_JEU:
+            self.shutdown()
+
+        elif event == MenuDebut.TitleEvent.CREER_SERVEUR:
+            nomJoueur = self.view.menuActif.nomJoueur
+
+            self.network.startServer(port=33333)
+            self.network.connectClient(ipAddress=NetworkModule.detectIP(), port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.REJOINDRE_SERVEUR:
+            IPJoueur = self.view.menuActif.IPJoueur
+            nomJoueur = self.view.menuActif.nomJoueur
+            self.network.connectClient(ipAddress=IPJoueur, port=33333, playerName=nomJoueur)
+            self.view.changerMenu(MenuDebut.MenuLobby(self.window, self, self.network.isClientHost()))
+            self.view.drawMenu()
+
+        elif event == MenuDebut.TitleEvent.ARRETER_SERVEUR:
+            if self.network.client:
+                self.network.disconnectClient()
+            if self.network.server:
+                self.network.stopServer()
+            self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR)
+
+        elif event == MenuDebut.TitleEvent.LANCER_PARTIE_MULTIJOUEUR:
+            self.sendCommand(Command(cmdType=Command.START_GAME))
+
+
+
+    def titleScreenLoop(self):
+        if not self.graphicsLoader.isDone:
+            if self.window.isShown:
+                self.graphicsLoader.run()
+                if SKIP_MENU:
+                    self.view.destroy()
+                    self.startSoloGame()
+                    return
+                else:
+                    self.view = TitleScreen(self.window, self)
+                    self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+
+        if self.displayTimer.isDone():
+                if isinstance(self.view, LoadingScreen):
+                    self.view.update(self.graphicsLoader.progression)
+                else:
+                    self.view.update()
+                    if isinstance(self.view.menuActif, MenuDebut.MenuLobby):
+                        self.view.menuActif.update(self.network.client.host.getClients())
+                self.displayTimer.reset()
+
+
 
     def shutdown(self):
 
@@ -161,9 +322,11 @@ class EventListener:
         """
         try:
             if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+                eventTkinter = True
                 x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
                 y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
             else:
+                eventTkinter = False
                 x2 = event.x
                 y2 = event.y
                 
@@ -181,7 +344,7 @@ class EventListener:
             carte = self.model.carte.matrice
             cases = self.model.trouverCaseMatrice(x2,y2)
             if not carte[cases[0]][cases[1]].isWalkable and carte[cases[0]][cases[1]].type == 5:
-                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings())[0]
+                buildingDetected = self.controller.view.detectBuildings(x2, y2, x2, y2, self.model.getBuildings(),eventTkinter)[0]
                 if buildingDetected.peutEtreOccupe:
                     posFin = []
                     for i in range(len(groupe)-1):
@@ -198,11 +361,11 @@ class EventListener:
             pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building, attackedBuildingId)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, groupe, None, building, attackedBuildingId, eventTkinter)
 
-        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building, attackedBuildingId)  # Faire le leader en dernier
+        self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupe[:], None, building, attackedBuildingId, eventTkinter)  # Faire le leader en dernier
 
-    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None, attackedBuildingId = None):
+    def selectionnerUnit(self, unitSelected, leaderUnit, posFin, x2, y2,groupe, targetUnit = None, building = None, attackedBuildingId = None, eventTkinter = False):
         """Pour la fonction onMapRClick !!!"""
         # print("select", leaderUnit)
         cmd = Command(self.controller.network.client.id, Command.UNIT_MOVE)
@@ -213,6 +376,7 @@ class EventListener:
         cmd.addData('Y2', y2)
         cmd.addData('BTYPE', building)
         cmd.addData('ABID', attackedBuildingId)
+        cmd.addData('ISEVENT', eventTkinter)
         if targetUnit:
             cmd.addData('ENNEMI', targetUnit.id)
         else:
@@ -306,11 +470,17 @@ class EventListener:
 
 
     def envoyerCommandBatiment(self,idBatiment, posX, posY, unitsSelected, bType, civ = None):
+        print("ENVOYER BATIMENT")
         caseX, caseY = self.model.trouverCaseMatrice(posX, posY)
         if self.model.validPosBuilding(caseX, caseY) and unitsSelected:
-            self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
+            tropProche = False
+            caseUnitX, caseUnitY = self.model.trouverCaseMatrice(unitsSelected[0].x, unitsSelected[0].y)
+            if abs(caseUnitX - caseX) + abs(caseUnitY - caseY) <= 1:
+                tropProche = True
+            else:
+                self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
             
-        if bType == 0: #Base TEMPORAIRE !
+        if bType == 0 or tropProche: #Base TEMPORAIRE !
             clientId = self.controller.network.getClientId()
             cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', idBatiment)
@@ -332,13 +502,17 @@ class EventListener:
         x1, y1 = event.x, event.y
         # x2, y2 = event.x, event.y
         if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            eventTkinter = True
             x2 = event.x + (self.controller.view.carte.cameraX * self.controller.view.carte.item)
             y2 = event.y + (self.controller.view.carte.cameraY * self.controller.view.carte.item)
         else:
+            eventTkinter = False
             x2 = event.x
             y2 = event.y
         # print("dude!", x2, y2)
         targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
+        if targetUnit.civilisation == self.model.joueur.civilisation:
+            return #Ne peux pas attaquer sa civilisation
         #TODO: Merge avec onMapRClick !!!
         try:
             groupe = groupeSansLeader
@@ -351,8 +525,8 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupeSansLeader, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupeSansLeader),
                                                                     groupeSansLeader[0].grandeur)
-            if groupe == None:
-                groupeSansLeader.remove(leaderUnit)
+            #if groupe == None:
+            #    groupeSansLeader.remove(leaderUnit)
 
                 #groupeSansLeader = self.controller.view.selected[:]
 
@@ -367,16 +541,15 @@ class EventListener:
             unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible, None, None, eventTkinter)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
         leaderUnit.mode = 3
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupeSansLeader,
-                              leaderUnit.ennemiCible)  # Faire le leader en dernier
-
-
+                              leaderUnit.ennemiCible, None, None, eventTkinter)  # Faire le leader en dernier
+        
         # if not targetUnit.estUniteDe(clientId):
         #leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
         #for unitSelected in self.controller.view.selected:
@@ -409,13 +582,17 @@ class EventListener:
         Appelée lorsqu'on clique sur un bâtiment avec le bouton droite de la souris
         :param event: Tkinter Event
         """
-        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings())[0]
+        if isinstance(event,Event): #Savoir si l'event vient de Tkinter ou du programme
+            eventTkinter = True
+        else:
+            eventTkinter = False
+        building = self.controller.view.detectBuildings(event.x, event.y,event.x, event.y, self.controller.model.getBuildings(),eventTkinter)[0]
         if not building.estBatimentDe(self.model.joueur.civilisation):
             print("click sur building ennemi")
             self.onMapRClick(event, attackedBuildingId=building.id)
 
         if building.type == Batiment.FERME:
-            print("batiment")
+            print("Rentre dans batiment")
             self.onMapRClick(event)
             
 
@@ -586,3 +763,4 @@ class EventListener:
 if __name__ == '__main__':
     app = Controller()
     app.start()
+

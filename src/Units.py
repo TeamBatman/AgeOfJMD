@@ -48,6 +48,7 @@ class Unit():
         self.positionDejaVue = []
         self.casesDejaVue = []
         self.cheminAttente = []
+        self.cibleAvantAttaque = None # Tuple de la cible (cibleX,cibleY)
 
         self.groupeID = [] #Pour le leader
         self.leader = 0
@@ -150,15 +151,20 @@ class Unit():
                 self.deplacementTrace(self.cheminTrace,0)
 
 
-    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None):
+    def changerCible(self, cibleX, cibleY, groupeID, finMultiSelection, leader, ennemiCibleID = None, building = None, attackedBuildingID = None, isEvent = False):
         #print("unit:", cibleX, cibleY , leader)
         self.leader = leader #Pour sélection multiple
         #print("leader", self.leader)
         #if leader == 1:
         #    self.mode = 0
-        if self.nbRessources == 0:#S'il n'est pas en ressource
+        self.groupeID = []
+        if isEvent:
             self.mode = 0
-        
+
+        if isinstance(self, Paysan):
+            if self.nbRessources == 0:#S'il n'est pas en ressource
+                self.mode = 0
+                
         if self.ennemiCible:
             print("changement", self.id)
             self.mode = 3
@@ -201,6 +207,8 @@ class Unit():
                 self.finMultiSelection = Noeud(None, finMultiSelection[0], finMultiSelection[1], None, None)
 
             self.cheminTrace = self.choisirTrace()
+            if self.cheminTrace == -1:
+                return -1 #Reste sur place
             #self.afficherList("cheminTrace", self.cheminTrace)
             if self.trouver:
                 self.trouverCheminMultiSelection()
@@ -449,7 +457,8 @@ class Unit():
            #self.attaquerBuilding(self.model,buildingViser)
 
         if self.mode == 4: #Rentre dans un building
-            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings())
+            print("JE VEUX RENTRER !")
+            buildingDetected = self.model.controller.view.detectBuildings(self.x, self.y,self.x,self.y, self.model.getBuildings(),False)
             if buildingDetected:
                 buildingDetected = buildingDetected[0]
                 if buildingDetected.peutEtreOccupe:
@@ -514,7 +523,8 @@ class Unit():
 
                     # TODO Changer le chemin pour aller à côté de la ressource !
                 else:
-                    return -1  # Ne peut pas aller sur un obstacle
+                    self.enDeplacement = False #Reste sur place
+                    return -1# Ne peut pas aller sur un obstacle
             else:
                 print("MODE semi", self.mode)
                 if not self.mode == 1 and not self.mode == 5: #S'il ne retourne pas à la base (ressource)
@@ -532,8 +542,8 @@ class Unit():
         # print("Temps a*: ", time.time() - self.time1)
 
         n = chemin
+        cheminTrace = []
         if not n == -1:
-            cheminTrace = []
             while n.parent:
                 cheminTrace.append(n)
                 centreCase = self.model.trouverCentreCase(n.x, n.y)
@@ -551,8 +561,11 @@ class Unit():
                 else:
                     cheminTrace.append(Noeud(None, self.x, self.y, None, None))
 
-            self.cibleXDeplacement = cheminTrace[-1].x
-            self.cibleYDeplacement = cheminTrace[-1].y
+            try:
+                self.cibleXDeplacement = cheminTrace[-1].x
+                self.cibleYDeplacement = cheminTrace[-1].y
+            except:
+                pass #pas de cheminTrace
         return cheminTrace
 
     def choisirTraceFail(self):
@@ -675,7 +688,6 @@ class Unit():
             self.trouverCheminMultiSelectionUnit(self)
 
         #self.leader = 0 #defaut
-        self.groupeID = []
 
     def trouverCheminMultiSelectionUnit(self,unit):
         """Utilisé par trouverCheminMultiSelection"""
@@ -859,6 +871,19 @@ class Unit():
             return True
         return False
 
+    def remplirGroupe(self):
+        """Crée un groupe pour envoyer au déplacement"""
+        groupe = []
+        groupe.append(self)
+        for unitID in self.groupeID:
+            unit = self.model.getUnit(unitID)
+            if unit:
+                groupe.append(unit)
+            else:
+                print("mort UNIT")
+                self.groupeID.remove(unitID)#unite du groupe tué
+        return groupe
+
 
     # KOMBAT ==========================================================
 
@@ -869,8 +894,14 @@ class Unit():
         if int(self.getClientId()) != model.joueur.civilisation and not self.joueur.ai:
              return     # Ce n'est pas une unité du joueur en cours ni l'AI
 
-        if self.ennemiCible == self:
-            self.ennemiCible = None
+        try:
+            if self.ennemiCible == self or self.ennemiCible.civilisation == self.joueur.civilisation:
+                print("nTO attaque!", self.mode)
+                self.ennemiCible = None
+                if self.mode == 3:
+                    self.mode = 0
+        except:
+            pass
 
         # ACTIF
         if self.modeAttack == Unit.ACTIF and not self.mode == 3:
@@ -880,14 +911,16 @@ class Unit():
                 units = model.controller.view.detectUnits(self.x - self.rayonVision, self.y - self.rayonVision,
                                                           self.x + self.rayonVision, self.y + self.rayonVision,
                                                           units=self.model.getUnits())
+
+                units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
+                units = [u for u in units if not u.id == self.id]
+                if not units:
+                    return
             except:
                 print("ennemi tué")
-
-            # units = [u for u in units if not u.estUniteDe(self.getClientId()) and u.id != self.id]
-            units = [u for u in units if not u.id == self.id]
-            if not units:
                 return
 
+            
             # Prendre la plus proche
             closestDistance = 2000
             closestUnit = units[0]
@@ -896,16 +929,16 @@ class Unit():
                 if d > closestDistance:
                     closestUnit = unit
             self.ennemiCible = closestUnit
+            if self.enDeplacement:
+                self.cibleAvantAttaque = (self.cibleX,self.cibleY)
             self.cibleX = self.ennemiCible.x
             self.cibleY = self.ennemiCible.y
             self.mode = 3
             print("leader actif", self.id, self.leader)
             if self.leader == 1:
-                groupe = []
-                groupe.append(self)
-                for unitID in self.groupeID: 
-                    groupe.append(model.getUnit(unitID))
+                groupe = self.remplirGroupe()
 
+                print("actif!", self.cibleAvantAttaque,len(groupe), len(self.groupeID))
                 self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
 
             if self.ancienPosEnnemi == None:
@@ -933,7 +966,14 @@ class Unit():
         #    pass
         if self.ennemiCible.hp == 0:
             self.ennemiCible = None
-            #TODO: SI en déplacement trouver une nouvelle position...
+            if self.leader == 1 and self.cibleAvantAttaque:
+                cible = Noeud(None, self.cibleAvantAttaque[0],self.cibleAvantAttaque[1] , None, None)
+                self.cibleAvantAttaque = None
+                groupe = self.remplirGroupe()
+
+                if self.enDeplacement:
+                    self.cibleAvantAttaque = (self.cibleX,self.cibleY)
+                self.model.controller.eventListener.onMapRClick(cible,groupe)
             return
 
         
@@ -944,7 +984,7 @@ class Unit():
             #print(abs(self.x - self.ennemiCible.x), abs(self.y - self.ennemiCible.y), self.grandeur)
             try:
                 #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1])
-                print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
+                #print("cible", self.ennemiCible.x, self.ennemiCible.y, self.ancienPosEnnemi[0], self.ancienPosEnnemi[1],self.x, self.y,self.ennemiCible.enDeplacement, self.cheminTrace)
                 if self.ennemiCible.enDeplacement:
                 #if abs(self.ennemiCible.x - self.ancienPosEnnemi[0]) > distance or abs(self.ennemiCible.y - self.ancienPosEnnemi[1]) > distance: #or not self.cheminTrace:
                     #x2 = self.ennemiCible.x-self.grandeur
@@ -952,10 +992,7 @@ class Unit():
                     self.ancienPosEnnemi = (self.ennemiCible.x,self.ennemiCible.y)
                     if self.leader == 1:
                         print("leader deplacement attaque", self.id)
-                        groupe = []
-                        groupe.append(self)
-                        for unitID in self.groupeID: 
-                            groupe.append(model.getUnit(unitID))
+                        groupe = self.remplirGroupe()
 
                         self.model.controller.eventListener.onUnitRClick((self.model.getUnit(self.ennemiCible.id)),groupe)
                         #model.controller.eventListener.selectionnerUnit(self,True, None,x2,y2, groupe)

@@ -3,11 +3,8 @@
 
 from __future__ import division
 
-from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-from Units import Paysan
-from Units import Noeud
 from AI import AI
 from Batiments import *
 
@@ -26,11 +23,14 @@ class Model:
         """ Permet de lancer les commande updates importantes
         """
         # On verifie si la civilisation du client peut évoluer
-        if self.joueurs[self.civNumber].canEvolve():
-            cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
-            cmd.addData('AGE', self.joueurs[self.civNumber].epoque + 1)
-            cmd.addData('CIV', self.civNumber)
-            self.controller.sendCommand(cmd)
+        try:
+            if self.joueurs[self.civNumber].canEvolve():
+                cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
+                cmd.addData('AGE', self.joueurs[self.civNumber].epoque + 1)
+                cmd.addData('CIV', self.civNumber)
+                self.controller.sendCommand(cmd)
+        except KeyError:    # La civilisation du client actif n'existe pas ou plus
+            pass
 
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
@@ -55,7 +55,9 @@ class Model:
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
 
-            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation
+            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation,
+
+            Command.START_GAME: lambda x: x
         }
 
         try:
@@ -92,7 +94,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'], command.data['ISEVENT'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
