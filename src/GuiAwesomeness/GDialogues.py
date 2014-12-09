@@ -19,16 +19,16 @@ class GConfirmDialogue(GFrame):
     def __init__(self, parent, message, command=None, color=0):
         self.message = message
         self.command = command
-        self.buttonYes = GCheckButton(parent, command=self.onYes)
-        self.buttonNo = GCrossButton(parent, command=self.onNo)
+        #self.buttonYes = GCheckButton(parent, command=self.onYes)
+        #self.buttonNo = GCrossButton(parent, command=self.onNo)
 
+        self.button = GButton(parent, text="OK", command=self.onOK, color=color)
         GFrame.__init__(self, parent, width=300, height=150, color=color)
         # CHANGE INSET HEIGHT AND REBUILD
-        self.panelInset.height = self.buttonYes.height + self.margin
+        self.panelInset.height = self.button.height + self.margin
         self.panelInset._buildFullImage()
 
-        #self.button = GButton(parent, text="OK", command=self.onOK, color=self.btnColor)
-        self.button = GCheckButton(parent, command=self.onOK, color=self.btnColor)
+       #self.button = GCheckButton(parent, command=self.onOK, color=self.btnColor)
 
 
     def onOK(self):

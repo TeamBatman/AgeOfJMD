@@ -73,6 +73,8 @@ class GButton(GWidget):
         self.imageData[GButton.EMPTY] = Image.new('RGBA', (self.width, self.height))
 
     def draw(self, x, y):
+        self.x = x
+        self.y = y
         self.btnItem = self.parent.create_image(x, y, image=self.graphImage, anchor=NW, tags=self.id)
 
         self.getCanvas().create_text(x + 10, y + 12, text=self.text, anchor=NW, font="Arial", fill=self.textColor,

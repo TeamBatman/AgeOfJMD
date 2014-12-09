@@ -21,8 +21,8 @@ from SimpleTimer import Timer
 import MenuDebut
 
 
-SKIP_MENU = False  # Permet de skipper les menus
-LOAD_RESSOURCE_ON_START = True  # Si on load les ressources au démarrage du jeu ou non
+SKIP_MENU = True  # Permet de skipper les menus
+LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
 
 try:
     from tkinter import Event  # Python 3
