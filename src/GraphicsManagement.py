@@ -254,6 +254,8 @@ class GraphicsManager():
             - Des PIL.Image
             - Des ImageTk.PhotoImage
             - Des SpriteSheets
+            - Des Animationsheets
+            - Des Sound FX
     """
 
     # Types de ressources
@@ -268,6 +270,8 @@ class GraphicsManager():
     photoImages = {}  # Les ressources chargées en tant que photoImage
     spritesheets = {}  # Les Spritesheets chargées
     animationSheets = {}  # Les feuilles d'animaton
+
+    soundFx = {}
 
     isInitialized = False
 
@@ -397,6 +401,8 @@ class GraphicsManager():
             cls.photoImages[name]
         except KeyError:
             cls.photoImages[name] = photo
+
+
 
     @staticmethod
     def outputDebug(msg):

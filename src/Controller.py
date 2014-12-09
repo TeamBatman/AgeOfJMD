@@ -18,11 +18,14 @@ from View import GameView, FrameSide
 from GameWindow import GameWindow
 from SimpleTimer import Timer
 
+import Config
+
 import MenuDebut
 
 
 SKIP_MENU = False  # Permet de skipper les menus
 LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
+
 
 try:
     from tkinter import Event  # Python 3
@@ -272,6 +275,7 @@ class Controller:
                     return
                 else:
                     self.view = TitleScreen(self.window, self)
+                    
                     self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
 
         if self.displayTimer.isDone():
@@ -286,7 +290,9 @@ class Controller:
 
 
     def shutdown(self):
+
         self.window.destroy()
+
         if self.network.client:
             self.network.disconnectClient()
         if self.network.server:

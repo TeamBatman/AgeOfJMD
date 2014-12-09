@@ -58,15 +58,16 @@ class ResourceLoader():
 
 
     def run(self):
+        i = 0
         for c in self.couleursHEX:
             selColor = GraphicsManagement.hex_to_rgba(c)
-            vision = GraphicsManagement.generateCircle(5, selColor)  # Pour tous les rayons possibles par défaut
-            GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
+            vision = GraphicsManagement.generateCircle(100, selColor)  # Pour tous les rayons possibles par défaut
+            GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision_%s' % c)
             self.loadSomething()
 
         for c in self.couleursHEX:
             selColor = GraphicsManagement.hex_to_rgba(c)
-            vision = GraphicsManagement.generateCircle(10, selColor)  # Pour tous les rayons possibles par défaut
+            vision = GraphicsManagement.generateCircle(200, selColor)  # Pour tous les rayons possibles par défaut
             GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
             self.loadSomething()
 

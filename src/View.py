@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from PIL import ImageDraw
+import winsound
+
 from Batiments import Batiment
 from Carte import Tuile
-
+import Config
 from GraphicsManagement import GraphicsManager
 import GraphicsManagement
 from Units import Unit
 from Units import Paysan
 from Civilisations import Civilisation
 import Units
+
 
 try:
     from tkinter import *  # Python 3
@@ -213,16 +215,15 @@ class ConstructionView():
                                            iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
         self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
-                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noir.png")
+                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
 
         self.buttonScierie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingScierie,
-                                           iconPath="Graphics/Buildings/Age_II/Scierie/scierie_noire.png")
+                                        iconPath="Graphics/Buildings/Age_II/Scierie/scierie_noire.png")
 
-        self.buttonFonderie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFonderie,
-                                            iconPath="Graphics/Buildings/Age_III/Fonderie/fonderie_noire.png")
+        self.buttonFonderie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFonderie, iconPath="Graphics/Buildings/Age_III/Fonderie/fonderie_noire.png")
 
-        self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
-                                       iconPath='Graphics/Icones/arrowBack.png')
+
+        self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour, iconPath='Graphics/Icones/arrowBack.png')
 
 
     def onRetour(self):
@@ -920,10 +921,12 @@ class FrameBottom():
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         self.moraleProg.setProgression(63)
 
-        self.texteNourriture = GLabel(self.canvas, text="Nourriture: " + str(40))
-        self.texteBois = GLabel(self.canvas, text="Bois: " + str(0))
-        self.texteMinerai = GLabel(self.canvas, text="Minerai: " + str(0))
-        self.texteCharbon = GLabel(self.canvas, text="Charbon: " + str(0))
+
+        self.texteNourriture = GLabel(self.canvas,text=" "+str(0))
+        self.texteBois = GLabel(self.canvas,text=" "+str(100))
+        self.texteMinerai = GLabel(self.canvas,text=" "+str(0))
+        self.texteCharbon = GLabel(self.canvas,text=" "+str(0))
+
 
         self.btnSettings = GSmallButton(self.canvas, command=self.onSettings)
 
@@ -932,11 +935,35 @@ class FrameBottom():
         """ Dessine le cadre
         """
         self.frame.draw(self.x, self.y)
-        # self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
-        self.texteNourriture.draw(x=self.frame.x + 225, y=self.frame.y + 35)
-        self.texteBois.draw(x=self.frame.x + 375, y=self.frame.y + 35)
-        self.texteMinerai.draw(x=self.frame.x + 500, y=self.frame.y + 35)
-        self.texteCharbon.draw(x=self.frame.x + 625, y=self.frame.y + 35)
+        #self.moraleProg.draw(x=self.frame.x + 35, y=self.frame.y + 25)
+        self.canvas.delete('infoRes')
+        self.texteNourriture.destroy()
+        self.texteBois.destroy()
+        self.texteMinerai.destroy()
+        self.texteCharbon.destroy()
+
+
+
+
+        self.texteNourriture.draw(x=self.frame.x + 300, y=self.frame.y + 35)
+        self.canvas.create_image(self.frame.x + 225, self.frame.y + 20, anchor=NW, image=GraphicsManager.getPhotoImage("Icones/foodInfo.png"), tags='infoRes')
+
+        self.texteBois.draw(x=self.frame.x + 410, y=self.frame.y + 35)
+        self.canvas.create_image(self.frame.x + 350, self.frame.y + 20, anchor=NW, image=GraphicsManager.getPhotoImage("Icones/woodInfo.png"), tags='infoRes')
+
+
+
+        self.texteMinerai.draw(x=self.frame.x + 555, y=self.frame.y + 35)
+        self.canvas.create_image(self.frame.x + 450, self.frame.y + 20, anchor=NW, image=GraphicsManager.getPhotoImage("Icones/mineraiInfo.png"), tags='infoRes')
+
+
+        self.texteCharbon.draw(x=self.frame.x + 675, y=self.frame.y + 35)
+        self.canvas.create_image(self.frame.x + 600, self.frame.y + 20, anchor=NW, image=GraphicsManager.getPhotoImage("Icones/charbonInfo.png"), tags='infoRes')
+
+
+
+
+
 
         self.btnSettings.draw(self.x + 20, self.y + 20)
 
@@ -947,11 +974,10 @@ class FrameBottom():
             if isinstance(value, GLabel):
                 value.destroy()
         ressources = joueur.ressources
-        print("civ", joueur.civilisation, "   ", ressources)
-        self.texteNourriture.text = "Nourriture: " + str(ressources['nourriture'])
-        self.texteBois.text = "Bois: " + str(ressources['bois'])
-        self.texteMinerai.text = "Minerai: " + str(ressources['minerai'])
-        self.texteCharbon.text = "Charbon: " + str(ressources['charbon'])
+        self.texteNourriture.text = " "+str(ressources['nourriture'])
+        self.texteBois.text = " "+str(ressources['bois'])
+        self.texteMinerai.text = " "+str(ressources['minerai'])
+        self.texteCharbon.text = " "+str(ressources['charbon'])
         self.draw()
 
 
@@ -1096,18 +1122,12 @@ class CarteView():
                 if unit in selectedUnits:
                     unitImage = unit.animation.activeOutline
 
-                    # VISION
-                    vx1 = posX - unit.rayonVision
-                    vy1 = posY - unit.rayonVision
-                    vx2 = posX + unit.rayonVision
-                    vy2 = posY + unit.rayonVision
 
-                    # TODO Mettre une couleur selon la civilisation
-                    # self.canvas.create_oval(vx1, vy1, vx2, vy2, outline='blue', tags='unitVision')
                     selColor = GraphicsManagement.hex_to_rgba(couleursCiv[unit.civilisation])
 
+
                     try:
-                        vision = GraphicsManager.photoImages['unitVision']
+                        vision = GraphicsManager.getPhotoImage('unitVision_%s' % couleursCiv[unit.civilisation])
                     except KeyError:
                         vision = GraphicsManagement.generateCircle(unit.rayonVision, selColor)
                         GraphicsManager.addPhotoImage(ImageTk.PhotoImage(vision), 'unitVision')
@@ -1144,6 +1164,9 @@ class CarteView():
                 for anim in unit.oneTimeAnimations:
                     imgAnim = anim.activeFrame
                     self.canvas.create_image(posX, posY, anchor=CENTER, image=imgAnim, tags=('unit', unit.id))
+                    #winsound.PlaySound("Sounds/Punch1", winsound.SND_ASYNC | winsound.SND_FILENAME)
+
+
 
                 """if unit.leader == 1:
                     self.canvas.create_rectangle(posX, posY, posX+10, posY+10, width=1, fill='red', tags='unit')
@@ -1276,6 +1299,15 @@ class GameView():
         self.bindEvents()
 
         self.modeConstruction = False
+
+        # Musique Principale
+        if Config.PLAY_MUSIC:
+            winsound.PlaySound("Sounds/AgeI.wav", winsound.SND_ASYNC | winsound.SND_LOOP | winsound.SND_FILENAME)
+
+
+
+
+
 
 
     def drawHUD(self):
@@ -1482,5 +1514,7 @@ class GameView():
     def destroy(self):
         """ Détruit la fenêtre de jeu
         """
+        winsound.PlaySound("*", winsound.SND_ALIAS)
         self.window.destroy()
+
 

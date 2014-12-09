@@ -1,4 +1,6 @@
 from tkinter import ALL
+import winsound
+import Config
 from GraphicsManagement import GraphicsManager
 from GuiAwesomeness import *
 
@@ -74,8 +76,9 @@ class TitleScreen():
         self.waveTimer = SimpleTimer.FrameTimer(1)
         self.waveTimer.start()
 
-
         self.menuActif = None
+        if Config.PLAY_MUSIC:
+            winsound.PlaySound("Sounds/Title.wav", winsound.SND_ASYNC | winsound.SND_LOOP | winsound.SND_FILENAME)
 
 
     def changerMenu(self, menu):
