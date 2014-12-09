@@ -31,7 +31,7 @@ LOCAL_TEST = False  # Permet de mettre l'adresse IP du serveur à 127.0.0.1. Fon
 
 
 def detectIP():
-    return socket.gethostbyname("127.0.0.1")
+    return socket.gethostbyname(socket.gethostname())
 
 
 class SCClient:
@@ -49,6 +49,12 @@ class SCClient:
 class ServerController:
     """ Contrôleur serveur. C'est une instance de cette classe qui sera mis à disposition des clients. Enregistrée dans
      le démon Pyro4. Ainsi, ils ne pourront avoir accès qu'aux méthodes définies ici."""
+
+    # ÉTATS DU JEU
+    WAITING_LOADING = 'wl'  # Le serveur attends que tous les joueur aient loadé les ressources du jeu
+    IN_GAME = 'ig'  # La parite est en cours
+
+
 
     def __init__(self):
         # Chaque clé est identifiant du client et la valeur est sa progression dans l'ensemble des commandes
@@ -92,7 +98,6 @@ class ServerController:
 
         return [c.__dict__ for c in self.clients.values()]
 
-
     def join(self, ip, name='Joueur Anonyme'):
         """ Permet à un client de rejoindre le serveur et lui retoune un Identifiant unique
         :return: l'identifiant unique généré pour le client
@@ -114,10 +119,16 @@ class ServerController:
         :param command: la commande à être envoyé à tous les clients
         """
         maxFrame = self.getFrameMostForwardInTime()
+        targetFrame = maxFrame + self.commandFrameLatency
         try:
-            self.commands[maxFrame + self.commandFrameLatency].append(command)
+            self.commands[targetFrame].append(command)
         except KeyError:
-            self.commands[maxFrame + self.commandFrameLatency] = [command]
+            self.commands[targetFrame] = [command]
+
+        if Command.START_GAME in command:
+            self.commands[1] = [command]
+
+
 
 
     def getNextCommand(self, clientId, currentFrame):  # TODO Simplifier
@@ -128,9 +139,11 @@ class ServerController:
         :return: La prochaine commande à exécuter par le client
         """
 
+
+
         currentClient = self.clients[clientId]
         currentClient.currentFrame = currentFrame
-        #print(["%s: %s" % (c.civId, c.currentFrame) for c in self.clients.values()])   # PROGRESSION CLIENTS
+
 
 
         # a-t-on suffisamment de joueurs pour commencer la partie?
@@ -145,7 +158,7 @@ class ServerController:
 
 
 
-        # Si quelqu'un est plus en retard que nous on ne peut obtenir notre prochaine frame
+        # Si quelqu'un est plus en retard que nous on ne peut pas obtenir notre prochaine frame
         # On va attendre que le(s) client(s) en retard se synchronise(nt)
         if self.isSomeoneLate():
             if self.isSomeoneMoreLate(currentClient):
@@ -343,7 +356,7 @@ class NetworkController:
      """
 
     def __init__(self):
-        self.client = Client()  # Instance du client
+        self.client = None #Client()  # Instance du client
         self.server = None  # Instance du serveur (Seulement lorsque le joueur décide de hoster une partie)
         self.serverThread = None  # Le Fil d'éxécution du serveur
 
@@ -354,6 +367,8 @@ class NetworkController:
         """
         if self.serverThread:
             ipAddress = detectIP()
+        if not self.client:
+            self.client = Client()
         try:
             self.client.connect(ipAddress, port, playerName=playerName)
         except Pyro4.errors.CommunicationError:
@@ -411,6 +426,12 @@ class NetworkController:
         """
         self.server.stop()
         self.server = None
+
+    def isClientHost(self):
+        """ Retourne si le client en cours est un HOST
+        :return: booléen True si le client est host autrement false
+        """
+        return self.serverThread is not None
 
 
 class ClientConnectionError(Exception):

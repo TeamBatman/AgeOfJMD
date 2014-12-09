@@ -147,7 +147,7 @@ class GMediumButton(GButton):
         check_y = y + self.height / 2 - height / 2
         self.getCanvas().create_image(check_x, check_y, anchor=NW, image=self.icon, tags=self.id)
 
-        self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=self.id)
+        self.eventMonitor = self.getCanvas().create_image(x, y, image=self.eventMonitorImage, anchor=NW, tags=(self.id,'GButton'))
         self._bindEvents()
 
 

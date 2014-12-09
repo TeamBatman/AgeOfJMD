@@ -26,6 +26,14 @@ class Batiment:
     SCIERIE = 6
     FONDERIE = 7
 
+    COUT_FERME = 20
+    COUT_BARAQUE = 25
+    COUT_HOPITAL = 25
+    COUT_TOUR_GUET = 30
+    COUT_LIEU_CULTE = 30
+    COUT_SCIERIE = 25
+    COUT_FONDERIE = 25
+
     def __init__(self, parent, bid, posX, posY):
         self.posX = posX
         self.posY = posY
@@ -33,6 +41,8 @@ class Batiment:
         self.peutEtreOccupe = False
         self.estOccupe = False
         self.pointsDeVie = 100
+        self.hpMax = 100
+        self.grandeur = 41  # 32 donc grandeur/2 - 16
         self.estSelectionne = False
         self.tailleX = 128  # Taille en pixels
         self.tailleY = 128  # Taille en pixels
@@ -262,6 +272,35 @@ class Hopital(Batiment):
                 self.joueur.recherche.append("Hopital")
                 #TODO decouvrir comment la regeneration va se faire
 
+
+
+    def determineImage(self):
+        #self.image = GraphicsManager.getPhotoImage('Graphics/Buildings/Age_I/Base.png')
+        """self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)"""
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        baseImages = {
+            Civilisation.BLANC: 'Buildings/%s/Hopital/hopital_blanc.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Hopital/hopital_bleu.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Hopital/hopital_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Hopital/hopital_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Hopital/hopital_noir.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Hopital/hopital_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Hopital/hopital_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Hopital/hopital_vert.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Hopital/hopital_rose.png' % age
+        }
+        img = GraphicsManager.getImage(baseImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
+
+
     def miseAJour(self):
         if self.enRecherche:
             self.recherche1()
@@ -272,11 +311,11 @@ class Base(Batiment):
         super().__init__(parent, bid, posX, posY)
         self.type = Batiment.BASE
         self.determineImage()
-        self.vitesseDeCreation = 3
+        self.vitesseDeCreation = 8
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-        self.coutCreer1['bois'] = 5
+        self.coutCreer1['nourriture'] = 20
         self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
@@ -314,9 +353,9 @@ class Base(Batiment):
 
 
     def creer1(self):  # création des paysans
-        if self.joueur.ressources['bois'] >= self.coutCreer1['bois']:
-            print("in creation 1", self.paysanAFaire, self.coutCreer1['bois'])
-            self.joueur.ajouterRessource('bois', -self.coutCreer1['bois'])
+        if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
+            print("in creation 1", self.paysanAFaire, self.coutCreer1['nourriture'])
+            self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
             self.paysanAFaire += 1
             civ = self.getClientId()
             
@@ -446,14 +485,14 @@ class Baraque(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.type = Batiment.BARAQUE
-        self.vitesseDeCreation = 40
+        self.vitesseDeCreation = 30
         self.typeCreation = ""
         self.typeRecherche = ""
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
-        self.coutCreer1['nourriture'] = 50
-        self.coutCreer2['nourriture'] = 50
-        self.coutCreer3['nourriture'] = 50
+        self.coutCreer1['nourriture'] = 40
+        self.coutCreer2['nourriture'] = 40
+        self.coutCreer3['nourriture'] = 40
 
     def determineImage(self):
         ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
@@ -480,10 +519,10 @@ class Baraque(Batiment):
     def creer1(self):  # création de soldats avec épée
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer1['nourriture']
-                self.enCreation = True
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.typeCreation = "Epee"
                 self.tempsDepartCreation = time.time()
+                self.enCreation = True
         elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
             posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
             cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
@@ -499,7 +538,7 @@ class Baraque(Batiment):
     def creer2(self):  # création de soldats avec lances
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer2['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer2['nourriture']
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Lance"
                 self.tempsDepartCreation = time.time()
@@ -518,7 +557,7 @@ class Baraque(Batiment):
     def creer3(self):  # création de soldats avec boucliers
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer3['nourriture']:
-                self.joueur.ressources['nourriture'] -= self.coutCreer3['nourriture']
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Bouclier"
                 self.tempsDepartCreation = time.time()
@@ -637,7 +676,7 @@ class Ferme(Batiment):
         self.unitInBuilding = [] # Les unités dans la ferme
         self.production = 5
         self.tempsProduction = 10
-        self.type = "ferme"
+        self.type = Batiment.FERME
         #self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Farm.png')
         #self.resized = self.rawImage.resize((self.tailleX, self.tailleY), Image.ANTIALIAS)
         #self.image = ImageTk.PhotoImage(self.resized)
@@ -754,17 +793,55 @@ class Scierie(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.peutEtreOccupe = True
+        self.unitInBuilding = [] # Les unités dans la scierie
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
         self.type = Batiment.SCIERIE
 
+    def determineImage(self):
+        """ Permet de déterminer l'image du bâtiment
+        """
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        scieriesImages = {
+            Civilisation.BLANC: 'Buildings/%s/Scierie/scierie_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Scierie/scierie_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Scierie/scierie_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Scierie/scierie_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Scierie/scierie_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Scierie/scierie_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Scierie/scierie_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Scierie/scierie_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Scierie/scierie_rose.png' % age
+        }
+        img = GraphicsManager.getImage(scieriesImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
-        if self.estOccupe:
+        if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.bois += self.production
+                self.joueur.ajouterRessource('bois',self.production * len(self.unitInBuilding) )
+                civ = self.getClientId()
                 self.tempsProduction = time.time()
+
+    def sortir(self):
+        for unit in self.unitInBuilding:
+            unit.inBuilding = False
+        unitExit = self.unitInBuilding
+        self.unitInBuilding = []
+
+        #trouve une case pour mettre les units
+        if unitExit:
+            cases = self.joueur.model.trouverCentreCase(self.posX, self.posY)
+            posFin = self.joueur.model.trouverFinMultiSelection(cases[0],cases[1],1, unitExit[0].grandeur)[0]
+            print("fin exit", posFin)
+            self.joueur.model.controller.eventListener.onMapRClick(Noeud(None, posFin[0], posFin[1], None, None), unitExit)
 
     def recherche1(self):  # meilleure vitesse de production
         self.rechercheCompletee = False
@@ -811,17 +888,55 @@ class Fonderie(Batiment):
     def __init__(self, parent, bid, posX, posY):
         super().__init__(parent, bid, posX, posY)
         self.peutEtreOccupe = True
+        self.unitInBuilding = [] # Les unités dans la fonderie
         self.production = 10
         self.tempsProduction = 10
         self.coutRecherche1['bois'] = 50
         self.type = Batiment.FONDERIE
 
+    def determineImage(self):
+        """ Permet de déterminer l'image du bâtiment
+        """
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        fonderiesImages = {
+            Civilisation.BLANC: 'Buildings/%s/Fonderie/fonderie_blanche.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Fonderie/fonderie_bleue.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Fonderie/fonderie_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Fonderie/fonderie_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Fonderie/fonderie_noire.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Fonderie/fonderie_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Fonderie/fonderie_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Fonderie/fonderie_verte.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Fonderie/fonderie_rose.png' % age
+        }
+        img = GraphicsManager.getImage(fonderiesImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
     def produire(self):
         # TODO a se renseigner sur les valeurs pour la production
-        if self.estOccupe:
+        if self.unitInBuilding:
             if time.time() - self.tempsProduction >= 10:
-                self.joueur.minerais += self.production
+                self.joueur.ajouterRessource('minerai',self.production * len(self.unitInBuilding) )
+                civ = self.getClientId()
                 self.tempsProduction = time.time()
+
+    def sortir(self):
+        for unit in self.unitInBuilding:
+            unit.inBuilding = False
+        unitExit = self.unitInBuilding
+        self.unitInBuilding = []
+
+        #trouve une case pour mettre les units
+        if unitExit:
+            cases = self.joueur.model.trouverCentreCase(self.posX, self.posY)
+            posFin = self.joueur.model.trouverFinMultiSelection(cases[0],cases[1],1, unitExit[0].grandeur)[0]
+            print("fin exit", posFin)
+            self.joueur.model.controller.eventListener.onMapRClick(Noeud(None, posFin[0], posFin[1], None, None), unitExit)
 
     def recherche1(self):  # meilleure vitesse de production
         self.rechercheCompletee = False

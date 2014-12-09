@@ -3,11 +3,8 @@
 
 from __future__ import division
 
-from Commands import Command
 from Carte import Carte
 from Joueurs import Joueur
-from Units import Paysan
-from Units import Noeud
 from AI import AI
 from Batiments import *
 import random
@@ -27,11 +24,14 @@ class Model:
         """ Permet de lancer les commande updates importantes
         """
         # On verifie si la civilisation du client peut évoluer
-        if self.joueurs[self.civNumber].canEvolve():
-            cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
-            cmd.addData('AGE', self.joueurs[self.civNumber].epoque + 1)
-            cmd.addData('CIV', self.civNumber)
-            self.controller.sendCommand(cmd)
+        try:
+            if self.joueurs[self.civNumber].canEvolve():
+                cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
+                cmd.addData('AGE', self.joueurs[self.civNumber].epoque + 1)
+                cmd.addData('CIV', self.civNumber)
+                self.controller.sendCommand(cmd)
+        except KeyError:    # La civilisation du client actif n'existe pas ou plus
+            pass
 
         # On UPDATE Chacune des civilisations
         [civ.update() for civ in self.joueurs.values()]
@@ -56,7 +56,9 @@ class Model:
 
             Command.CIVILISATION_CREATE: self.executeCreateCivilisation,
 
-            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation
+            Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation,
+
+            Command.START_GAME: lambda x: x
         }
 
         try:
@@ -70,7 +72,20 @@ class Model:
         :param command: la commande à exécuter [Objet Command]
         """
         print(self.joueurs)
-        self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
+        if command.data['CLASSE'] == "soldatEpee":
+            self.joueurs[command.data['CIV']].createUnitSword(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatLance":
+            self.joueurs[command.data['CIV']].createUnitLance(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "soldatBouclier":
+            self.joueurs[command.data['CIV']].createUnitShield(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
+        elif command.data['CLASSE'] == "paysan":
+            self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
     def executeMoveUnit(self, command):
@@ -80,7 +95,7 @@ class Model:
         try:
             unit = self.getUnit(command['ID'])
             unit.changerCible(command.data['X2'], command.data['Y2'], command.data['GROUPE'], command.data['FIN'],
-                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'])
+                              command.data['LEADER'], command.data['ENNEMI'], command.data['BTYPE'], command.data['ABID'], command.data['ISEVENT'])
         except (KeyError, AttributeError):  # On a essayé de déplacer une unité morte
             pass
 
@@ -123,7 +138,7 @@ class Model:
             if self.joueur.civilisation == civId or isinstance(self.getUnit(command['ID']).joueur, AI):
                 self.getUnit(command['ID']).nbRessources += self.carte.matrice[command['X1']][
                     command['Y1']].nbRessources
-            self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
+            #self.carte.matrice[command['X1']][command['Y1']].nbRessources = 0
         if self.carte.matrice[command['X1']][command['Y1']].nbRessources <= 0:
             self.carte.matrice[command['X1']][command['Y1']].type = 0  # Gazon -> n'est plus une ressource
             self.carte.matrice[command['X1']][command['Y1']].isWalkable = True
@@ -266,6 +281,56 @@ class Model:
 
         return centreX, centreY
 
+    def trouverRessourcePlusPres(self, unit, typeRessource):
+        ressource = {"x" : 0 , "y" : 0}
+
+        minX = int(unit.x)
+        minY = int(unit.y)
+        maxX = int(unit.x)
+        maxY = int(unit.y)
+        found = False
+
+        while not found:
+            print("start check")
+            minX = minX - 144
+            minY = minY - 144
+            maxX += 144
+            maxY += 144
+            print(minX, minY)
+            #si le minimum des X à vérifier est va à moins de 0, mettre à 0
+            if minX < 0:
+                minX = 0
+
+            #si le minimum des Y à vérifier est va à moins de 0, mettre à 0
+            if minY < 0:
+                minY = 0
+
+            #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxX > self.carte.size * 48:
+                maxX = self.carte.size * 48
+
+            #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
+            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
+            if maxY > self.carte.size * 48:
+                maxY = self.carte.size * 48
+
+            print(maxX)
+            print(maxY)
+            print(minX)
+            print(minY)
+
+            for x in range (minX, maxX, 48):
+                for y in range (minY, maxY, 48):
+                    casesCible = self.trouverCaseMatrice(x, y)
+                    caseCibleX = casesCible[0]
+                    caseCibleY = casesCible[1]
+                    if self.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
+                        ressource["x"] = x
+                        ressource["y"] = y
+                        print("!", x,y)
+                        return ressource
+
     def validPosBuilding(self, caseX, caseY):
         """Regarde si on peut construire à cette endroit un building
         :param caseX: la case en X du bâtiment
@@ -314,7 +379,7 @@ class Model:
         :param clientId: L'id du client
         """
         self.joueurs[clientId] = Joueur(clientId, self)
-        self.joueurs[clientId].ressources['bois'] += 100
+        self.joueurs[clientId].ressources['nourriture'] += 40
 
     def getUnits(self):
         """ Retoune la totalité des unités de toutes les civilisations

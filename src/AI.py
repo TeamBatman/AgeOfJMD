@@ -19,7 +19,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {'bois' : 100, 'minerai' : 100, 'charbon' : 100, 'nourriture' : 10}
+        self.ressources = {'bois' : 100, 'minerai' : 100, 'charbon' : 100, 'nourriture' : 100}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
@@ -425,57 +425,9 @@ class AI(Joueur):
         if unit == None:
             self.creerPaysan()
             return
-
-        minX = int(unit.x)
-        minY = int(unit.y)
-        maxX = int(unit.x)
-        maxY = int(unit.y)
-        found = False
-
-        while not found:
-            print("start check")
-            minX = minX - 144
-            minY = minY - 144
-            maxX += 144
-            maxY += 144
-            print(minX, minY)
-            #si le minimum des X à vérifier est va à moins de 0, mettre à 0
-            if minX < 0:
-                minX = 0
-
-            #si le minimum des Y à vérifier est va à moins de 0, mettre à 0
-            if minY < 0:
-                minY = 0
-
-            #si le maximum des X à vérifier est plus grand que la taille de la map, le mettre au max de la map
-            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
-            if maxX > self.model.carte.size * 48:
-                maxX = self.model.carte.size * 48
-
-            #si le maximum des Y à vérifier est plus grand que la taille de la map, le mettre au max de la map
-            #taille de la map * 48 parceque la taille de la map est en tuiles et chaque tuile est de 48 pixels
-            if maxY > self.model.carte.size * 48:
-                maxY = self.model.carte.size * 48
-
-            print(maxX)
-            print(maxY)
-            print(minX)
-            print(minY)
-
-            for x in range (minX, maxX, 48):
-                for y in range (minY, maxY, 48):
-                    casesCible = self.model.trouverCaseMatrice(x, y)
-                    caseCibleX = casesCible[0]
-                    caseCibleY = casesCible[1]
-                    if self.model.carte.matrice[caseCibleX][caseCibleY].type == typeRessource:
-                        ressource["x"] = x
-                        ressource["y"] = y
-                        print("!", x,y)
-                        return ressource
-
-
-
-
+        
+        return self.model.trouverRessourcePlusPres(unit, typeRessource)
+        
 
     def update(self):
 
