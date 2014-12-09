@@ -295,9 +295,9 @@ class BaseView():
         self.y = parent.y
 
         self.boutonCreateUnit = GMediumButton(self.canvas, 'Unit', self.onCreateUnit, GButton.GREY)
-        self.boutonCreateUnit.icon = \
-            GraphicsManager.getSpriteSheet('Graphics/Units/Age_I/paysans/paysan_noir.png').frames[
-            'DOWN_1']
+        p = Paysan(-1, -1, -1,  building.joueur, building.joueur.civilisation)
+        img = p.animation.spriteSheet.frames['DOWN_1']
+        self.boutonCreateUnit.icon = img
 
 
     def draw(self):
