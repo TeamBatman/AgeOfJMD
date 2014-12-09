@@ -446,7 +446,19 @@ class Unit():
         self.enDeplacement = False
         if self.building:
             print("JE VEUX CONSTRUIRE!")
-            self.joueur.createBuilding(self.building[0], self.x, self.y, self.building[1])
+            idBatiment = self.building[0]
+            civ =  self.model.joueur.civilisation
+            bType =  self.building[1]
+            #self.joueur.createBuilding(self.building[0], self.x, self.y, self.building[1])
+            clientId = self.model.controller.network.getClientId()
+            cmd = Command(clientId, Command.BUILDING_CREATE)
+            cmd.addData('ID', idBatiment)
+            cmd.addData('X', self.x)
+            cmd.addData('Y', self.y)
+            cmd.addData('CIV', civ)
+            cmd.addData('UNITS', [])
+            cmd.addData('BTYPE', bType)
+            self.model.controller.sendCommand(cmd)
             self.building = None
         else:
             print("JE VEUX PAS CONSTRUIRE!")

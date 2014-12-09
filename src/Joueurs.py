@@ -20,7 +20,7 @@ class Joueur:
         self.base = None  # TODO Base Vivante ne pourrait pas juste être remplacer par un if self.base: ?
         self.baseVivante = False  # À modifier, doit être true quand on commence une vraie partie
         #self.ressources = {Ressources.BOIS: 0, Ressources.MINERAI: 0, Ressources.CHARBON: 0}
-        self.ressources = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture': 0}
+        self.ressources = {'bois': 110, 'minerai': 0, 'charbon': 0, 'nourriture': 100}
         self.morale = 0
         self.nbNourriture = 0
         self.epoque = 1
@@ -181,30 +181,32 @@ class Joueur:
         :param posY: position Y du bâtiment
         :param btype: Type de bâtiment à construire
         """
+        print("create building joeur")
+        newID = bId
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
         if btype == Batiments.Batiment.FERME and self.ressources['bois'] >= Batiments.Batiment.COUT_FERME:
-            newID = Batiments.Batiment.generateId(self.civilisation)
+            #newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Ferme(self, newID, posX, posY)
             self.ajouterRessource('bois', -Batiments.Batiment.COUT_FERME)
         elif btype == Batiments.Batiment.BARAQUE and self.ressources['bois'] >= Batiments.Batiment.COUT_BARAQUE:
-            newID = Batiments.Batiment.generateId(self.civilisation)
+            #newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Baraque(self, newID, posX, posY)
             self.ajouterRessource('bois', -Batiments.Batiment.COUT_BARAQUE)
         elif btype == Batiments.Batiment.HOPITAL and self.ressources['bois'] >= Batiments.Batiment.COUT_HOPITAL:
-            newID = Batiments.Batiment.generateId(self.civilisation)
+            #newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Hopital(self, newID, posX, posY)
             self.ajouterRessource('bois', -Batiments.Batiment.COUT_HOPITAL)
         elif btype == Batiments.Batiment.SCIERIE and self.ressources['bois'] >= Batiments.Batiment.COUT_SCIERIE:
-            newID = Batiments.Batiment.generateId(self.civilisation)
+            #newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Scierie(self, newID, posX, posY)
             self.ajouterRessource('bois', -Batiments.Batiment.COUT_SCIERIE)
         elif btype == Batiments.Batiment.FONDERIE and self.ressources['bois'] >= Batiments.Batiment.COUT_FONDERIE:
-            newID = Batiments.Batiment.generateId(self.civilisation)
+            #newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Fonderie(self, newID, posX, posY)
             self.ajouterRessource('bois', -Batiments.Batiment.COUT_FONDERIE)
         elif btype == Batiments.Batiment.BASE:
             if not self.baseVivante:
-                newID = Batiments.Batiment.generateId(self.civilisation)
+                #newID = Batiments.Batiment.generateId(self.civilisation)
                 createdBuild = Batiments.Base(self, newID, posX, posY)
                 self.baseVivante = True
             else:
@@ -228,10 +230,17 @@ class Joueur:
     def destroyBuilding(self, bId):
         """ Détruit un bâtiment 
         """
+        print("DELETE BUILDING 1")
         try:
-            self.buildings.pop(bId)
+            print("DELETE BUILDING 2")
+            building = self.buildings.pop(bId)
+            print("DELETE BUILDING 3")
         except KeyError:  # Le bâtiment n'existe déjà plus
             pass
+        
+        #if building.peutEtreOccupe:
+        #    building.sortir()
+        print("DELETE BUILDING 4")
 
     def updateBuildings(self):
         """ Met à jour les bâtiments 
