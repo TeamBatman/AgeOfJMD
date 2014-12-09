@@ -184,8 +184,9 @@ class AI(Joueur):
 
     def chercherBois(self):
         unit = self.trouverUniteLibre(Tuile.FORET)
+        scierie = self.trouverBatiment(Batiment.SCIERIE, "", self.civilisation)
         if unit != None:
-            if self.epoque >= 2:
+            if self.epoque >= 2 and not scierie:
                 if time.time() - self.derniereScierie >= self.cooldownAutomatisation:
                     self.batirBatiment(Batiment.SCIERIE, unit)
                     self.derniereScierie = time.time()
@@ -204,8 +205,9 @@ class AI(Joueur):
 
     def chercherminerais(self):
         unit = self.trouverUniteLibre(Tuile.MINERAI)
+        fonderie = self.trouverBatiment(Batiment.FONDERIE)
         if unit != None:
-            if self.epoque >= 3:
+            if self.epoque >= 3 and not fonderie:
                 if time.time() - self.derniereFonderie >= self.cooldownAutomatisation:
                     self.batirBatiment(Batiment.FONDERIE, unit)
                     self.derniereFonderie = time.time()

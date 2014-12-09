@@ -453,7 +453,12 @@ class Base(Batiment):
                     self.enRecherche = False
                     self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 2")
-                    print("époque changée")
+                    print("époque changée à", self.joueur.epoque)
+                    cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
+                    cmd.addData('AGE', self.joueur.epoque + 1)
+                    cmd.addData('CIV', self.joueur.civilisation)
+                    self.joueur.model.controller.sendCommand(cmd)
+
         elif self.joueur.epoque == 2:
             for recherche in self.joueur.recherche:
                 if recherche == "Époque 3":
@@ -470,6 +475,11 @@ class Base(Batiment):
                     self.enRecherche = False
                     self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 3")
+                    print("époque changée à", self.joueur.epoque)
+                    cmd = Command(cmdType=Command.CIVILISATION_EVOLVE)
+                    cmd.addData('AGE', self.joueur.epoque + 1)
+                    cmd.addData('CIV', self.joueur.civilisation)
+                    self.joueur.model.controller.sendCommand(cmd)
 
     def miseAJour(self):
         if self.enCreation:
