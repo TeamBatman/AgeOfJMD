@@ -601,13 +601,13 @@ class StatsView():
         self.labelAge.text = "Âge: %s" % self.joueur.epoque
         self.labelAge.draw(self.x + 20, self.labelTempsJeux.y + 30)
 
-        self.labelNbBuilding.text = "Nombre de Bâtiments: %s" % len(self.joueur.buildings.values())
+        self.labelNbBuilding.text = "Nombre de Bâtiments: %s" % len(self.joueur.buildings)
         self.labelNbBuilding.draw(self.x + 20, self.labelAge.y + 30)
 
-        self.labelNbUnits.text = "Nombre d'unités: %s" % self.joueur
+        self.labelNbUnits.text = "Nombre d'unités: %s" % len(self.joueur.buildings)
         self.labelNbUnits.draw(self.x + 20, self.labelNbBuilding.y + 30)
 
-        self.labelNbUnitsDead.text = "Nombre d'unités mortes au combat: %s" % 0
+        self.labelNbUnitsDead.text = "Nombre d'unités mortes au combat: %s" % self.joueur.nbDeadUnits
         self.labelNbUnitsDead.draw(self.x + 20, self.labelNbUnits.y + 30)
 
         self.okButton.draw(self.x + self.width/2-self.okButton.width/2, self.y + self.height-80)

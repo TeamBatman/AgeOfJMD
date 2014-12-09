@@ -28,6 +28,7 @@ class Joueur:
         self.units = {}
         self.enRessource = []
         self.buildings = {}
+        self.nbDeadUnits = 0
 
 
     def ajouterRessource(self, typeRessource, nbRessources):
@@ -130,6 +131,7 @@ class Joueur:
         """
         try:
             self.units.pop(uId)
+            self.nbDeadUnits += 1
         except KeyError:  # L'unité n'existe déjà plus
             pass
 
