@@ -515,7 +515,7 @@ class AI(Joueur):
 
 
     def deplacerUnite(self, butX, butY, unite, building):
-        print(butX, butY, unite.x, unite.y)
+        print(butX, butY, unite.x, unite.y, "blabla position")
         self.model.controller.eventListener.onMapRClick(Noeud(None, butX, butY, None, None), [unite], building, None)
         #cmd = Command(self.civilisation, Command.MOVE_UNIT)
         #cmd.addData('ID', unite.id)
@@ -531,13 +531,14 @@ class AI(Joueur):
             print("no unit selected for build")
             return
         else:
-            self.dernierBatiment = time.time()
-            position = self.trouverZoneLibrePourBatir(unite)
-            unite.building = []
-            unite.building.append(Batiment.generateId(self.civilisation))
-            unite.building.append(type)
+            if self.verifierCoutBatiment(type):
+                self.dernierBatiment = time.time()
+                position = self.trouverZoneLibrePourBatir(unite)
+                unite.building = []
+                unite.building.append(Batiment.generateId(self.civilisation))
+                unite.building.append(type)
 
-            self.deplacerUnite(position["x"], position["y"], unite, unite.building)
+                self.deplacerUnite(position["x"], position["y"], unite, unite.building)
 
     def trouverBatiment(self, type, raison, civilisation):
         if civilisation == self.civilisation:
@@ -727,3 +728,30 @@ class AI(Joueur):
         if self.epoque == 3 and not hopital:
             self.batirBatiment(Batiment.HOPITAL, unite)
             return
+
+    def verifierCoutBatiment(self, type):
+        if type == Batiment.FERME:
+            cost = Batiment.COUT_FERME
+        elif type == Batiment.BARAQUE:
+            cost = Batiment.COUT_BARAQUE
+        elif type == Batiment.BASE:
+            cost = Batiment.COUT_BASE
+        elif type == Batiment.FONDERIE:
+            cost = Batiment.COUT_FONDERIE
+        elif type == Batiment.SCIERIE:
+            cost = Batiment.COUT_SCIERIE
+        elif type == Batiment.TOUR_GUET:
+            cost = Batiment.COUT_TOUR_GUET
+        elif type == Batiment.LIEU_CULTE:
+            cost = Batiment.COUT_LIEU_CULTE
+        elif type == Batiment.HOPITAL:
+            cost = Batiment.COUT_HOPITAL
+
+        if self.ressources['bois'] >= cost:
+            print("assez de ressources pour", type)
+            return True
+        else:
+            self.ressourceManquante = 'bois'
+            self.qteRessourceManquante = cost
+            print("manque de ressources pour", type)
+            return False

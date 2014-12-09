@@ -26,6 +26,7 @@ class Batiment:
     SCIERIE = 6
     FONDERIE = 7
 
+    COUT_BASE = 25
     COUT_FERME = 20
     COUT_BARAQUE = 25
     COUT_HOPITAL = 25
