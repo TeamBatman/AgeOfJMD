@@ -327,13 +327,20 @@ class MenuSolo:
                                   sliderlength=10, troughcolor="#B45F04", fg="#B45F04",
                                   width=10, bd=0, showvalue=0, bg="#D3BF8F")
 
-        self.boutAccept = GButton(self.window.canvas, text="Lancer la partie", command=lambda: self.controller.catchMenuEvent(TitleEvent.LANCER_PARTIE_SOLO), color=0)
+        self.boutAccept = GButton(self.window.canvas, text="Lancer la partie", command=self.onLancer , color=0)
         # bouton "retour"
         self.boutRetour = GButton(self.window.canvas, text="Retour", command=lambda: self.controller.catchMenuEvent(TitleEvent.VOIR_MENU_PRINCIPAL), color=0)
 
 
         #TODO Vérifier
         #self.vue.eventListener.controller.startServeur()
+
+    def onLancer(self):
+        vitesse = self.scaleVitesse.get()
+        self.controller.catchMenuEvent(TitleEvent.LANCER_PARTIE_SOLO, vitesse)
+
+
+
 
     def draw(self):
         self.frameSolo.draw(self.x + 0, self.y + 0)

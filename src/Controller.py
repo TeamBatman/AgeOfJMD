@@ -54,6 +54,8 @@ class Controller:
 
         self.gameStarted = False
 
+    def updateRefreshRate(self):
+        self.refreshRate = int(1000 / self.nbFramesPerSecond)
 
     def mainLoop(self):
         if self.network.client is not None:
@@ -225,6 +227,8 @@ class Controller:
             self.view.drawMenu()
 
         elif event == MenuDebut.TitleEvent.LANCER_PARTIE_SOLO:
+            self.nbFramesPerSecond *= int(additionalData)
+            self.updateRefreshRate()
             self.view.destroy()
             self.startSoloGame()
 

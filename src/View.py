@@ -9,6 +9,7 @@ import GraphicsManagement
 from Units import Unit
 from Units import Paysan
 from Civilisations import Civilisation
+import Units
 
 try:
     from tkinter import *  # Python 3
@@ -429,17 +430,23 @@ class BarackView():
         self.x = parent.x
         self.y = parent.y
         self.createPrivate = GMediumButton(self.canvas, 'Soldat', self.onCreatePrivate, GButton.GREY)
-        self.createPrivate.icon = \
-            GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_epee/soldat_epee_noir.png').frames[
-            'DOWN_1']
+        p = Units.GuerrierEpee(-1, -1, -1,  building.joueur, building.joueur.civilisation)
+        img = p.animation.spriteSheet.frames['DOWN_1']
+        self.createPrivate.icon = img
+
+
+        p = Units.GuerrierLance(-1, -1, -1,  building.joueur, building.joueur.civilisation)
+        img = p.animation.spriteSheet.frames['DOWN_1']
         self.createUpgradedPrivate = GMediumButton(self.canvas, 'Soldat 2', self.onCreateUpgradedPrivate, GButton.GREY)
-        self.createUpgradedPrivate.icon = \
-            GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_lance/soldat_lance_noir.png').frames[
-            'DOWN_1']
+        self.createUpgradedPrivate.icon = img
+
+
+
+
+        p = Units.GuerrierBouclier(-1, -1, -1,  building.joueur, building.joueur.civilisation)
+        img = p.animation.spriteSheet.frames['DOWN_1']
         self.createShieldPrivate = GMediumButton(self.canvas, 'Soldat 3', self.onCreateShieldPrivate, GButton.GREY)
-        self.createShieldPrivate.icon = \
-            GraphicsManager.getSpriteSheet('Graphics/Units/Age_II/Soldat_bouclier/soldat_bouclier_noir.png').frames[
-            'DOWN_1']
+        self.createShieldPrivate.icon = img
 
 
     def draw(self):
