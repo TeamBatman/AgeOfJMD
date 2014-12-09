@@ -19,7 +19,7 @@ class AI(Joueur):
         self.manqueRessource = False
         self.ressourceManquante = None
         self.qteRessourceManquante = 0
-        self.ressources = {'bois' : 100, 'minerai' : 100, 'charbon' : 100, 'nourriture' : 10}
+        self.ressources = {'bois' : 100, 'minerai' : 100, 'charbon' : 100, 'nourriture' : 100}
         self.paix = True
         self.paysansOccupes = True
         self.nombreSoldatsAllies = 0
