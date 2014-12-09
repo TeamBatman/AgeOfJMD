@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import random
 
 import sys
 from tkinter import ALL
@@ -23,8 +24,6 @@ import Config
 import MenuDebut
 
 
-SKIP_MENU = False  # Permet de skipper les menus
-LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
 
 
 try:
@@ -88,8 +87,8 @@ class Controller:
     def startGame(self):
 
         self.window.canvas.delete(ALL)
-        print(self.window.root.update())
-        self.view = GameView(self.window, self.eventListener,)
+
+        #self.view = GameView(self.window, self.eventListener, )
 
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
@@ -161,12 +160,13 @@ class Controller:
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.model.civNumber = self.network.getClientId()
 
-
-        self.model.creerAI(7)
-        self.model.creerbaseAI(7)
+        aiId = self.network.client.host.join('127.0.0.1', 'AI')
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIIIIIIIIIII %s" % aiId)
+        self.model.creerAI(aiId)
+        self.model.creerbaseAI(aiId)
 
         # INITIALISATION AFFICHAGE
-        self.view = GameView(self.window, self.eventListener,  self.model.joueurs[self.model.civNumber])
+        self.view = GameView(self.window, self.eventListener, self.model.joueurs[self.model.civNumber])
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
@@ -181,11 +181,11 @@ class Controller:
         # FRAMES
         self.currentFrame = 0
 
-        if LOAD_RESSOURCE_ON_START:
+        if not Config.SKIP_LOADING:
             self.view = LoadingScreen(self.window, self)
             self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
         else:
-            if SKIP_MENU:
+            if Config.SKIP_MENU:
                self.startSoloGame()
             else:
                 self.graphicsLoader = ResourceLoader(GraphicsManagement.detectGraphics(), self.view)
@@ -261,6 +261,8 @@ class Controller:
             self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR)
 
         elif event == MenuDebut.TitleEvent.LANCER_PARTIE_MULTIJOUEUR:
+            cmd = Command(cmdType=Command.START_GAME)
+            cmd.addData('SEED', random.randint(0, 2000))
             self.sendCommand(Command(cmdType=Command.START_GAME))
 
 
@@ -269,7 +271,7 @@ class Controller:
         if not self.graphicsLoader.isDone:
             if self.window.isShown:
                 self.graphicsLoader.run()
-                if SKIP_MENU:
+                if Config.SKIP_MENU:
                     self.view.destroy()
                     self.startSoloGame()
                     return

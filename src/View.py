@@ -215,7 +215,7 @@ class ConstructionView():
                                            iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
         self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
-                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
+                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noir.png")
 
         self.buttonScierie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingScierie,
                                         iconPath="Graphics/Buildings/Age_II/Scierie/scierie_noire.png")

@@ -66,6 +66,11 @@ class Model:
             raise NotImplementedError("COMMANDE NON IMPLÉMENTÉE...: %s" % command['TYPE'])
         exe(command)
 
+    def executeStartGame(self, command):
+        random.seed(command['SEED'])
+        self.carte = Carte(self.grandeurMat)
+
+
     def executeCreateUnit(self, command):
         """ Execute la commande crééer unité  selon ses paramètres 
         :param command: la commande à exécuter [Objet Command]
