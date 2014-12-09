@@ -84,7 +84,7 @@ class Controller:
 
         self.window.canvas.delete(ALL)
         print(self.window.root.update())
-        self.view = GameView(self.window, self.eventListener)
+        self.view = GameView(self.window, self.eventListener,)
 
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
@@ -96,8 +96,7 @@ class Controller:
         self.gameStarted = True
 
 
-
-        self.view = GameView(self.window, self.eventListener)
+        self.view = GameView(self.window, self.eventListener, joueur=self.model.joueurs[self.model.civNumber])
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)
@@ -159,7 +158,7 @@ class Controller:
         self.model.creerbaseAI(7)
 
         # INITIALISATION AFFICHAGE
-        self.view = GameView(self.window, self.eventListener)
+        self.view = GameView(self.window, self.eventListener,  self.model.joueurs[self.model.civNumber])
         self.view.drawMinimap(self.model.carte.matrice)
         self.view.drawRectMiniMap()
         self.view.drawMap(self.model.carte.matrice)

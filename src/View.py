@@ -568,8 +568,11 @@ class FonderieView():
 
 
 class StatsView():
-    def __init__(self, canvas, joueur):
+    def __init__(self, canvas, joueur, tkRoot):
         self.canvas = canvas
+        self.joueur = joueur
+        self.root = tkRoot
+
         self.width = 450
         self.height = 500
         self.x = 225
@@ -592,23 +595,22 @@ class StatsView():
 
         self.labelStatisques.draw(self.x + self.width/2-70, self.y + 20)
 
+        self.labelTempsJeux.text = "Temps de jeu: %s" % self.joueur.baseVivante
         self.labelTempsJeux.draw(self.x + 20, self.y + 70)
 
+        self.labelAge.text = "Âge: %s" % self.joueur.epoque
         self.labelAge.draw(self.x + 20, self.labelTempsJeux.y + 30)
 
-
+        self.labelNbBuilding.text = "Nombre de Bâtiments: %s" % len(self.joueur.buildings.values())
         self.labelNbBuilding.draw(self.x + 20, self.labelAge.y + 30)
 
-
+        self.labelNbUnits.text = "Nombre d'unités: %s" % self.joueur
         self.labelNbUnits.draw(self.x + 20, self.labelNbBuilding.y + 30)
 
-
+        self.labelNbUnitsDead.text = "Nombre d'unités mortes au combat: %s" % 0
         self.labelNbUnitsDead.draw(self.x + 20, self.labelNbUnits.y + 30)
 
-
         self.okButton.draw(self.x + self.width/2-self.okButton.width/2, self.y + self.height-80)
-
-
 
 
 
@@ -625,10 +627,9 @@ class StatsView():
 
 
 class GameMenu():
-    def __init__(self, canvas, evListener, joueur):
+    def __init__(self, canvas, mainView):
         self.canvas = canvas
-        self.joueur = joueur
-        self.evListener = evListener
+        self.mainView = mainView
 
         self.width = 250
         self.height = 315
@@ -660,7 +661,7 @@ class GameMenu():
                 value.destroy()
 
     def onStats(self):
-        self.statWindow = StatsView(self.canvas, self.joueur)
+        self.statWindow = StatsView(self.canvas, self.mainView.joueur, self.mainView.window.root)
         self.statWindow.draw()
 
     def onSurrender(self):
@@ -896,7 +897,8 @@ class FrameMiniMap():  # TODO AFFICHER LES BUILDINGS
 
 
 class FrameBottom():
-    def __init__(self, canvas, largeurMinimap):
+    def __init__(self, gameView, canvas, largeurMinimap):
+        self.gameView = gameView
         self.canvas = canvas
         self.width = int(self.canvas.cget('width')) - largeurMinimap
         self.height = 100
@@ -947,7 +949,7 @@ class FrameBottom():
 
 
     def onSettings(self):
-        self.gmenu = GameMenu(self.canvas, None, None)
+        self.gmenu = GameMenu(self.canvas, self.gameView)
         self.gmenu.draw()
 
 class CarteView():
@@ -1234,9 +1236,11 @@ class CarteView():
 class GameView():
     """ Responsable de l'affichage graphique et de captuer les entrées de l'usager"""
 
-    def __init__(self, window, evListener):
+    def __init__(self, window, evListener, joueur):
         self.window = window
         self.canvas = self.window.canvas
+        self.joueur = joueur
+
 
         # PARAMÈTRES DE BASE
         self.width = self.window.width
@@ -1281,7 +1285,7 @@ class GameView():
         self.frameSide.drawBaseButton()
 
         # LE CADRE DU BAS
-        self.frameBottom = FrameBottom(self.canvas, self.frameMinimap.width)
+        self.frameBottom = FrameBottom(self, self.canvas, self.frameMinimap.width)
         self.frameBottom.draw()
 
 
@@ -1445,7 +1449,7 @@ class GameView():
 
     def update(self, units, buildings, carte=None, joueur=None):  # CLEAN UP
         """ Met à jours la carte et la minimap (et leurs unités) (au besoin)"""
-
+        self.joueur = joueur
         if carte:
             self.drawMap(carte)
 
