@@ -269,6 +269,7 @@ class Controller:
                     return
                 else:
                     self.view = TitleScreen(self.window, self)
+                    
                     self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
 
         if self.displayTimer.isDone():
