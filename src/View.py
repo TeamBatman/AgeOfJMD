@@ -1024,7 +1024,10 @@ class CarteView():
         self.canvas.delete("building")#QUICK FIX
         
         for building in buildings.values():
-            if self.isBuildingShown(building):
+            #print(str(building.posX)+"\x20:\x20"+str(building.posY))
+            x = building.posX
+            y = building.posY
+            if self.isBuildingShown(building) and (self.eventListener.controller.model.carte.matrice[x][y].revealed == 1 or (building.joueur.civilisation == self.eventListener.controller.model.civNumber and not building.joueur.ai == True)):
                 img = building.image
                 posX = (building.posX * 48) - (self.cameraX * self.item)
                 posY = (building.posY * 48) - (self.cameraY * self.item)
