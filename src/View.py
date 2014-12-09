@@ -664,7 +664,21 @@ class GameMenu():
         self.statWindow.draw()
 
     def onSurrender(self):
-        pass    # TODO
+        self.dialog = GChoiceDialogue(self.canvas, "Voulez-vous vraiment abandonner   \n la partie?", command=self.onConfirmSurrender)
+        self.destroy()
+        self.dialog.draw(self.x, self.y)
+
+    def onConfirmSurrender(self, result):
+        if result == GChoiceDialogue.NO:
+            self.dialog.destroy()
+            self.draw()
+            return
+
+        self.destroy()
+        pass # TODO Faire quitter le jeuux
+
+
+
 
     def onBack(self):
         self.destroy()
@@ -902,7 +916,7 @@ class FrameBottom():
         self.texteMinerai = GLabel(self.canvas, text="Minerai: " + str(0))
         self.texteCharbon = GLabel(self.canvas, text="Charbon: " + str(0))
 
-        self.btnSettings = GCheckButton(self.canvas, command=self.onSettings)
+        self.btnSettings = GSmallButton(self.canvas, command=self.onSettings)
 
 
     def draw(self):
