@@ -21,7 +21,7 @@ from SimpleTimer import Timer
 import MenuDebut
 
 
-SKIP_MENU = True  # Permet de skipper les menus
+SKIP_MENU = False  # Permet de skipper les menus
 LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
 
 try:
@@ -42,7 +42,6 @@ class Controller:
         self.network = NetworkController()
         self.eventListener = EventListener(self)
         self.window = GameWindow()
-
         self.view = None
 
 
@@ -58,11 +57,12 @@ class Controller:
 
     def mainLoop(self):
         if self.network.client is not None:
+            cmd = []
             try:
                 #print(self.currentFrame)
                 cmd = self.network.synchronizeClient(self.currentFrame)
-            except ClientConnectionError:
-                self.shutdown()
+            except (ClientConnectionError, KeyError):
+                self.gameStarted = False
             # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
             for c in cmd:
                 if c['TYPE'] == Command.START_GAME:
@@ -134,7 +134,10 @@ class Controller:
             #if self.view.needUpdateCarte():
             #    self.view.update(self.model.getUnits(), self.model.getBuildings(),self.model.carte.matrice, joueur=joueur)
             #else:
-            self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
+            try:
+                self.view.update(self.model.getUnits(), self.model.getBuildings(), joueur=joueur)
+            except TypeError:
+                pass
 
             self.displayTimer.reset()
 
@@ -279,7 +282,7 @@ class Controller:
 
 
     def shutdown(self):
-        self.view.destroy()
+        self.window.destroy()
         if self.network.client:
             self.network.disconnectClient()
         if self.network.server:
@@ -753,6 +756,18 @@ class EventListener:
                 print("oups")
             else:
                 print("MODE CONSTRUCTION")
+
+    def onSurrender(self):
+        self.controller.view = TitleScreen(self.controller.window, self.controller)
+        self.controller.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
+        self.controller.network.disconnectClient()
+        if self.controller.network.server:
+            self.controller.network.stopServer()
+        self.controller.gameStarted = False
+
+
+
+
 
 
 if __name__ == '__main__':

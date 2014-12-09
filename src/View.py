@@ -676,7 +676,7 @@ class GameMenu():
             return
 
         self.destroy()
-        pass # TODO Faire quitter le jeuux
+        self.mainView.eventListener.onSurrender()
 
 
 
