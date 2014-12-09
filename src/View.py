@@ -215,7 +215,7 @@ class ConstructionView():
                                            iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
         self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
-                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
+                                           iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noir.png")
 
         self.buttonScierie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingScierie,
                                         iconPath="Graphics/Buildings/Age_II/Scierie/scierie_noire.png")
@@ -450,6 +450,12 @@ class BarackView():
         self.createShieldPrivate.icon = img
 
 
+        p = Units.Scout(-1, -1, -1,  building.joueur, building.joueur.civilisation)
+        img = p.animation.spriteSheet.frames['DOWN_1']
+        self.createScout = GMediumButton(self.canvas, 'Scout', self.onCreateScoutPrivate, GButton.GREY)
+        self.createScout.icon = img
+
+
     def draw(self):
         posX = self.x + 91
         posY = self.y + 35
@@ -468,7 +474,8 @@ class BarackView():
 
         self.createPrivate.draw(x=self.x + 25, y=self.y + 130)
         self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
-        self.createShieldPrivate.draw(x=self.x + 25, y=self.y + 225)
+        self.createShieldPrivate.draw(x=self.x + 25, y=self.y + 235)
+        self.createScout.draw(x=self.x + self.width / 2 + 5, y=self.y + 235)
 
     def onCreatePrivate(self):
         self.barack.creer1()
@@ -478,6 +485,9 @@ class BarackView():
 
     def onCreateShieldPrivate(self):
         self.barack.creer3()
+
+    def onCreateScoutPrivate(self):
+        self.barack.creer4()
 
     def destroy(self):
         self.canvas.delete('buildingView')
@@ -922,8 +932,8 @@ class FrameBottom():
         self.moraleProg.setProgression(63)
 
 
-        self.texteNourriture = GLabel(self.canvas,text=" "+str(0))
-        self.texteBois = GLabel(self.canvas,text=" "+str(100))
+        self.texteNourriture = GLabel(self.canvas,text=" "+str(40))
+        self.texteBois = GLabel(self.canvas,text=" "+str(0))
         self.texteMinerai = GLabel(self.canvas,text=" "+str(0))
         self.texteCharbon = GLabel(self.canvas,text=" "+str(0))
 

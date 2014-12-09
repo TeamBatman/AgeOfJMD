@@ -87,6 +87,10 @@ class Model:
             self.joueurs[command.data['CIV']].createUnit(command.data['ID'], command.data['X'], command.data['Y'],
                                                      command.data['CIV'])
 
+        elif command.data['CLASSE'] == "soldatScout":
+            self.joueurs[command.data['CIV']].createUnitScout(command.data['ID'], command.data['X'], command.data['Y'],
+                                                     command.data['CIV'])
+
     def executeMoveUnit(self, command):
         """ Execute la commande pour DÉPLACER UNE UNITÉ selon ses paramètres 
         :param command: la commande à exécuter [Objet Commande]

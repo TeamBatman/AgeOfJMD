@@ -59,6 +59,7 @@ class Batiment:
         self.coutCreer1 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.coutCreer2 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.coutCreer3 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
+        self.coutCreer4 = {'bois': 0, 'minerai': 0, 'charbon': 0, 'nourriture' : 0}
         self.determineImage()
 
         self.oneTimeAnimations = []
@@ -493,6 +494,7 @@ class Baraque(Batiment):
         self.coutCreer1['nourriture'] = 40
         self.coutCreer2['nourriture'] = 40
         self.coutCreer3['nourriture'] = 40
+        self.coutCreer4['nourriture'] = 30
 
     def determineImage(self):
         ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
@@ -538,7 +540,7 @@ class Baraque(Batiment):
     def creer2(self):  # création de soldats avec lances
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer2['nourriture']:
-                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer2['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Lance"
                 self.tempsDepartCreation = time.time()
@@ -557,7 +559,7 @@ class Baraque(Batiment):
     def creer3(self):  # création de soldats avec boucliers
         if self.enCreation == False:
             if self.joueur.ressources['nourriture'] >= self.coutCreer3['nourriture']:
-                self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer3['nourriture'])
                 self.enCreation = True
                 self.typeCreation = "Bouclier"
                 self.tempsDepartCreation = time.time()
@@ -569,6 +571,24 @@ class Baraque(Batiment):
             cmd.addData('Y', posUnitY)
             cmd.addData('CIV', self.joueur.civilisation)
             cmd.addData('CLASSE', "soldatBouclier")
+            self.joueur.model.controller.sendCommand(cmd)
+            self.enCreation = False
+
+    def creer4(self):  # création de soldats scouts
+        if self.enCreation == False:
+            if self.joueur.ressources['nourriture'] >= self.coutCreer4['nourriture']:
+                self.joueur.ajouterRessource('nourriture', -self.coutCreer4['nourriture'])
+                self.enCreation = True
+                self.typeCreation = "Scout"
+                self.tempsDepartCreation = time.time()
+        elif time.time() - self.tempsDepartCreation >= self.vitesseDeCreation:
+            posUnitX,posUnitY = self.joueur.model.trouverCentreCase(self.posX-1,self.posY-1)
+            cmd = Command(self.joueur.civilisation, Command.UNIT_CREATE)
+            cmd.addData('ID', Unit.generateId(self.joueur.civilisation))
+            cmd.addData('X', posUnitX)
+            cmd.addData('Y', posUnitY)
+            cmd.addData('CIV', self.joueur.civilisation)
+            cmd.addData('CLASSE', "soldatScout")
             self.joueur.model.controller.sendCommand(cmd)
             self.enCreation = False
 
@@ -659,8 +679,10 @@ class Baraque(Batiment):
                 self.creer1()
             elif self.typeCreation == "Lance":
                 self.creer2()
-            else:
+            elif self.typeCreation == "Bouclier":
                 self.creer3()
+            elif self.typeCreation == "Scout":
+                self.creer4()
         if self.enRecherche:
             if self.typeRecherche == "Attaque":
                 self.recherche1()

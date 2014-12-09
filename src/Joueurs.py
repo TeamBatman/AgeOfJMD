@@ -125,6 +125,14 @@ class Joueur:
         """
         self.units[uId] = GuerrierBouclier(uId, x, y, self, civilisation)
 
+    def createUnitScout(self, uId, x, y, civilisation):
+        """ Crée et ajoute une nouvelle unité scout à la liste des unités
+        :param uId: ID que l'on souhaite attribuer à l'unité
+        :param x: position x de l'unité
+        :param y: position y de l'unité
+        """
+        self.units[uId] = Scout(uId, x, y, self, civilisation)
+
     def killUnit(self, uId):
         """ Permet de tuer une unité selon son Id 
         (donc retirer de la liste des unités)

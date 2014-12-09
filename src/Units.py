@@ -1162,7 +1162,7 @@ class GuerrierEpee(Soldat):
         self.hpMax = 40
         self.hp = 40
         # Force à laquelle l'unité frappe
-        self.attackMin = 1
+        self.attackMin = 2
         self.attackMax = 15
 
     def determineSpritesheet(self):
@@ -1193,7 +1193,7 @@ class GuerrierLance(Soldat):
         self.hp = 30
         # Force à laquelle l'unité frappe
         self.attackMin = 1
-        self.attackMax = 25
+        self.attackMax = 15
 
     def determineSpritesheet(self):
         spritesheets = {
@@ -1256,17 +1256,17 @@ class Scout(Soldat):
 
     def determineSpritesheet(self):
         spritesheets = {
-            Civilisation.BLANC: 'Units/Age_I/paysan_blanc.png',
-            Civilisation.BLEU: 'Units/Age_I/paysan_bleu.png',
-            Civilisation.JAUNE: 'Units/Age_I/paysan_jaune.png',
+            Civilisation.BLANC: 'Units/Age_II/Scout/scout_blanc.png',
+            Civilisation.BLEU: 'Units/Age_II/Scout/scout_bleu.png',
+            Civilisation.JAUNE: 'Units/Age_II/Scout/scout_jaune.png',
 
-            Civilisation.MAUVE: 'Units/Age_I/paysan_mauve.png',
-            Civilisation.NOIR: 'Units/Age_I/paysan_noir.png',
-            Civilisation.ORANGE: 'Units/Age_I/paysan_orange.png',
+            Civilisation.MAUVE: 'UnitsAge_II/Scout/scout_mauve.png',
+            Civilisation.NOIR: 'Units/Age_II/Scout/scout_noir.png',
+            Civilisation.ORANGE: 'Units/Age_II/Scout/scout_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_I/paysan_rouge.png',
-            Civilisation.VERT: 'Units/Age_I/paysan_vert.png',
-            Civilisation.ROSE: 'Units/Age_I/paysan_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/Scout/scout_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/Scout/scout_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/Scout/scout_rose.png'
         }
 
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])

@@ -24,7 +24,7 @@ import MenuDebut
 
 
 SKIP_MENU = False  # Permet de skipper les menus
-LOAD_RESSOURCE_ON_START = False  # Si on load les ressources au démarrage du jeu ou non
+LOAD_RESSOURCE_ON_START = True  # Si on load les ressources au démarrage du jeu ou non
 
 
 try:
@@ -89,7 +89,7 @@ class Controller:
 
         self.window.canvas.delete(ALL)
         print(self.window.root.update())
-        self.view = GameView(self.window, self.eventListener,)
+        #self.view = GameView(self.window, self.eventListener,)
 
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
