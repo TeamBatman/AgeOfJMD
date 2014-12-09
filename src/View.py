@@ -212,13 +212,13 @@ class ConstructionView():
                                         iconPath="Graphics/Buildings/Age_II/Barracks/barracks_noire.png")
 
         self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
-                                        iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
+                                        iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noir.png")
 
         self.buttonScierie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingScierie,
-                                        iconPath="Graphics/Buildings/Age_II/Ferme/ferme_mauve.png")
+                                        iconPath="Graphics/Buildings/Age_II/Scierie/scierie_noire.png")
 
         self.buttonFonderie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFonderie,
-                                        iconPath="Graphics/Buildings/Age_II/Ferme/ferme_jaune.png")
+                                        iconPath="Graphics/Buildings/Age_III/Fonderie/fonderie_noire.png")
 
         self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
                                        iconPath='Graphics/Icones/arrowBack.png')
