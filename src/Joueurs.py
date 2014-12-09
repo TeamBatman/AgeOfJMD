@@ -180,21 +180,26 @@ class Joueur:
         :param btype: Type de bâtiment à construire
         """
         posX, posY = self.model.trouverCaseMatrice(posX, posY)
-        if btype == Batiments.Batiment.FERME:
+        if btype == Batiments.Batiment.FERME and self.ressources['bois'] >= Batiments.Batiment.COUT_FERME:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Ferme(self, newID, posX, posY)
-        elif btype == Batiments.Batiment.BARAQUE:
+            self.ajouterRessource('bois', -Batiments.Batiment.COUT_FERME)
+        elif btype == Batiments.Batiment.BARAQUE and self.ressources['bois'] >= Batiments.Batiment.COUT_BARAQUE:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Baraque(self, newID, posX, posY)
-        elif btype == Batiments.Batiment.HOPITAL:
+            self.ajouterRessource('bois', -Batiments.Batiment.COUT_BARAQUE)
+        elif btype == Batiments.Batiment.HOPITAL and self.ressources['bois'] >= Batiments.Batiment.COUT_HOPITAL:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Hopital(self, newID, posX, posY)
-        elif btype == Batiments.Scierie:
+            self.ajouterRessource('bois', -Batiments.Batiment.COUT_HOPITAL)
+        elif btype == Batiments.Batiment.SCIERIE and self.ressources['bois'] >= Batiments.Batiment.COUT_SCIERIE:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Scierie(self, newID, posX, posY)
-        elif btype == Batiments.Fonderie:
+            self.ajouterRessource('bois', -Batiments.Batiment.COUT_SCIERIE)
+        elif btype == Batiments.Batiment.FONDERIE and self.ressources['bois'] >= Batiments.Batiment.COUT_FONDERIE:
             newID = Batiments.Batiment.generateId(self.civilisation)
             createdBuild = Batiments.Fonderie(self, newID, posX, posY)
+            self.ajouterRessource('bois', -Batiments.Batiment.COUT_FONDERIE)
         elif btype == Batiments.Batiment.BASE:
             if not self.baseVivante:
                 newID = Batiments.Batiment.generateId(self.civilisation)

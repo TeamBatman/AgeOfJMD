@@ -39,6 +39,8 @@ class FrameSide():
     FARMVIEW = 3
     HOSPITALVIEW = 4
     BARACKVIEW = 5
+    SCIERIEVIEW = 6
+    FONDERIEVIEW = 7
 
 
     def __init__(self, canvas, parent, largeurMinimap, hauteurMinimap, eventListener):
@@ -113,6 +115,16 @@ class FrameSide():
             self.barackView = BarackView(self.canvas, building, self, self.eventListener)
             self.barackView.draw()
             self.childView = self.barackView
+
+        elif selectedView == FrameSide.SCIERIEVIEW:
+            self.scierieView = ScierieView(self.canvas, building, self, self.eventListener)
+            self.scierieView.draw()
+            self.childView = self.scierieView
+
+        elif selectedView == FrameSide.FONDERIEVIEW:
+            self.fonderieView = FonderieView(self.canvas, building, self, self.eventListener)
+            self.fonderieView.draw()
+            self.childView = self.fonderieView
 
 
     def destroy(self):
@@ -204,12 +216,24 @@ class ConstructionView():
         self.buttonHopital = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingHopital,
                                         iconPath="Graphics/Buildings/Age_III/Hopital/hopital_noire.png")
 
+        self.buttonScierie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingScierie,
+                                        iconPath="Graphics/Buildings/Age_II/Ferme/ferme_mauve.png")
+
+        self.buttonFonderie = GMediumButton(self.canvas, text=None, command=self.onCreateBuildingFonderie,
+                                        iconPath="Graphics/Buildings/Age_II/Ferme/ferme_jaune.png")
+
         self.btnRetour = GMediumButton(self.canvas, text=None, command=self.onRetour,
                                        iconPath='Graphics/Icones/arrowBack.png')
 
 
     def onRetour(self):
         self.parent.changeView(FrameSide.UNITVIEW)
+
+    def onCreateBuildingScierie(self):
+        self.eventListener.createBuilding(Batiment.SCIERIE)
+
+    def onCreateBuildingFonderie(self):
+        self.eventListener.createBuilding(Batiment.FONDERIE)
 
     def onCreateBuildingBaraque(self):
         self.eventListener.createBuilding(Batiment.BARAQUE)
@@ -225,7 +249,6 @@ class ConstructionView():
 
     def draw(self):
         # BTN CONSTRUCTION
-        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
         if self.parent.parent.selected:
             unit = self.parent.parent.selected[0]
             epoque = unit.joueur.epoque
@@ -234,10 +257,23 @@ class ConstructionView():
             epoque = 1
             
         if epoque > 1:
+            ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+            unit = self.parent.parent.selected[0]
+            epoque = unit.joueur.epoque
+            age = ageString[epoque]
+            img = GraphicsManager.getImage(('Buildings/%s/Ferme/ferme_noire.png' % age))
+            resized = img.resize((70, 70), Image.ANTIALIAS)
+            imageBonne = ImageTk.PhotoImage(resized)
+            self.buttonFerme.icon = imageBonne
             self.buttonBaraque.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
             self.buttonHopital.draw(x=self.x + 25, y=self.y + 130)
 
-        self.btnRetour.draw(x=self.x + 25, y=self.y + 235)
+        if epoque > 1:
+            self.buttonScierie.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
+            self.buttonFonderie.draw(x=self.x + 25, y=self.y + 235)
+
+        self.buttonFerme.draw(x=self.x + 25, y=self.y + 25)
+        self.btnRetour.draw(x=self.x + 25, y=self.y + 340)
 
 
     def destroy(self):
@@ -266,13 +302,29 @@ class BaseView():
 
 
     def draw(self):
-        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.base.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.base.pointsDeVie * largeurBarre / self.base.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.base.image,
+                                 tags=('buildingView', self.base.id))
+
+        self.boutonCreateUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onCreateUnit(self):
         self.base.creer1()
         print("created unit")
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -293,12 +345,28 @@ class FarmView():
         self.boutonReleaseUnit = GMediumButton(self.canvas, 'Ferme', self.onRemoveUnit, GButton.GREY)
 
     def draw(self):
-        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.farm.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.farm.pointsDeVie * largeurBarre / self.farm.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.farm.image,
+                                 tags=('buildingView', self.farm.id))
+
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onRemoveUnit(self):
         self.farm.sortir()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -319,12 +387,28 @@ class HospitalView():
         self.healUnit = GMediumButton(self.canvas, 'Regenerer', self.onHealingUnit, GButton.GREY)
 
     def draw(self):
-        self.healUnit.draw(x=self.x + 25, y=self.y + 25)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.hospital.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.hospital.pointsDeVie * largeurBarre / self.hospital.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.hospital.image,
+                                 tags=('buildingView', self.hospital.id))
+
+        self.healUnit.draw(x=self.x + 25, y=self.y + 130)
 
     def onHealingUnit(self):
         self.hospital.healing()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -356,9 +440,24 @@ class BarackView():
 
 
     def draw(self):
-        self.createPrivate.draw(x=self.x + 25, y=self.y + 25)
-        self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 25)
-        self.createShieldPrivate.draw(x=self.x+25, y=self.y+130)
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.barack.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.barack.pointsDeVie * largeurBarre / self.barack.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.barack.image,
+                                 tags=('buildingView', self.barack.id))
+
+        self.createPrivate.draw(x=self.x + 25, y=self.y + 130)
+        self.createUpgradedPrivate.draw(x=self.x + self.width / 2 + 5, y=self.y + 130)
+        self.createShieldPrivate.draw(x=self.x+25, y=self.y+225)
 
     def onCreatePrivate(self):
         self.barack.creer1()
@@ -370,6 +469,93 @@ class BarackView():
         self.barack.creer3()
 
     def destroy(self):
+        self.canvas.delete('buildingView')
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class ScierieView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.scierie = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonReleaseUnit = GMediumButton(self.canvas, 'Scierie', self.onRemoveUnit, GButton.GREY)
+
+
+    def draw(self):
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.scierie.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.scierie.pointsDeVie * largeurBarre / self.scierie.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.scierie.image,
+                                 tags=('buildingView', self.scierie.id))
+
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 130)
+
+    def onRemoveUnit(self):
+        self.scierie.sortir()
+
+    def destroy(self):
+        self.canvas.delete('buildingView')
+        attr = self.__dict__
+        for value in attr.values():
+            if isinstance(value, GButton):
+                value.destroy()
+
+class FonderieView():
+    def __init__(self, canvas, building, parent, evListener):
+        self.canvas = canvas
+        self.parent = parent
+        self.eventListener = evListener
+
+        self.fonderie = building
+
+        self.width = parent.width
+        self.height = parent.width
+        self.x = parent.x
+        self.y = parent.y
+        self.boutonReleaseUnit = GMediumButton(self.canvas, 'Fonderie', self.onRemoveUnit, GButton.GREY)
+
+
+    def draw(self):
+        posX = self.x + 91
+        posY = self.y + 35
+
+        # BARRE DE VIE
+        largeurBarre = self.fonderie.grandeur  # en pixels
+        hauteurBarre = 10
+        hp = int(self.fonderie.pointsDeVie * largeurBarre / self.fonderie.hpMax)
+        self.canvas.create_rectangle(posX, posY - 12, posX + 32, posY - hauteurBarre, fill='black', tags='buildingView')
+        self.canvas.create_rectangle(posX, posY - 12, posX + hp, posY - hauteurBarre, fill='red', tags='buildingView')
+
+
+        # IMAGE DU BATIMENT
+        self.canvas.create_image(posX-25, posY-10, anchor=NW, image=self.fonderie.image,
+                                 tags=('buildingView', self.fonderie.id))
+
+        self.boutonReleaseUnit.draw(x=self.x + 25, y=self.y + 130)
+
+    def onRemoveUnit(self):
+        self.fonderie.sortir()
+
+    def destroy(self):
+        self.canvas.delete('buildingView')
         attr = self.__dict__
         for value in attr.values():
             if isinstance(value, GButton):
@@ -599,10 +785,12 @@ class FrameBottom():
         self.moraleProg = GProgressBar(self.canvas, 150, "Morale")
         self.moraleProg.setProgression(63)
 
+
         self.texteNourriture = GLabel(self.canvas,text=" "+str(0))
         self.texteBois = GLabel(self.canvas,text=" "+str(100))
         self.texteMinerai = GLabel(self.canvas,text=" "+str(0))
         self.texteCharbon = GLabel(self.canvas,text=" "+str(0))
+
 
 
 
