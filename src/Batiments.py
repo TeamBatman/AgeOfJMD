@@ -12,7 +12,6 @@ from GraphicsManagement import GraphicsManager, OneTimeAnimation
 
 from Units import *
 from Civilisations import Civilisation
-from Joueurs import Ressources
 
 
 class Batiment:
@@ -287,11 +286,7 @@ class Base(Batiment):
         self.coutRecherche1['bois'] = 50
         self.coutRecherche2['bois'] = 50
         self.coutRecherche2['minerai'] = 50
-<<<<<<< HEAD
-        self.coutCreer1['nourriture'] = 5
-=======
         self.coutCreer1['nourriture'] = 20
->>>>>>> origin/dev
         self.paysanAFaire = 0 #Le nombre de paysan à faire (Queue)
         print(posX, posY)
         cases = self.joueur.model.trouverCentreCase(posX, posY)
@@ -331,11 +326,7 @@ class Base(Batiment):
     def creer1(self):  # création des paysans
         if self.joueur.ressources['nourriture'] >= self.coutCreer1['nourriture']:
             print("in creation 1", self.paysanAFaire, self.coutCreer1['nourriture'])
-<<<<<<< HEAD
-            self.joueur.ajouterRessource(Ressources.NOURRITURE, -self.coutCreer1['nourriture'])
-=======
             self.joueur.ajouterRessource('nourriture', -self.coutCreer1['nourriture'])
->>>>>>> origin/dev
             self.paysanAFaire += 1
             civ = self.getClientId()
             
@@ -430,8 +421,7 @@ class Base(Batiment):
                 #TODO ne pas oublier de changer le temps pour changer d'époque
                 elif time.time() - self.tempsDepartRecherche >= 0: #60:
                     self.enRecherche = False
-                    #self.joueur.epoque = 2
-                    self.joueur.changerAge(2)
+                    self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 2")
                     print("époque changée")
         elif self.joueur.epoque == 2:
@@ -448,8 +438,7 @@ class Base(Batiment):
                         self.typeRecherche = 2
                 elif time.time() - self.tempsDepartRecherche >= 60:
                     self.enRecherche = False
-                    #self.joueur.epoque = 3
-                    self.joueur.changerAge(3)
+                    self.joueur.epoque = 2
                     self.joueur.recherche.append("Époque 3")
 
     def miseAJour(self):
