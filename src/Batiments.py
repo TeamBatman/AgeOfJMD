@@ -272,6 +272,35 @@ class Hopital(Batiment):
                 self.joueur.recherche.append("Hopital")
                 #TODO decouvrir comment la regeneration va se faire
 
+
+
+    def determineImage(self):
+        #self.image = GraphicsManager.getPhotoImage('Graphics/Buildings/Age_I/Base.png')
+        """self.rawImage = GraphicsManager.getImage('Graphics/Buildings/Age_I/Base.png')
+        self.resized = self.rawImage.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)"""
+        ageString = {1: 'Age_I', 2: 'Age_II', 3: 'Age_III'}
+        age = ageString[self.joueur.epoque]
+
+        baseImages = {
+            Civilisation.BLANC: 'Buildings/%s/Hopital/hopital_blanc.png' % age,
+            Civilisation.BLEU: 'Buildings/%s/Hopital/hopital_bleu.png' % age,
+            Civilisation.JAUNE: 'Buildings/%s/Hopital/hopital_jaune.png' % age,
+
+            Civilisation.MAUVE: 'Buildings/%s/Hopital/hopital_mauve.png' % age,
+            Civilisation.NOIR: 'Buildings/%s/Hopital/hopital_noir.png' % age,
+            Civilisation.ORANGE: 'Buildings/%s/Hopital/hopital_orange.png' % age,
+
+            Civilisation.ROUGE: 'Buildings/%s/Hopital/hopital_rouge.png' % age,
+            Civilisation.VERT: 'Buildings/%s/Hopital/hopital_vert.png' % age,
+            Civilisation.ROSE: 'Buildings/%s/Hopital/hopital_rose.png' % age
+        }
+        img = GraphicsManager.getImage(baseImages[self.joueur.civilisation])
+        resized = img.resize((96, 96), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+
+
+
     def miseAJour(self):
         if self.enRecherche:
             self.recherche1()
