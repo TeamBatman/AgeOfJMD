@@ -190,10 +190,10 @@ class Unit():
         #print("info unit",self.id, self.leader, self.cibleX, self.cibleY, self.cibleXDeplacement, self.cibleYDeplacement)
         self.trouver = False
         self.enDeplacement = True
-        #if ennemiCibleID:
-        #    self.ennemiCible = self.parent.getUnit(ennemiCibleID)
-        #else:
-        #    self.ennemiCible = None
+        if ennemiCibleID:
+            self.ennemiCible = self.model.getUnit(ennemiCibleID)
+        else:
+            self.ennemiCible = None
         
         self.positionDejaVue = []
         self.cheminAttente = []

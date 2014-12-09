@@ -59,7 +59,7 @@ class Controller:
     def mainLoop(self):
         if self.network.client is not None:
             try:
-                print(self.currentFrame)
+                #print(self.currentFrame)
                 cmd = self.network.synchronizeClient(self.currentFrame)
             except ClientConnectionError:
                 self.shutdown()
@@ -521,14 +521,14 @@ class EventListener:
             leaderUnit = self.controller.model.trouverPlusProche(groupeSansLeader, (x2, y2))
             posFin = self.controller.model.trouverFinMultiSelection(x2, y2, len(groupeSansLeader),
                                                                     groupeSansLeader[0].grandeur)
-            #if groupe == None:
-            #    groupeSansLeader.remove(leaderUnit)
+            if groupe == None:
+                groupeSansLeader.remove(leaderUnit)
 
                 #groupeSansLeader = self.controller.view.selected[:]
 
         except IndexError:  # Il n'y rien à l'endroit ou l'on a cliqué
             print("index 2 !")
-            groupeSansLeader = None
+            groupeSansLeader = []
         #    pass
         # TODO François Check ça
         for unitSelected in groupeSansLeader:
@@ -537,7 +537,7 @@ class EventListener:
             unitSelected.mode = 3
             #print("-----posFIn",len(posFin))
             #print("posFin", posFin)
-            self.selectionnerUnit(unitSelected, False, posFin, x2, y2, unitSelected.ennemiCible, None, None, eventTkinter)
+            self.selectionnerUnit(unitSelected, False, posFin, x2, y2,None, unitSelected.ennemiCible, None, None, eventTkinter)
 
         leaderUnit.ennemiCible = targetUnit
         leaderUnit.ancienPosEnnemi = (targetUnit.x, targetUnit.y)
