@@ -11,7 +11,6 @@ class Carte(object):
         self.matrice = [[Tuile() for x in range(0, self.size)] for x in range(0, self.size)]
         # Passer le seed pour avoir la meme map random
         # TODO Aller chercher le seed commun
-        random.seed(2)
 
         self.createRessources()
 
