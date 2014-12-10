@@ -447,7 +447,7 @@ class Unit():
         if self.building:
             print("JE VEUX CONSTRUIRE!")
             idBatiment = self.building[0]
-            civ =  self.model.joueur.civilisation
+            civ =  self.joueur.civilisation
             bType =  self.building[1]
             #self.joueur.createBuilding(self.building[0], self.x, self.y, self.building[1])
             clientId = self.model.controller.network.getClientId()
