@@ -1187,9 +1187,9 @@ class GuerrierEpee(Soldat):
             Civilisation.NOIR: 'Units/Age_II/Soldat_epee/soldat_epee_noir.png',
             Civilisation.ORANGE: 'Units/Age_II/Soldat_epee/soldat_epee_orange.png',
 
-            Civilisation.ROUGE: 'Units/Age_II/soldat_epee_rouge.png',
-            Civilisation.VERT: 'Units/Age_II/soldat_epee_vert.png',
-            Civilisation.ROSE: 'Units/Age_II/soldat_epee_rose.png'
+            Civilisation.ROUGE: 'Units/Age_II/Soldat_epee/soldat_epee_rouge.png',
+            Civilisation.VERT: 'Units/Age_II/Soldat_epee/soldat_epee_vert.png',
+            Civilisation.ROSE: 'Units/Age_II/Soldat_epee/soldat_epee_rose.png'
         }
 
         spritesheet = GraphicsManager.getSpriteSheet(spritesheets[self.civilisation])
