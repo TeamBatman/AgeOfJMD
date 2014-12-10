@@ -157,7 +157,7 @@ class Controller:
         # INITIALISATION MODEL
         cmd = Command(cmdType=Command.START_GAME)
         cmd.addData('SEED', random.randint(0, 2000))
-        self.sendCommand(Command(cmdType=Command.START_GAME))
+        self.sendCommand(cmd)
 
 
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
@@ -274,9 +274,10 @@ class Controller:
             self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_MULTIJOUEUR)
 
         elif event == MenuDebut.TitleEvent.LANCER_PARTIE_MULTIJOUEUR:
+            print("PARTIE MULTI")
             cmd = Command(cmdType=Command.START_GAME)
             cmd.addData('SEED', random.randint(0, 2000))
-            self.sendCommand(Command(cmdType=Command.START_GAME))
+            self.sendCommand(cmd)
 
 
 

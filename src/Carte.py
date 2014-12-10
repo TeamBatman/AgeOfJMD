@@ -17,7 +17,7 @@ class Carte(object):
 
     # Creation des differentes ressources selon des parametres au hasard
     def createRessources(self):
-
+        print("createRessource!")
         # Creation de la ressource en grappe
         for x in range(0, self.size):
             for y in range(0, self.size):

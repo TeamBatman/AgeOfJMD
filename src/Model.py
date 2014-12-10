@@ -57,7 +57,7 @@ class Model:
 
             Command.CIVILISATION_EVOLVE: self.executeEvolveCivilisation,
 
-            Command.START_GAME: lambda x: x
+            Command.START_GAME: self.executeStartGame #lambda x: x
         }
 
         try:
@@ -67,7 +67,8 @@ class Model:
         exe(command)
 
     def executeStartGame(self, command):
-        random.seed(command['SEED'])
+        print("SEED", command)
+        random.seed(command.data['SEED'])
         self.carte = Carte(self.grandeurMat)
 
 
