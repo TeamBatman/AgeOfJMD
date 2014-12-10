@@ -161,8 +161,8 @@ class Model:
         :param command: la commande à exécuter [Objet Commande]
         """
         print("batient reseaux...")
-        if command['BTYPE'] == 0: #Base TEMPORAIRE !
-            self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
+        #if command['BTYPE'] == 0: #Base TEMPORAIRE !
+        self.joueurs[command.data['CIV']].createBuilding(command['ID'], command['X'], command['Y'],
                                                          command['BTYPE'])
 
     def executeDestroyBuilding(self, command):
