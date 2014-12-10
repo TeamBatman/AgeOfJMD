@@ -534,7 +534,10 @@ class EventListener:
             x2 = event.x
             y2 = event.y
         # print("dude!", x2, y2)
-        targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
+        try:
+            targetUnit = self.controller.view.detectUnits(x1, y1, x2, y2, self.controller.model.getUnits())[0]
+        except:
+            return #Pas sur une unité
         if targetUnit.civilisation == self.model.joueur.civilisation:
             return #Ne peux pas attaquer sa civilisation
         #TODO: Merge avec onMapRClick !!!
