@@ -70,7 +70,9 @@ class Controller:
             except (ClientConnectionError, KeyError):
                 self.gameStarted = False
             # TODO Faire quelque chose de plus approprié (afficher message? retour au menu principal?)
+
             for c in cmd:
+                print(c['TYPE'])
                 if c['TYPE'] == Command.START_GAME:
                     self.startGame()
 
@@ -150,20 +152,29 @@ class Controller:
     def startSoloGame(self):
          # INITIALISATION RÉSEAU
         self.network.startServer(port=33333)
-        self.network.connectClient(ipAddress='10.57.100.193', port=33333, playerName='Batman')
+        self.network.connectClient(ipAddress=NetworkModule.detectIP(), port=33333, playerName='Batman')
 
         # INITIALISATION MODEL
-        self.gameStarted = True
+        cmd = Command(cmdType=Command.START_GAME)
+        cmd.addData('SEED', random.randint(0, 2000))
+        self.sendCommand(Command(cmdType=Command.START_GAME))
+
+
         cmd = Command(self.network.getClientId(), Command.CIVILISATION_CREATE)
         cmd.addData('ID', self.network.getClientId())
         self.sendCommand(cmd)
-
         self.model.creerJoueur(self.network.getClientId())
         self.model.joueur = self.model.joueurs[self.network.getClientId()]
         self.model.civNumber = self.network.getClientId()
 
-        aiId = self.network.client.host.join('127.0.0.1', 'AI')
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIIIIIIIIIII %s" % aiId)
+        self.gameStarted = True
+
+
+
+        aiId = self.model.civNumber + 1
+        if aiId > 8:
+             aiId = 0
+
         self.model.creerAI(aiId)
         self.model.creerbaseAI(aiId)
 
@@ -279,7 +290,7 @@ class Controller:
                     return
                 else:
                     self.view = TitleScreen(self.window, self)
-                    
+
                     self.catchMenuEvent(MenuDebut.TitleEvent.VOIR_MENU_PRINCIPAL)
 
         if self.displayTimer.isDone():
@@ -341,7 +352,7 @@ class EventListener:
                 eventTkinter = False
                 x2 = event.x
                 y2 = event.y
-                
+
             print("DEPLACEMENT !!!!:::", x2, y2, " vs ", event.x, event.y, event)
             if not groupe:
                 groupe = self.controller.view.selected[:]
@@ -396,7 +407,7 @@ class EventListener:
         #print("leader selection", leaderUnit)
         if leaderUnit:
             cmd.addData('LEADER', 1)
-            
+
             if posFin:
                 posLeader = posFin.pop(0)
                 print("leader KOMBAT!", posLeader)
@@ -444,7 +455,7 @@ class EventListener:
         x2, y2 = event.x, event.y
 
         self.controller.view.deleteSelectionSquare()
-        
+
         # SÉLECTION BUILDINGS
         buildings = self.controller.view.detectBuildings(x1, y1, x2, y2, self.model.getBuildings())
         if buildings:
@@ -465,14 +476,14 @@ class EventListener:
             clientId = self.controller.network.getClientId()
 
             idBatiment = Batiment.generateId(clientId)
-            civ =  self.model.joueur.civilisation
+            civ =  self.model.civNumber
             bType =  self.controller.view.lastConstructionType
-            self.envoyerCommandBatiment(idBatiment, currentX, currentY, self.controller.view.selected[:], bType,civ)
 
+            self.envoyerCommandBatiment(idBatiment, currentX, currentY, self.controller.view.selected[:], bType, civ)
             self.controller.view.modeConstruction = False
             print("MODE SELECTION")
             return
-        
+
         # SÉLECTION UNITÉS
         units = self.controller.view.detectUnits(x1, y1, x2, y2, self.model.getUnits())
         if units:
@@ -491,14 +502,14 @@ class EventListener:
                 tropProche = True
             else:
                 self.controller.eventListener.onMapRClick(Noeud(None, posX, posY, None, None), unitsSelected, (idBatiment, bType))
-            
+
         if bType == 0 or tropProche: #Base TEMPORAIRE !
             clientId = self.controller.network.getClientId()
             cmd = Command(clientId, Command.BUILDING_CREATE)
             cmd.addData('ID', idBatiment)
             cmd.addData('X', posX)
             cmd.addData('Y', posY)
-            cmd.addData('CIV', civ)
+            cmd.addData('CIV', clientId)
             cmd.addData('UNITS', [])
             cmd.addData('BTYPE', bType)
             self.controller.sendCommand(cmd)
@@ -561,7 +572,7 @@ class EventListener:
         #print("posFIn leader", posFin)
         self.selectionnerUnit(leaderUnit, True, posFin, x2, y2, groupeSansLeader,
                               leaderUnit.ennemiCible, None, None, eventTkinter)  # Faire le leader en dernier
-        
+
         # if not targetUnit.estUniteDe(clientId):
         #leaderUnit = self.controller.model.trouverPlusProche(self.controller.view.selected, (x2, y2))
         #for unitSelected in self.controller.view.selected:
@@ -606,7 +617,7 @@ class EventListener:
         if building.type == Batiment.FERME:
             print("Rentre dans batiment")
             self.onMapRClick(event)
-            
+
 
     def onMapMouseMotion(self, event):
         """ Appelée lorsque le joueur bouge sa souris dans la regions de la map
@@ -643,7 +654,7 @@ class EventListener:
 
 
     def onMinimapLPress(self, event, redo=0):
-        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
+        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris
         dans la regions de la minimap
         """
         self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
@@ -698,7 +709,7 @@ class EventListener:
 
 
     def onMinimapLPress(self, event, redo=0):
-        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris 
+        """ Appelée lorsque le joueur appuis sur le bouton gauche de sa souris
         dans la regions de la minimap
         """
         self.controller.view.deleteSelectionSquare()  # déselection des unités de la carte
