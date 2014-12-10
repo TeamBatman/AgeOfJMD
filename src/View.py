@@ -938,7 +938,7 @@ class FrameBottom():
         self.texteCharbon = GLabel(self.canvas,text=" "+str(0))
 
 
-        self.btnSettings = GSmallButton(self.canvas, command=self.onSettings)
+        self.btnSettings = GSmallButton(self.canvas, command=self.onSettings, iconPath="Graphics/Icones/menuIcon.png")
 
 
     def draw(self):
