@@ -8,6 +8,8 @@ class GameWindow(GWindow):
         self.height = 768
         self.root.geometry('%sx%s' % (self.width, self.height))
         self.root.configure(background='#000')
+        self.root.title("Age Of JMD")
+        self.root.iconbitmap("Graphics/Icones/logo.ico")
 
         # ZONE DE DESSIN
         self.canvas = Canvas(self.root, width=self.width, height=self.height, background='#91BB62', bd=0,
