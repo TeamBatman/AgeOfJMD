@@ -10,8 +10,33 @@ Membres de la Team Batman:
 
 
 # FICHIERS INCLUS
- - Manuel du gameplay (Gameplay.pdf)
+ - Manuel du gameplay alpha (Gameplay.pdf)
  - Planification Générale (Scrum Manager)
+ - Power Point expliquant ce qu'on peut faire dans le jeu
+ 
+ POUR JOUER EN MULTIJOUEUR:
+	- Cliquer sur le bouton Jouer Multijoueur
+	- Cliquer sur créer un serveur
+	
+	- Cliquer sur rejoindre un serveur
+		- Rentrer l'adresse IP du serveur (indiqué lors de la création du serveur)
+		
+	On peut:
+		-Créer des unités
+		-Créer des bâtiments (Voir le Power Point pour le coût)
+		-Aller chercher des ressources
+		-Rentrer dans une fermer pour faire de la nourriture/sortir de la ferme
+		-Attaquer des unités et des bâtiments
+		-Jouer contre un AI
+		-Jouer contre ses amis
+		-et bien plus !
+		
+	*** Pour quitter le jeu ou pour avoir des statistiques pendant la partie, 
+		cliquer sur le bouton dans le menu en bas à gauche (le bouton avec l'engrenage)
+	
+	*** Les cartes sont générées aléatoirement avant chaque partie !
 
+	Bonne partie !!!
+	
 address github du projet: https://github.com/TeamBatman/AgeOfJMD
 
